@@ -545,7 +545,7 @@ def plot_all_models(
     rng = get_rng(seed=seed, rng=rng)
 
     n_grid = 500
-    n_samples = 10_000 if os.cpu_count() > 10 else 1_000
+    n_samples = 10_000 if os.cpu_count() > 10 else 5_000
     x = np.logspace(1, 7, n_grid)
 
     # legend position per panel — keeps legend away from the spectral peaks

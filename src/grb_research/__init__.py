@@ -43,7 +43,7 @@ def find_project_root(marker="results.json"):
 def update_style():
     """Update style for publication-ready figures.
 
-    All values are driven by constants in grb_constants — single source of truth.
+    All values are driven by constants in grb_constants — a single source of truth.
     Changing a constant there automatically updates every figure.
     """
     plt.rcParams.update(

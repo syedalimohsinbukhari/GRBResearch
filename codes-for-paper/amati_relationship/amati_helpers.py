@@ -9,11 +9,11 @@ from src.grb_research.grb_calculations import mc_e_iso_sampler, ModelResampler
 from src.grb_research.grb_utils import break_e_to_e_peak, EpisodeMarkerResolver
 
 # ---------------------------------------------------------------------------
-# Normalisation — single source of truth for axis units
+# Normalization — single source of truth for axis units
 # ---------------------------------------------------------------------------
 
-EP_NORM = 1e3  # E_i,peak plotted in units of keV × 10³  →  x-axis in 10³ keV
-EI_NORM = 1e52  # E_iso    plotted in units of erg × 10⁵²  →  y-axis in 10⁵² erg
+EP_NORM = 1e3  # E_{i,peak} plotted in units of keV x 1e3 → x-axis in 1e3 keV
+EI_NORM = 1e52  # E_iso plotted in units of erg x 1e52 → y-axis in 1e52 erg
 
 
 def _episode_label(m) -> str:
@@ -183,13 +183,13 @@ def amati_relationship_dirirsa2019(
     e_i_peak = np.logspace(np.log10(x_lim[0]), np.log10(x_lim[1]), num=num_points)
     x = np.log10(e_i_peak / e_i_peak_norm)
     y = k + m * x
-    sigma_y = np.sqrt(sigma_k**2 + x**2 * sigma_m**2 + sigma_ext**2)
+    sigma_y = np.sqrt(sigma_k ** 2 + x ** 2 * sigma_m ** 2 + sigma_ext ** 2)
 
     if use_average:
         sigma_y = np.mean(sigma_y)
-    e_isotropic = (10**y) * e_iso_norm
+    e_isotropic = (10 ** y) * e_iso_norm
 
-    # Normalise to plotting units
+    # Normalize to plotting units
     e_i_peak_plot = e_i_peak / EP_NORM
     e_isotropic_plot = e_isotropic / EI_NORM
 

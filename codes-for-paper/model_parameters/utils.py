@@ -114,6 +114,8 @@ def fit_and_plot_odr(
     annotation_xy: Tuple[float, float] = (0.05, 0.92),
     fontsize: float = LEGEND_FONT_SIZE,
     y_min_clip: Optional[float] = None,
+    x_symbol: str = "kT",
+    y_symbol: str = r"E_{\rm peak}",
 ):
     """Perform an ODR linear fit and draw the result with an uncertainty band.
 
@@ -137,6 +139,9 @@ def fit_and_plot_odr(
         Font size for the annotation.
     y_min_clip : float, optional
         If given, clips the lower uncertainty band to this value.
+    x_symbol, y_symbol : str
+        LaTeX math symbols for the independent/dependent variable in the
+        annotated fit equation.
 
     Returns
     -------
@@ -170,8 +175,8 @@ def fit_and_plot_odr(
     ax.fill_between(x_fine, lower, y_fit + y_err, color=color, alpha=0.1)
 
     ax.annotate(
-        f"$E_{{\\rm peak}} = {result.beta[0]:+.1f}({result.sd_beta[0]:.1f})"
-        f"\\cdot kT {result.beta[1]:+.1f}({result.sd_beta[1]:.1f})$",
+        f"${y_symbol} = {result.beta[0]:+.1f}({result.sd_beta[0]:.1f})"
+        f"\\cdot {x_symbol} {result.beta[1]:+.1f}({result.sd_beta[1]:.1f})$",
         xy=annotation_xy,
         xycoords="axes fraction",
         fontsize=fontsize,

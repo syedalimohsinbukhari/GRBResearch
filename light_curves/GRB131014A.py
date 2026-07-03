@@ -4,7 +4,10 @@ import os
 
 from matplotlib import pyplot as plt
 
+from grb_research import update_style
 from make_lightcurve import make_lightcurves
+
+update_style()
 
 source_name = "131014A"
 t_05 = 0.960

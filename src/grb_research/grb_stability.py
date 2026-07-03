@@ -165,7 +165,7 @@ class ModelComparison:
         a parameter named "norm_BB_1".
     """
 
-    def __init__(self, simple, complex_, bb_param_names: Optional[list] = None):
+    def __init__(self, simple, complex_, bb_param_names: Optional[list] = None, report_unsafe: bool = False):
         self.simple = simple
         self.complex = complex_
         self.bb_names = [s.lower() for s in (bb_param_names or [])]
@@ -184,7 +184,7 @@ class ModelComparison:
                 f"complex_ must have more parameters than simple. "
                 f"Got Δk = {self._delta_k}."
             )
-        if self.complex.is_unsafe:
+        if self.complex.is_unsafe and not report_unsafe:
             raise ValueError(
                 f"Complex model {complex_.name} is not good. " f"Cannot compare to it."
             )

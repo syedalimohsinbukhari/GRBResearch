@@ -78,7 +78,7 @@ TICK_DIRECTION = "in"  # astronomy convention
 
 # Grid
 GRID_ALPHA = 0.25
-GRID_LINESTYLE = ":"
+GRID_LINESTYLE = "--"
 
 OK_THRESHOLD = 0.4
 NOK_THRESHOLD = 1.0

@@ -19,9 +19,21 @@ with open("best_names.txt", "w") as f:
         f.write(f" GRB{grb_name[idx]} ".center(51, "=") + "\n")
         p: ModelSet = _.get_all_best_models()
         for model_ in p:
-            m_idx = model_.interval.index
-            # m_idx = m_idx + 1 if m_idx is not None else None
-            if m_idx is not None:
-                f.write(f"{model_.interval.kind}{m_idx}: {model_.name}\n")
-            else:
-                f.write(f"{model_.interval.kind}: {model_.name}\n")
+            interval_str = model_.interval.to_string()
+            params_str = ", ".join(f"{p.name} {p.value:.4g}({p.error:.4g})" for p in model_.parameters)
+            f.write(f"{interval_str}: {model_.name}\n{params_str}\n\n")
+
+            if not model_.name.endswith("_BB"):
+                bb_name = model_.name + "_BB"
+                bb_model = model_.interval.models.get(bb_name)
+                if bb_model is not None:
+                    bb_params_str = ", ".join(f"{p.name} {p.value:.4g}({p.error:.4g})" for p in bb_model.parameters)
+                    unconstrained = [p.name for p in bb_model.parameters if p.is_unconstrained]
+                    f.write(f"  +BB: {bb_model.name}\n  {bb_params_str}\n")
+                    if unconstrained:
+                        f.write(f"  Unconstrained: {', '.join(unconstrained)}\n")
+                        unc_error = [f'{p.relative_error:.3%}' for p in bb_model.parameters if p.is_unconstrained]
+                        f.write(f"  Error: {', '.join(unc_error)}\n\n")
+                    else:
+                        f.write(f"  cstat={bb_model.cstat:.4g}, dof={bb_model.dof}\n")
+                        f.write(f"  cstat difference={model_.cstat - bb_model.cstat:.4g}\n\n")

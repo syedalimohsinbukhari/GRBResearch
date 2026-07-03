@@ -193,7 +193,7 @@ def prepare_grbs(grb_list, result_file, name_mapping=short_to_long, get_best=Fal
 
     grb_list_long = [name_mapping[i] for i in grb_list]
     gc = GRBCatalog.from_iterable(grb_list=grb_list, data=data, name_mapping=name_mapping)
-    grb_objs = [gc.get_grb(name) for name in grb_list_long]
+    grb_objs: list[GRB] = [gc.get_grb(name) for name in grb_list_long]
     grb_best = [g.get_all_best_models() for g in grb_objs]
     if get_best:
         return gc, grb_list_long, grb_objs, grb_best

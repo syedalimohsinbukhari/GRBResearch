@@ -4,14 +4,17 @@ import json
 
 import numpy as np
 
+from grb_research import update_style
 from src.grb_research import GRBCatalog, find_project_root
 from src.grb_research.grb_calculations import plot_all_models
 from src.grb_research.grb_constants import short_to_long
 
+update_style()
+
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"
 
-grb_name = ["080916C", "140206B", "131014A", "231129C"]
+grb_name = ["080916C", "131014A", "140206B", "231129C"]
 # grb_name = ["150210A"]
 
 with open(result_file, "r") as f:

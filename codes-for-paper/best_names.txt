@@ -1,30 +1,142 @@
 ==================== GRB080916C ===================
-T90: SBPL_BB
-EX0: BAND_BB
-TR1: BAND_BB
-TR2: BAND
-TR3: SBPL
-TR4: SBPL
-EX1: SBPL
-TR5: SBPL
+T90 1.280_64.256: SBPL_BB
+amp_sbpl 0.01046(0.0004146), e_piv_sbpl 100(0), index1_sbpl -1.291(0.02466), e_break_sbpl 702.2(135.9), delta_sbpl 0.3(0), index2_sbpl -2.251(0.02286), amp_bb 3.847e-06(5.373e-07), kt_bb 44.45(2.051)
+
+EX0 -0.128_4.864: BAND_BB
+amp_band 0.02509(0.001781), e_peak_band 1309(247.8), index1_band -0.9538(0.04461), index2_band -2.546(0.07711), amp_bb 1.232e-05(2.766e-06), kt_bb 42.49(3.269)
+
+TR1 1.280_4.864: BAND_BB
+amp_band 0.02864(0.002), e_peak_band 1331(250.4), index1_band -0.9382(0.04474), index2_band -2.505(0.07619), amp_bb 1.571e-05(4.214e-06), kt_bb 39.76(3.589)
+
+TR2 4.864_15.040: BAND
+amp_band 0.02029(0.0006421), e_peak_band 885.9(129.3), index1_band -1.152(0.02525), index2_band -2.122(0.02441)
+
+  +BB: BAND_BB
+  amp_band 0.01557(0.0008372), e_peak_band 2439(739.5), index1_band -1.292(0.03277), index2_band -2.217(0.04916), amp_bb 3.169e-06(1.193e-06), kt_bb 45.97(5.702)
+  cstat=459.3, dof=352
+  cstat difference=11.35
+
+TR3 15.040_55.296: SBPL
+amp_sbpl 0.01271(0.0001798), e_piv_sbpl 100(0), index1_sbpl -1.116(0.01733), e_break_sbpl 258.5(17.19), delta_sbpl 0.3(0), index2_sbpl -2.216(0.01654)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.008808(0.0006261), e_piv_sbpl 100(0), index1_sbpl -1.345(0.04381), e_break_sbpl 598.5(192.5), delta_sbpl 0.3(0), index2_sbpl -2.235(0.03155), amp_bb 2.806e-06(5.861e-07), kt_bb 49.14(2.604)
+  cstat=672.9, dof=363
+  cstat difference=24.1
+
+TR4 55.296_59.520: SBPL
+amp_sbpl 0.01007(0.0005165), e_piv_sbpl 100(0), index1_sbpl -0.9216(0.1117), e_break_sbpl 132.7(28.62), delta_sbpl 0.3(0), index2_sbpl -2.207(0.07542)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.0067(0.002287), e_piv_sbpl 100(0), index1_sbpl -1.187(0.2183), e_break_sbpl 333.2(329.2), delta_sbpl 0.3(0), index2_sbpl -2.265(0.1128), amp_bb 1.511e-05(1.098e-05), kt_bb 26.17(7.627)
+  Unconstrained: e_break_sbpl, amp_bb
+  Error: 98.814%, 72.660%
+
+EX1 59.520_67.904: SBPL
+amp_sbpl 0.005949(0.0003155), e_piv_sbpl 100(0), index1_sbpl -1.214(0.09684), e_break_sbpl 135.2(42.31), delta_sbpl 0.3(0), index2_sbpl -2.115(0.0492)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.00302(0.0006765), e_piv_sbpl 100(0), index1_sbpl -1.65(0.1309), e_break_sbpl 1397(5843), delta_sbpl 0.3(0), index2_sbpl -2.141(0.3457), amp_bb 5.153e-06(2.188e-06), kt_bb 36.37(4.647)
+  Unconstrained: e_break_sbpl, amp_bb
+  Error: 418.327%, 42.455%
+
+TR5 59.520_64.256: SBPL
+amp_sbpl 0.007203(0.0004612), e_piv_sbpl 100(0), index1_sbpl -1.22(0.09857), e_break_sbpl 160.4(54.9), delta_sbpl 0.3(0), index2_sbpl -2.211(0.08446)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.005312(0.001683), e_piv_sbpl 100(0), index1_sbpl -1.406(0.2823), e_break_sbpl 159.5(278.2), delta_sbpl 0.3(0), index2_sbpl -2.141(0.151), amp_bb 1.857e-06(4.408e-06), kt_bb 44.43(32.03)
+  Unconstrained: e_break_sbpl, amp_bb, kt_bb
+  Error: 174.368%, 237.360%, 72.081%
+
 ==================== GRB131014A ===================
-T90: BAND_BB
-EX0: BAND_BB
-TR1: BAND_BB
-EX1: BAND_BB
-TR2: SBPL_BB
+T90 0.960_4.160: BAND_BB
+amp_band 0.7643(0.01832), e_peak_band 443.6(7.615), index1_band -0.4152(0.01447), index2_band -2.904(0.03474), amp_bb 0.0003707(2.262e-05), kt_bb 34.92(0.7959)
+
+EX0 -0.192_2.432: BAND_BB
+amp_band 0.4892(0.01522), e_peak_band 521(11.34), index1_band -0.2572(0.01986), index2_band -2.942(0.04501), amp_bb 0.000133(1.172e-05), kt_bb 42.58(1.477)
+
+TR1 0.960_2.432: BAND_BB
+amp_band 0.8066(0.02576), e_peak_band 528.5(11.6), index1_band -0.2443(0.02028), index2_band -2.951(0.04211), amp_bb 0.000196(1.803e-05), kt_bb 44.05(1.616)
+
+EX1 2.432_6.976: BAND_BB
+amp_band 0.3894(0.02473), e_peak_band 271.1(9.902), index1_band -0.6447(0.03229), index2_band -2.801(0.05401), amp_bb 0.0002129(2.557e-05), kt_bb 28.03(1.194)
+
+TR2 2.432_4.160: SBPL_BB
+amp_sbpl 0.4614(0.02055), e_piv_sbpl 100(0), index1_sbpl -0.6947(0.03069), e_break_sbpl 271.4(16.89), delta_sbpl 0.3(0), index2_sbpl -3.109(0.07556), amp_bb 0.001001(7.154e-05), kt_bb 27.23(0.9493)
+
 ==================== GRB140206B ===================
-T90: BAND
-EX0: BAND_BB
-TR1: BAND_BB
-TR2: BAND
-TR3: BAND
-TR4: BAND
-TR5: PL
-TR6: CPL
+T90 7.488_154.240: BAND
+amp_band 0.01225(0.0001581), e_peak_band 515.3(24.99), index1_band -1.369(0.009045), index2_band -2.602(0.0366)
+
+  +BB: BAND_BB
+  amp_band 0.01049(0.000311), e_peak_band 806.9(93.42), index1_band -1.44(0.01627), index2_band -2.684(0.04674), amp_bb 5.285e-06(1.444e-06), kt_bb 27.13(2.224)
+  cstat=1441, dof=350
+  cstat difference=24.87
+
+EX0 4.288_11.072: BAND_BB
+amp_band 0.01626(0.0006337), e_peak_band 2391(248.3), index1_band -0.9947(0.02667), index2_band -2.889(0.1273), amp_bb 3.278e-06(6.948e-07), kt_bb 58.51(4.044)
+
+TR1 7.488_11.072: BAND_BB
+amp_band 0.02507(0.001039), e_peak_band 2173(256.1), index1_band -1.023(0.02806), index2_band -2.77(0.1218), amp_bb 5.952e-06(1.236e-06), kt_bb 55.84(3.793)
+
+TR2 11.072_20.032: BAND
+amp_band 0.105(0.002037), e_peak_band 352.3(9.505), index1_band -0.8052(0.01497), index2_band -2.352(0.04495)
+
+  +BB: BAND_BB
+  amp_band 0.07936(0.003848), e_peak_band 477(28.54), index1_band -0.9298(0.02722), index2_band -2.501(0.06722), amp_bb 3.118e-05(6.903e-06), kt_bb 31.53(2.33)
+  cstat=458.3, dof=342
+  cstat difference=22
+
+TR3 20.032_26.752: BAND
+amp_band 0.04071(0.002694), e_peak_band 171.2(14.6), index1_band -1.273(0.03754), index2_band -2.279(0.06387)
+
+  +BB: BAND_BB
+  amp_band 0.02475(0.002009), e_peak_band 400.9(85.13), index1_band -1.483(0.04458), index2_band -2.456(0.09162), amp_bb 0.0001271(5.14e-05), kt_bb 16.95(1.9)
+  Unconstrained: amp_bb
+  Error: 40.442%
+
+TR4 26.752_59.776: BAND
+amp_band 0.02161(0.001039), e_peak_band 153.1(8.576), index1_band -1.305(0.02699), index2_band -2.418(0.0537)
+
+  +BB: BAND_BB
+  amp_band 0.03482(0.005982), e_peak_band 132.4(7.655), index1_band -0.8152(0.1523), index2_band -2.374(0.04698), amp_bb 0.008644(0.002508), kt_bb 4.971(0.2341)
+  cstat=594.2, dof=349
+  cstat difference=23.62
+
+TR5 59.776_100.032: PL
+amp_pl 0.001092(7.014e-05), e_piv_pl 100(0), index1_pl -2.163(0.03917)
+
+  +BB: PL_BB
+  amp_pl 0.001445(0.0001167), e_piv_pl 100(0), index1_pl -2.037(0.04422), amp_bb -7.202e-07(4.077e-07), kt_bb 44.03(6.845)
+  Unconstrained: amp_bb
+  Error: 56.612%
+
+TR6 100.032_154.240: CPL
+amp_cpl 0.003588(6.939e-05), e_peak_cpl 6970(1199), index1_cpl -1.774(0.01442), e_piv_cpl 100(0)
+
 ==================== GRB231129C ===================
-T90: SBPL_BB
-EX0: SBPL_BB
-TR1: SBPL_BB
-EX1: SBPL
-TR2: SBPL
+T90 0.384_7.296: SBPL_BB
+amp_sbpl 0.1201(0.00504), e_piv_sbpl 100(0), index1_sbpl -0.731(0.02914), e_break_sbpl 362.6(27.3), delta_sbpl 0.3(0), index2_sbpl -4.438(0.2749), amp_bb 0.0003141(1.459e-05), kt_bb 29.89(0.6549)
+
+EX0 -0.192_3.136: SBPL_BB
+amp_sbpl 0.1522(0.008259), e_piv_sbpl 100(0), index1_sbpl -0.4759(0.04229), e_break_sbpl 321.4(24.63), delta_sbpl 0.3(0), index2_sbpl -3.484(0.144), amp_bb 0.0004034(2.463e-05), kt_bb 31.2(0.8846)
+
+TR1 0.384_3.136: SBPL_BB
+amp_sbpl 0.1708(0.009601), e_piv_sbpl 100(0), index1_sbpl -0.5016(0.04306), e_break_sbpl 347(28.83), delta_sbpl 0.3(0), index2_sbpl -4.197(0.2524), amp_bb 0.0004939(2.912e-05), kt_bb 31.04(0.8504)
+
+EX1 3.136_10.048: SBPL
+amp_sbpl 0.08984(0.0006937), e_piv_sbpl 100(0), index1_sbpl -0.695(0.01881), e_break_sbpl 130.6(3.621), delta_sbpl 0.3(0), index2_sbpl -2.817(0.03958)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.07096(0.003812), e_piv_sbpl 100(0), index1_sbpl -0.7031(0.03113), e_break_sbpl 97(6.911), delta_sbpl 0.3(0), index2_sbpl -2.575(0.04918), amp_bb 9.554e-06(2.474e-06), kt_bb 53.09(2.309)
+  cstat=644.5, dof=463
+  cstat difference=21.16
+
+TR2 3.136_7.296: SBPL
+amp_sbpl 0.1431(0.001114), e_piv_sbpl 100(0), index1_sbpl -0.5819(0.01937), e_break_sbpl 132.5(3.504), delta_sbpl 0.3(0), index2_sbpl -2.863(0.04049)
+
+  +BB: SBPL_BB
+  amp_sbpl 0.1431(0.001632), e_piv_sbpl 100(0), index1_sbpl -0.4128(0.09831), e_break_sbpl 125.6(5.723), delta_sbpl 0.3(0), index2_sbpl -2.848(0.04272), amp_bb 0.002297(0.001468), kt_bb 8.573(1.036)
+  Unconstrained: amp_bb
+  Error: 63.915%
+

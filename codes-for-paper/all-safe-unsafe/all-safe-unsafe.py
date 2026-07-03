@@ -19,7 +19,7 @@ update_style()
 
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"
-grb_name = ["080916C", "140206B", "131014A", "231129C"]
+grb_name = ["080916C", "131014A", "140206B", "231129C"]
 
 with open(result_file, "r") as f:
     data = json.load(f)

@@ -5,6 +5,7 @@ from typing import Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
+from grb_research import update_style
 from utils import (
     extract_parameter,
     find_project_root,
@@ -16,6 +17,8 @@ from utils import (
     plot_per_episode,
     save_value_error_as_parquet,
 )
+
+update_style()
 
 
 def extract_high_index(model_collection: ModelSet) -> Tuple[np.typing.ArrayLike, np.typing.ArrayLike]:
@@ -42,27 +45,27 @@ def extract_high_index(model_collection: ModelSet) -> Tuple[np.typing.ArrayLike,
 
         # --- BAND / SBPL family ---
         if m_name in sbpl_band_models:
-            result = extract_parameter(model, "index2")
+            result = extract_parameter(model=model, param_pattern="index2")
             if result is not None:
                 values.append(result[0])
                 errors.append(result[1])
 
         # --- CPL + PL family ---
         elif m_name in cpl_pl_models:
-            result = extract_parameter(model, "add_index_pl")
+            result = extract_parameter(model=model, param_pattern="add_index_pl")
             if result is not None:
                 values.append(result[0])
                 errors.append(result[1])
 
         # --- Pure CPL ---
-        elif m_name == "cpl":
+        else:
             values.append(np.nan)
             errors.append(np.nan)
 
     return np.asarray(values), np.asarray(errors)
 
 
-grb_list = ["080916C", "110721A", "140206B", "131014A"]
+grb_list = ["080916C", "131014A", "140206B", "231129C"]
 
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"
@@ -72,75 +75,39 @@ _, grb_list_long, grb_objs, grb_best = prepare_grbs(grb_list, result_file, get_b
 start_080916, end_080916, diff_080916, midpoint_080916 = grb_objs[0].intervals.extract_interval_arrays(
     return_include=("diff", "midpoint")
 )
-start_110721, end_110721, diff_110721, midpoint_110721 = grb_objs[1].intervals.extract_interval_arrays(
+start_131014, end_131014, diff_131014, midpoint_131014 = grb_objs[1].intervals.extract_interval_arrays(
     return_include=("diff", "midpoint")
 )
-start_110731, end_110731, diff_110731, midpoint_110731 = grb_objs[2].intervals.extract_interval_arrays(
+start_140206, end_140206, diff_140206, midpoint_140206 = grb_objs[2].intervals.extract_interval_arrays(
     return_include=("diff", "midpoint")
 )
-start_150210, end_150210, diff_150210, midpoint_150210 = grb_objs[3].intervals.extract_interval_arrays(
+start_231129, end_231129, diff_231129, midpoint_231129 = grb_objs[3].intervals.extract_interval_arrays(
     return_include=("diff", "midpoint")
 )
 
-start_110731 = start_110731[:-1]
-end_110731 = end_110731[:-1]
-diff_110731 = diff_110731[:-1]
-midpoint_110731 = midpoint_110731[:-1]
+start_140206 = start_140206[:-1]
+end_140206 = end_140206[:-1]
+diff_140206 = diff_140206[:-1]
+midpoint_140206 = midpoint_140206[:-1]
 
-ep_value_080916c, ep_error_080916c = extract_high_index(grb_best[0])
-ep_value_110721a, ep_error_110721a = extract_high_index(grb_best[1])
-ep_value_110731a, ep_error_110731a = extract_high_index(grb_best[2])
-ep_value_150210a, ep_error_150210a = extract_high_index(grb_best[3])
+beta_value_080916c, beta_error_080916c = extract_high_index(grb_best[0])
+beta_value_131014a, beta_error_131014a = extract_high_index(grb_best[1])
+beta_value_140206b, beta_error_140206b = extract_high_index(grb_best[2])
+beta_value_231129c, beta_error_231129c = extract_high_index(grb_best[3])
 
 _, ax = plt.subplots(4, 1, figsize=(6, 12))  # , sharey=True)
 
-plot_per_episode(
-    values=ep_value_080916c,
-    errors=ep_error_080916c,
-    m_name=grb_list[0],
-    start=start_080916,
-    end=end_080916,
-    difference=diff_080916,
-    midpoints=midpoint_080916,
-    axes=ax[0],
-    special_counter=[i.interval.is_sp for i in grb_best[0]],
-)
+plot_per_episode(values=beta_value_080916c, errors=beta_error_080916c, m_name=grb_list[0], start=start_080916,
+                 end=end_080916, difference=diff_080916, midpoints=midpoint_080916, axes=ax[0])
 
-plot_per_episode(
-    values=ep_value_110721a,
-    errors=ep_error_110721a,
-    m_name=grb_list[1],
-    start=start_110721,
-    end=end_110721,
-    difference=diff_110721,
-    midpoints=midpoint_110721,
-    axes=ax[1],
-    special_counter=[i.interval.is_sp for i in grb_best[1]],
-)
+plot_per_episode(values=beta_value_131014a, errors=beta_error_131014a, m_name=grb_list[1], start=start_131014,
+                 end=end_131014, difference=diff_131014, midpoints=midpoint_131014, axes=ax[1])
 
-plot_per_episode(
-    values=ep_value_110731a,
-    errors=ep_error_110731a,
-    m_name=grb_list[2],
-    start=start_110731,
-    end=end_110731,
-    difference=diff_110731,
-    midpoints=midpoint_110731,
-    axes=ax[2],
-    special_counter=[i.interval.is_sp for i in grb_best[2]],
-)
+plot_per_episode(values=beta_value_140206b, errors=beta_error_140206b, m_name=grb_list[2], start=start_140206,
+                 end=end_140206, difference=diff_140206, midpoints=midpoint_140206, axes=ax[2])
 
-plot_per_episode(
-    values=ep_value_150210a,
-    errors=ep_error_150210a,
-    m_name=grb_list[3],
-    start=start_150210,
-    end=end_150210,
-    difference=diff_150210,
-    midpoints=midpoint_150210,
-    axes=ax[3],
-    special_counter=[i.interval.is_sp for i in grb_best[3]],
-)
+plot_per_episode(values=beta_value_231129c, errors=beta_error_231129c, m_name=grb_list[3], start=start_231129,
+                 end=end_231129, difference=diff_231129, midpoints=midpoint_231129, axes=ax[3])
 
 [i.grid(True, which="both", alpha=0.5, ls="--") for i in ax]
 [i.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i in ax]
@@ -157,12 +124,22 @@ plt.close()
 # SAVE THE VALUES
 ######################################################################################################################
 
+list_of_eps = []
+for grb in grb_objs:
+    episode_labels = []
+    for interval in grb.intervals:
+        if interval.index is None:
+            episode_labels.append(interval.kind.value)
+        else:
+            episode_labels.append(f"{interval.kind.value}{interval.index}")
+    list_of_eps.append(episode_labels)
 
-list_of_values = [ep_value_080916c, ep_value_110721a, ep_value_110731a, ep_value_150210a]
-list_of_errors = [ep_error_080916c, ep_error_110721a, ep_error_110731a, ep_error_150210a]
-list_of_names = [[i.name for i in j if i.name != "PL"] for j in grb_best]
+list_of_values = [beta_value_080916c, beta_value_131014a, beta_value_140206b, beta_value_231129c]
+list_of_errors = [beta_error_080916c, beta_error_131014a, beta_error_140206b, beta_error_231129c]
+list_of_names = [[i.name for i in j] for j in grb_best]
 
 save_value_error_as_parquet(
+    list_of_ep=list_of_eps,
     grb_names=grb_list_long,
     list_of_values=list_of_values,
     list_of_errors=list_of_errors,

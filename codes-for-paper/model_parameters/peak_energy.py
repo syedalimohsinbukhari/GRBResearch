@@ -1,140 +1,88 @@
 """Created on Dec 17 13:22:15 2025"""
 
-import json
+from typing import Tuple
 
-import matplotlib.pyplot as plt
 import numpy as np
-import numpy.typing as npt
+from matplotlib import pyplot as plt, ticker
 
+from grb_research import update_style, GRID_LINESTYLE, GRID_ALPHA
 from utils import (
     extract_parameter,
     convert_sbpl_to_band,
     find_project_root,
-    short_to_long,
+    prepare_grbs,
     LABEL_FONT_SIZE,
     TICK_FONT_SIZE,
     LEGEND_FONT_SIZE,
-    GRBCatalog,
     ModelSet,
     plot_per_episode,
     save_value_error_as_parquet,
 )
 
+update_style()
 
-def extract_peak_energy(best_model: ModelSet, seed: int = 42) -> tuple[npt.ArrayLike, npt.ArrayLike, npt.ArrayLike]:
-    value, error1, error2 = [], [], []
+
+def extract_peak_energy(
+    best_model: ModelSet, seed: int = 42
+) -> Tuple[np.typing.ArrayLike, np.typing.ArrayLike, np.typing.ArrayLike]:
+    """Extract peak energy (Ep) values and asymmetric errors from a model set."""
+    values, errors_hi, errors_lo = [], [], []
+
     for model in best_model:
         if "SBPL" in model.name:
-            lower_err, median, upper_err = convert_sbpl_to_band(model, seed=seed)
-            value.append(median)
-            error1.append(upper_err)
-            error2.append(lower_err)
+            err_lo, median, err_hi = convert_sbpl_to_band(model, seed=seed)
         else:
             result = extract_parameter(model, "e_peak")
-            if result is not None:
-                val, err = result
-                value.append(val)
-                error1.append(err)
-                error2.append(err)
+            median, err_hi = result if result is not None else (np.nan, np.nan)
+            err_lo = err_hi
 
-    return np.array(value), np.array(error1), np.array(error2)
+        values.append(median)
+        errors_hi.append(err_hi)
+        errors_lo.append(err_lo)
 
+    return np.asarray(values), np.asarray(errors_hi), np.asarray(errors_lo)
+
+
+grb_list = ["080916C", "131014A", "140206B", "231129C"]
 
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"
 
-with open(result_file, "r") as f:
-    example_data = json.load(f)
+_, grb_list_long, grb_objs, grb_best = prepare_grbs(grb_list, result_file, get_best=True)
 
-grb_list = ["080916C", "110721A", "140206B", "131014A"]
-grb_list_long = [short_to_long[i] for i in grb_list]
-
-gc = GRBCatalog.from_iterable(grb_list=grb_list, data=example_data, name_mapping=short_to_long)
-
-grb080916c = gc.get_grb(grb_list_long[0])
-grb110721a = gc.get_grb(grb_list_long[1])
-grb110731a = gc.get_grb(grb_list_long[2])
-grb150210a = gc.get_grb(grb_list_long[3])
-
-grb080916c_best = grb080916c.get_all_best_models()
-grb110721a_best = grb110721a.get_all_best_models()
-grb110731a_best = grb110731a.get_all_best_models()
-grb150210a_best = grb150210a.get_all_best_models()
-
-start_080916, end_080916, diff_080916, midpoint_080916 = grb080916c.intervals.extract_interval_arrays(
-    return_include=("diff", "midpoint")
+starts, ends, diffs, midpoints = zip(
+    *(g.intervals.extract_interval_arrays(return_include=("diff", "midpoint")) for g in grb_objs)
 )
-start_110721, end_110721, diff_110721, midpoint_110721 = grb110721a.intervals.extract_interval_arrays(
-    return_include=("diff", "midpoint")
-)
-start_110731, end_110731, diff_110731, midpoint_110731 = grb110731a.intervals.extract_interval_arrays(
-    return_include=("diff", "midpoint")
-)
-start_150210, end_150210, diff_150210, midpoint_150210 = grb150210a.intervals.extract_interval_arrays(
-    return_include=("diff", "midpoint")
-)
-
-ep_value_080916c, ep_error1_080916c, ep_error2_080916c = extract_peak_energy(grb080916c_best)
-ep_value_110721a, ep_error1_110721a, ep_error2_110721a = extract_peak_energy(grb110721a_best)
-ep_value_110731a, ep_error1_110731a, ep_error2_110731a = extract_peak_energy(grb110731a_best)
-ep_value_150210a, ep_error1_150210a, ep_error2_150210a = extract_peak_energy(grb150210a_best)
+ep_values, ep_errors_hi, ep_errors_lo = zip(*(extract_peak_energy(best) for best in grb_best))
 
 _, ax = plt.subplots(4, 1, figsize=(5.5, 12))
 
-plot_per_episode(
-    values=ep_value_080916c,
-    errors=[ep_error1_080916c, ep_error2_080916c],
-    m_name=grb_list[0],
-    start=start_080916,
-    end=end_080916,
-    difference=diff_080916,
-    midpoints=midpoint_080916,
-    axes=ax[0],
-    special_counter=[i.interval.is_sp for i in grb080916c_best],
-)
+for i, axis in enumerate(ax):
+    plot_per_episode(values=ep_values[i], errors=[ep_errors_hi[i], ep_errors_lo[i]], m_name=grb_list[i],
+                     start=starts[i], end=ends[i], difference=diffs[i], midpoints=midpoints[i], axes=axis)
 
-plot_per_episode(
-    values=ep_value_110721a,
-    errors=[ep_error1_110721a, ep_error2_110721a],
-    m_name=grb_list[1],
-    start=start_110721,
-    end=end_110721,
-    difference=diff_110721,
-    midpoints=midpoint_110721,
-    axes=ax[1],
-    special_counter=[i.interval.is_sp for i in grb110721a_best],
-)
+# --- Inset zoom on the trailing CPL episode of 140206B ---
+axins = ax[2].inset_axes([100, 900, 55, 1300], transform=ax[2].transData)
+axins.errorbar(midpoints[2][-1:], ep_values[2][-1:],
+               xerr=diffs[2][-1:] / 2,
+               yerr=[ep_errors_lo[2][-1:], ep_errors_hi[2][-1:]],
+               fmt="o", capsize=5, color='g')
+axins.text(midpoints[2][-1] + 2.5, ep_values[2][-1] + 250, "CPL", fontsize=LABEL_FONT_SIZE)
+axins.set_xlim(100, 155)
+axins.set_ylim(5500, 8500)
+axins.xaxis.set_major_locator(ticker.MultipleLocator(25))
+axins.spines['top'].set_visible(False)
+axins.spines['right'].set_visible(False)
+axins.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE)
+axins.tick_params(labelsize=TICK_FONT_SIZE - 2)
 
-plot_per_episode(
-    values=ep_value_110731a,
-    errors=[ep_error2_110731a, ep_error1_110731a],
-    m_name=grb_list[2],
-    start=start_110731,
-    end=end_110731,
-    difference=diff_110731,
-    midpoints=midpoint_110731,
-    axes=ax[2],
-    special_counter=[i.interval.is_sp for i in grb110731a_best],
-)
-
-plot_per_episode(
-    values=ep_value_150210a,
-    errors=[ep_error1_150210a, ep_error2_150210a],
-    m_name=grb_list[3],
-    start=start_150210,
-    end=end_150210,
-    difference=diff_150210,
-    midpoints=midpoint_150210,
-    axes=ax[3],
-    special_counter=[i.interval.is_sp for i in grb150210a_best],
-)
-
-[i.grid(True, which="both", alpha=0.5, ls="--") for i in ax]
-[i.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i in ax]
+[i.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE) for i in ax]
+ax[-1].set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE)
 [i.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i in ax]
+ax[2].set_ylim(top=3000)
 plt.xticks(fontsize=TICK_FONT_SIZE)
 plt.yticks(fontsize=TICK_FONT_SIZE)
-[i.legend(loc="upper center", frameon=False, fontsize=LEGEND_FONT_SIZE) for i in ax]
+[i.legend(loc="upper right", frameon=False, fontsize=LEGEND_FONT_SIZE) for i in ax]
 plt.tight_layout()
 # plt.show()
 [plt.savefig(f"./peak_energy_best__all.{i}", dpi=600) for i in ["png", "pdf"]]
@@ -144,16 +92,23 @@ plt.close()
 # SAVE THE VALUES
 ######################################################################################################################
 
+list_of_eps = []
+for grb in grb_objs:
+    episode_labels = []
+    for interval in grb.intervals:
+        if interval.index is None:
+            episode_labels.append(interval.kind.value)
+        else:
+            episode_labels.append(f"{interval.kind.value}{interval.index}")
+    list_of_eps.append(episode_labels)
 
-list_of_values = [ep_value_080916c, ep_value_110721a, ep_value_110731a, ep_value_150210a]
-list_of_errors1 = [ep_error1_080916c, ep_error1_110721a, ep_error1_110731a, ep_error1_150210a]
-list_of_errors2 = [ep_error2_080916c, ep_error2_110721a, ep_error2_110731a, ep_error2_150210a]
-list_of_names = [[i.name for i in j] for j in [grb080916c_best, grb110721a_best, grb110731a_best, grb150210a_best]]
+list_of_names = [[model.name for model in best] for best in grb_best]
 
 save_value_error_as_parquet(
+    list_of_ep=list_of_eps,
     grb_names=grb_list_long,
-    list_of_values=list_of_values,
-    list_of_errors=(list_of_errors1, list_of_errors2),
+    list_of_values=list(ep_values),
+    list_of_errors=(list(ep_errors_hi), list(ep_errors_lo)),
     list_of_names=list_of_names,
     filename="peak_energy.parquet",
     asym_errs=True,
