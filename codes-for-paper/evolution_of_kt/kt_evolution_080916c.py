@@ -5,8 +5,7 @@ import numpy as np
 from plotez import plot_errorbar, ErrorPlotConfig
 # from pymultifit.fitters import LineFitter
 
-from src.grb_research import find_project_root, ModelSet
-from src.grb_research.grb_core import prepare_grbs, GRB
+from src.grb_research import GRB, ModelSet, find_project_root, prepare_grbs
 
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"

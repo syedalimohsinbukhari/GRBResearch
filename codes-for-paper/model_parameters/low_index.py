@@ -6,8 +6,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 
-from grb_research import update_style
-from grb_research.grb_core import prepare_grbs
+from grb_research import prepare_grbs, update_style
 from utils import (
     extract_parameter,
     find_project_root,
@@ -47,6 +46,8 @@ grb_list_long = [short_to_long[i] for i in grb_list]
 
 _, _, grb_objs, _ = prepare_grbs(grb_list, result_file, get_best=True)
 
+has_BB = [['BB' in i.name for i in t_.get_all_best_models()] for t_ in grb_objs]
+
 gc = GRBCatalog.from_iterable(grb_list=grb_list, data=example_data, name_mapping=short_to_long)
 
 grb080916c = gc.get_grb(grb_list_long[0])
@@ -77,29 +78,30 @@ alpha_value_131014a, alpha_error_131014a = extract_low_index(grb131014a_best)
 alpha_value_140206b, alpha_error_140206b = extract_low_index(grb140206b_best)
 alpha_value_231129c, alpha_error_231129c = extract_low_index(grb231129c_best)
 
-_, ax = plt.subplots(4, 1, figsize=(5.5, 12))
+_, ax = plt.subplots(2, 2, figsize=(10, 7.5))
+ax = ax.flatten()
 
 plot_per_episode(values=alpha_value_080916c, errors=alpha_error_080916c, m_name=grb_list[0], start=start_080916,
-                 end=end_080916, difference=diff_080916, midpoints=midpoint_080916, axes=ax[0])
+                 end=end_080916, difference=diff_080916, midpoints=midpoint_080916, axes=ax[0], has_BB=has_BB[0])
 
 plot_per_episode(values=alpha_value_131014a, errors=alpha_error_131014a, m_name=grb_list[1], start=start_131014,
-                 end=end_131014, difference=diff_131014, midpoints=midpoint_131014, axes=ax[1])
+                 end=end_131014, difference=diff_131014, midpoints=midpoint_131014, axes=ax[1], has_BB=has_BB[1])
 
 plot_per_episode(values=alpha_value_140206b, errors=alpha_error_140206b, m_name=grb_list[2], start=start_140206,
-                 end=end_140206, difference=diff_140206, midpoints=midpoint_140206, axes=ax[2])
+                 end=end_140206, difference=diff_140206, midpoints=midpoint_140206, axes=ax[2], has_BB=has_BB[2])
 
 plot_per_episode(values=alpha_value_231129c, errors=alpha_error_231129c, m_name=grb_list[3], start=start_231129,
-                 end=end_231129, difference=diff_231129, midpoints=midpoint_231129, axes=ax[3])
+                 end=end_231129, difference=diff_231129, midpoints=midpoint_231129, axes=ax[3], has_BB=has_BB[3])
 
 [i.grid(True, which="both", alpha=0.5, ls="--") for i in ax]
-[i.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i in ax]
-[i.set_ylabel(r"Lower Index [$\alpha$]", fontsize=LABEL_FONT_SIZE) for i in ax]
+[v.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i >= 2]
+[v.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i % 2 == 0]
 plt.xticks(fontsize=TICK_FONT_SIZE)
 plt.yticks(fontsize=TICK_FONT_SIZE)
 [i.legend(loc="best", frameon=False, fontsize=LEGEND_FONT_SIZE) for i in ax]
 plt.tight_layout()
 # plt.show()
-[plt.savefig(f"./low_index_best_all.{i}", dpi=600) for i in ["png", "pdf"]]
+[plt.savefig(f"./low_index_best__all.{i}", dpi=600) for i in ["png", "pdf"]]
 plt.close()
 
 ######################################################################################################################

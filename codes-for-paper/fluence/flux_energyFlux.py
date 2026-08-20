@@ -1,9 +1,6 @@
 """Created on May 26 20:25:58 2026"""
 
-from grb_research import TimeInterval, update_style
-from grb_research.grb_constants import long_to_short
-from grb_research.grb_time import EpisodeTypes
-from grb_research.grb_utils import EpisodeMarkerResolver
+from grb_research import EpisodeMarkerResolver, EpisodeTypes, TimeInterval, long_to_short, update_style
 
 """
 GRB Spectral Properties Visualization Script

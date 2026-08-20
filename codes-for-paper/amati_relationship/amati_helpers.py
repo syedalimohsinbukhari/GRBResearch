@@ -5,8 +5,7 @@ from typing import List, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from src.grb_research.grb_calculations import mc_e_iso_sampler, ModelResampler
-from src.grb_research.grb_utils import break_e_to_e_peak, EpisodeMarkerResolver
+from src.grb_research import EpisodeMarkerResolver, ModelResampler, break_e_to_e_peak, mc_e_iso_sampler
 
 # ---------------------------------------------------------------------------
 # Normalization — single source of truth for axis units

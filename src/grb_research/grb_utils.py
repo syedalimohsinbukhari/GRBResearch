@@ -13,10 +13,9 @@ import seaborn
 from matplotlib.patches import Ellipse
 from scipy import stats
 
-from . import Model
 from .grb_constants import MODEL_PARAMETERS, NOK_THRESHOLD, OK_THRESHOLD, model_n_pars
 from .grb_enums import GRBModelsCombinations, ModelStatus
-from .grb_time import EpisodeTypes
+from .grb_model import Model
 
 m_style = seaborn.color_palette("deep6")
 
@@ -381,10 +380,10 @@ def break_e_to_e_peak(index1_sbpl, break_energy_sbpl, index2_sbpl):
     f1 = index1_sbpl + 2
     f2 = -(index2_sbpl + 2)
     f3 = (0.3 / 2) * np.log(f1 / f2)
-    return break_energy_sbpl * 10**f3
+    return break_energy_sbpl * 10 ** f3
 
 
-def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, axes):
+def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, axes, has_BB=None):
     errors = np.asarray(errors)
 
     axes.plot([], [], ls="none", marker=None, label=f"GRB{m_name}")
@@ -404,15 +403,18 @@ def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, 
         if errors.ndim == 1:
             y_err = errors[i]
         else:
-            y_err = errors[:, i : i + 1]  # (2, 1), symmetric or asymmetric
+            y_err = errors[:, i: i + 1]  # (2, 1), symmetric or asymmetric
+
+        col = "b" if (start[i] < start[0] or end[i] > end[0] + 0.064) else "g"
 
         axes.errorbar(
             x,
             values[i],
             xerr=difference[i],
             yerr=y_err,
-            color="b" if (start[i] < start[0] or end[i] > end[0] + 0.064) else "g",
+            color=col,
             marker=".",
+            mfc='w' if has_BB[i] else col,
             ms=10,
             capsize=5,
         )
@@ -669,13 +671,15 @@ def analyze_model_hierarchy(is_good: Dict) -> Dict[str, ModelStatus]:
     return results
 
 
-def save_value_error_as_parquet(list_of_ep, grb_names, list_of_values, list_of_errors, list_of_names, filename, asym_errs=False):
+def save_value_error_as_parquet(list_of_ep, grb_names, list_of_values, list_of_errors, list_of_names, filename,
+                                asym_errs=False):
     if asym_errs:
         if not isinstance(list_of_errors, tuple) or len(list_of_errors) != 2:
             raise ValueError("list_of_errors must be a tuple of two lists when asym_errs is True")
         if not all(isinstance(err, list) for err in list_of_errors):
             raise ValueError("list_of_errors must contain only lists")
-        temp_ = [np.column_stack((i, j, k, l)) for i, j, k, l in zip(list_of_ep, list_of_values, list_of_errors[0], list_of_errors[1])]
+        temp_ = [np.column_stack((i, j, k, l)) for i, j, k, l in
+                 zip(list_of_ep, list_of_values, list_of_errors[0], list_of_errors[1])]
         df = pd.DataFrame(np.vstack([*temp_]), columns=["ep", "value", "error_low", "error_high"])
     else:
         temp_ = [np.column_stack((i, j, k)) for i, j, k in zip(list_of_ep, list_of_values, list_of_errors)]

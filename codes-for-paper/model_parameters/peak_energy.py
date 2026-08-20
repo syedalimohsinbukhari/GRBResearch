@@ -5,7 +5,7 @@ from typing import Tuple
 import numpy as np
 from matplotlib import pyplot as plt, ticker
 
-from grb_research import update_style, GRID_LINESTYLE, GRID_ALPHA
+from grb_research import update_style, GRID_LINESTYLE, GRID_ALPHA, SAVE_DPI
 from utils import (
     extract_parameter,
     convert_sbpl_to_band,
@@ -50,16 +50,19 @@ result_file = SOURCE_ROOT / "results.json"
 
 _, grb_list_long, grb_objs, grb_best = prepare_grbs(grb_list, result_file, get_best=True)
 
+has_BB = [['BB' in i.name for i in t_.get_all_best_models()] for t_ in grb_objs]
+
 starts, ends, diffs, midpoints = zip(
     *(g.intervals.extract_interval_arrays(return_include=("diff", "midpoint")) for g in grb_objs)
 )
 ep_values, ep_errors_hi, ep_errors_lo = zip(*(extract_peak_energy(best) for best in grb_best))
 
-_, ax = plt.subplots(4, 1, figsize=(5.5, 12))
+_, ax = plt.subplots(2, 2, figsize=(10, 7.5))
+ax = ax.flatten()
 
 for i, axis in enumerate(ax):
     plot_per_episode(values=ep_values[i], errors=[ep_errors_hi[i], ep_errors_lo[i]], m_name=grb_list[i],
-                     start=starts[i], end=ends[i], difference=diffs[i], midpoints=midpoints[i], axes=axis)
+                     start=starts[i], end=ends[i], difference=diffs[i], midpoints=midpoints[i], axes=axis, has_BB=has_BB[i])
 
 # --- Inset zoom on the trailing CPL episode of 140206B ---
 axins = ax[2].inset_axes([100, 900, 55, 1300], transform=ax[2].transData)
@@ -77,15 +80,15 @@ axins.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE)
 axins.tick_params(labelsize=TICK_FONT_SIZE - 2)
 
 [i.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE) for i in ax]
-ax[-1].set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE)
-[i.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i in ax]
+[v.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i >= 2]
+[v.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i % 2 == 0]
 ax[2].set_ylim(top=3000)
 plt.xticks(fontsize=TICK_FONT_SIZE)
 plt.yticks(fontsize=TICK_FONT_SIZE)
 [i.legend(loc="upper right", frameon=False, fontsize=LEGEND_FONT_SIZE) for i in ax]
 plt.tight_layout()
 # plt.show()
-[plt.savefig(f"./peak_energy_best__all.{i}", dpi=600) for i in ["png", "pdf"]]
+[plt.savefig(f"./peak_energy_best__all.{i}", dpi=SAVE_DPI) for i in ["png", "pdf"]]
 plt.close()
 
 ######################################################################################################################

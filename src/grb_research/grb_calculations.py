@@ -432,7 +432,7 @@ def mc_e_iso_sampler(
     lum_distance = lambda z: FlatLambdaCDM(h0, omega_m).luminosity_distance(z).cgs.value
     lum_distance = quad(lum_distance, 0, z)[0]
 
-    return 4 * np.pi * lum_distance**2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
+    return 4 * np.pi * lum_distance ** 2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
 
 
 def plot_best_models(best_models, n_rows=2, n_cols=None, grb_name=None, fig_size=(15, 4), save=True):
@@ -490,9 +490,9 @@ def plot_best_models(best_models, n_rows=2, n_cols=None, grb_name=None, fig_size
         med, low, high = credible_interval_partition(samples)
         med, low, high = med * kev_to_erg, low * kev_to_erg, high * kev_to_erg
         ax[i].loglog(
-            x, med * x**2, f"{color}--", label=f"{v.name.replace('_', '+')}\n({v.interval.start} - {v.interval.end})"
+            x, med * x ** 2, f"{color}--", label=f"{v.name.replace('_', '+')}\n({v.interval.start} - {v.interval.end})"
         )
-        ax[i].fill_between(x, low * x**2, high * x**2, color=color, alpha=0.2)
+        ax[i].fill_between(x, low * x ** 2, high * x ** 2, color=color, alpha=0.2)
         ax[i].legend()
 
     [v.set_xlabel("Energy [keV]") for i, v in enumerate(ax) if i > (n_cols - 1)]
@@ -573,20 +573,21 @@ def plot_all_models(
                 # ax[i].fill_between(x, low * x ** 2, high * x ** 2, color="k", alpha=0.2)
                 ax[i].loglog(
                     x,
-                    med * x**2,
+                    med * x ** 2,
                     "k-",
                     zorder=1000,
                     label=f"{w.interval.kind}" + r"$_\text{" + f'{w.name.replace("_", "+")}' + r"}$",
                 )
-                ax[i].fill_between(x, low * x**2, high * x**2, zorder=1000, color="k", alpha=0.2)
+                ax[i].fill_between(x, low * x ** 2, high * x ** 2, zorder=1000, color="k", alpha=0.2)
             else:
                 sub = (
                     f"{w.interval.kind}{w.interval.index}"
                     if w.interval.kind in [EpisodeTypes.TR, EpisodeTypes.SP]
                     else w.interval.kind
                 )
-                ax[i].loglog(x, med * x**2, "--", label=f"{sub}" + r"$_\text{" + f'{w.name.replace("_", "+")}' + r"}$")
-                ax[i].fill_between(x, low * x**2, high * x**2, alpha=0.2)
+                ax[i].loglog(x, med * x ** 2, "--",
+                             label=f"{sub}" + r"$_\text{" + f'{w.name.replace("_", "+")}' + r"}$")
+                ax[i].fill_between(x, low * x ** 2, high * x ** 2, alpha=0.2)
 
             ax[i].set_ylim(bottom=3.2e-10, top=8.7e-5)
 

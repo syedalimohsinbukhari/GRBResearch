@@ -13,8 +13,7 @@ from amati_helpers import (
     EP_NORM,
     EI_NORM,
 )
-from grb_research import find_project_root, ModelSet, update_style
-from grb_research.grb_core import prepare_grbs
+from grb_research import ModelSet, find_project_root, prepare_grbs, update_style
 
 # ---------------------------------------------------------------------------
 # Data

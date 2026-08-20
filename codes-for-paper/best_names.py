@@ -2,8 +2,7 @@
 
 import json
 
-from src.grb_research import GRBCatalog, find_project_root, ModelSet
-from src.grb_research.grb_constants import short_to_long
+from src.grb_research import GRBCatalog, ModelSet, find_project_root, short_to_long
 
 SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"

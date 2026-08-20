@@ -4,10 +4,7 @@ import numpy as np
 import pandas as pd
 from black import Path
 
-from src.grb_research import find_project_root
-from src.grb_research.grb_calculations import FluxFluenceCalculator
-from src.grb_research.grb_core import prepare_grbs
-from src.grb_research.grb_time import EpisodeTypes
+from src.grb_research import EpisodeTypes, FluxFluenceCalculator, find_project_root, prepare_grbs
 
 # ---------------------------------------------------------------------------
 # Configuration

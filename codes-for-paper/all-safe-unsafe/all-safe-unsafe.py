@@ -4,16 +4,18 @@ import json
 
 import matplotlib.pyplot as plt
 
-from grb_research import GRBCatalog, find_project_root, update_style
-from grb_research.grb_constants import (
-    MODEL_ORDER,
-    short_to_long,
-    TICK_FONT_SIZE,
+from grb_research import (
+    GRBCatalog,
+    GRBPlotStyle as grbStyle,
     LABEL_FONT_SIZE,
     LEGEND_FONT_SIZE,
     LEGEND_TITLE_FONT_SIZE,
+    MODEL_ORDER,
+    TICK_FONT_SIZE,
+    find_project_root,
+    short_to_long,
+    update_style,
 )
-from grb_research.grb_styles import GRBPlotStyle as grbStyle
 
 update_style()
 
