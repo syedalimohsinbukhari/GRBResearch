@@ -56,8 +56,17 @@ class GRBPlotStyle:
     # ------------------------------------------------------------------
     # GRB → color (Okabe–Ito colorblind-safe, high contrast on white)
     # ------------------------------------------------------------------
+    # Okabe-Ito colourblind-safe palette. The paper's four-GRB sample
+    # (080916C, 131014A, 140206B, 231129C) is assigned the four most mutually
+    # distinct hues; the remaining entries belong to earlier, disjoint samples
+    # and deliberately reuse those hues, since no figure mixes the two sets.
     GRB_COLORS: dict[str, str] = {
+        # current paper sample
         "GRB080916C": "#0072B2",  # sky blue
+        "GRB131014A": "#E69F00",  # orange
+        "GRB140206B": "#009E73",  # bluish green
+        "GRB231129C": "#CC79A7",  # reddish purple
+        # earlier samples, not part of this paper
         "GRB110721A": "#D55E00",  # vermillion
         "GRB110731A": "#009E73",  # bluish green
         "GRB150210A": "#CC79A7",  # reddish purple
@@ -68,6 +77,9 @@ class GRBPlotStyle:
 
     GRB_SHORT: dict[str, str] = {
         "GRB080916C": "080916C",
+        "GRB131014A": "131014A",
+        "GRB140206B": "140206B",
+        "GRB231129C": "231129C",
         "GRB110721A": "110721A",
         "GRB110731A": "110731A",
         "GRB150210A": "150210A",
