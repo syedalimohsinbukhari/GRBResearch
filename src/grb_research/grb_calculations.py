@@ -9,14 +9,16 @@ import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike
-from scipy.integrate import simpson, quad
+from scipy.integrate import simpson
 from tqdm import tqdm
 
 from .grb_constants import kev_to_erg, LABEL_FONT_SIZE
 from .grb_enums import GRBModelsCombinations as gmC
 from .grb_fits_io import build_composite_schema
 from .grb_model import Model
-from .grb_sed import SpectralModels
+from .grb_constants import model_n_pars
+from .grb_sed import MODEL_MAP, SpectralModels
+from .grb_seds import band_function, black_body, cutoff_powerlaw, powerlaw, smoothly_broken_power_law
 from .grb_time import EpisodeTypes
 
 
@@ -388,21 +390,34 @@ def mc_e_iso_sampler(
     rng_instance = get_rng(seed=seed_number, rng=rng)
     bolometric_fluence = 0
 
-    energy_bolometric = np.logspace(start=bol_min, stop=bol_max, num=n_grid)
-    e_observed = energy_bolometric / (1 + z)
-    # ph / cm^2 / s / keV (n_samples, n_grid)
+    # The bolometric band [bol_min, bol_max] is defined in the REST frame, so the fitted (observer-frame) spectrum must
+    # be evaluated at the observed energies E_rest / (1 + z). Since logspace(a, b) / (1 + z) == logspace(a - s, b - s)
+    # with s = log10(1 + z), the shift is applied to the exponents directly — this keeps the grid the model is
+    # evaluated on identical to the grid integrated over. Pairing a rest-frame grid with an observed-frame variable,
+    # as this previously did, underestimated E_iso by ~3.7x at z = 4.35 (BUGS.md, BUG-11).
+    redshift_shift = np.log10(1 + z)
+    bol_range_observed = (bol_min - redshift_shift, bol_max - redshift_shift)
+    e_observed = np.logspace(start=bol_range_observed[0], stop=bol_range_observed[1], num=n_grid)
+
+    # model_type="energy" returns E * N(E) [keV / cm^2 / s / keV], so integrating it over dE directly gives energy flux
     bolometric_samples = np.asarray(
         mc_spectra_sampler(
             model=model,
             model_type="energy",
-            e_range=(bol_min, bol_max),
+            e_range=bol_range_observed,
             n_samples=n_samples,
             n_grid=n_grid,
             samples=samples,
             rng=rng_instance,
         )
     )
+    # keV / cm^2 / s -> keV / cm^2 over the interval
+    bolometric_flux = simpson(y=bolometric_samples, x=e_observed, axis=1)
+
     if method == 1:
+        # Explicit k-correction route: S_bol = S_obs * k, with k = (bolometric-band fluence) / (detector-band fluence).
+        # Algebraically, the detector term cancels, so this must agree with method 2 exactly; it is kept as an
+        # independent cross-check.
         energy_detector = np.logspace(start=det_min, stop=det_max, num=n_grid)
         detector_samples = np.asarray(
             mc_spectra_sampler(
@@ -414,25 +429,18 @@ def mc_e_iso_sampler(
                 rng=rng_instance,
             )
         )
-        # keV / cm^2: vectorized integration over axis=1
-        detector_fluence = simpson(
-            y=detector_samples * energy_detector, x=energy_detector, axis=1
-        )  # * model.interval.duration
+        detector_flux = simpson(y=detector_samples, x=energy_detector, axis=1)
 
-        numerator = simpson(y=bolometric_samples * e_observed, x=e_observed, axis=1)
-        denominator = simpson(y=detector_samples * energy_detector, x=energy_detector, axis=1)
-
-        # k correction
-        bolometric_fluence = detector_fluence * (numerator / denominator)
-        # erg / cm^2
-        bolometric_fluence = np.asarray(bolometric_fluence, dtype=float) * kev_to_erg
+        s_obs = detector_flux * model.interval.duration
+        k_correction = bolometric_flux / detector_flux
+        bolometric_fluence = np.asarray(s_obs * k_correction, dtype=float) * kev_to_erg
     elif method == 2:
-        bolometric_fluence = simpson(y=bolometric_samples, x=e_observed, axis=1) * kev_to_erg * model.interval.duration
+        bolometric_fluence = bolometric_flux * kev_to_erg * model.interval.duration
 
-    lum_distance = lambda z: FlatLambdaCDM(h0, omega_m).luminosity_distance(z).cgs.value
-    lum_distance = quad(lum_distance, 0, z)[0]
+    # astropy already returns d_L(z); integrating it over z would give \int_0^z d_L dz', which is not a distance
+    lum_distance = FlatLambdaCDM(h0, omega_m).luminosity_distance(z).cgs.value
 
-    return 4 * np.pi * lum_distance ** 2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
+    return 4 * np.pi * lum_distance**2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
 
 
 def plot_best_models(best_models, n_rows=2, n_cols=None, grb_name=None, fig_size=(15, 4), save=True):
@@ -824,3 +832,97 @@ class FluxFluenceCalculator:
             return percentiles[1], percentiles[2] - percentiles[1], percentiles[1] - percentiles[0]
 
         return output
+
+
+# ─── Component-resolved energy fluxes ────────────────────────────────────────
+
+_SED_FUNCTIONS = {
+    gmC.PL: powerlaw,
+    gmC.CPL: cutoff_powerlaw,
+    gmC.BAND: band_function,
+    gmC.SBPL: smoothly_broken_power_law,
+    gmC.BB: black_body,
+}
+
+
+def _component_energy_flux_block(model_name, values, energy):
+    """Vectorised per-component energy-flux integration for a block of draws."""
+    components = MODEL_MAP.get(gmC(model_name.lower()), (gmC(model_name.lower()),))
+    energy_row = energy[None, :]
+
+    fluxes = {}
+    total = np.zeros((values.shape[0], energy.size))
+
+    idx = 0
+    for component in components:
+        n_pars = model_n_pars[component]
+        pars = [values[:, idx + offset, None] for offset in range(n_pars)]
+        idx += n_pars
+
+        contribution = energy_row * _SED_FUNCTIONS[component](energy_row, *pars)
+        total += contribution
+        fluxes[component] = simpson(y=contribution, x=energy, axis=1)
+
+    return fluxes, simpson(y=total, x=energy, axis=1)
+
+
+def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
+    """Integrate each spectral component's energy flux, and their total.
+
+    Components are sliced in declaration order exactly as
+    ``SpectralModels._evaluate_components`` does, so the decomposition is
+    identical to the rest of the codebase. Every draw is evaluated at once --
+    parameters of shape ``(n, 1)`` broadcast against energy of shape
+    ``(1, n_grid)`` -- and integrated by a single ``simpson(..., axis=1)``,
+    matching the pattern used by :func:`mc_e_iso_sampler`.
+
+    Draws are processed in blocks so peak memory stays bounded at roughly
+    ``chunk * n_grid * 8`` bytes per component.
+
+    Parameters
+    ----------
+    model_name :
+        Composite model name, e.g. ``"SBPL_BB"``.
+    values :
+        Parameter values, shape ``(n_pars,)`` or ``(n, n_pars)``.
+    energy :
+        Energy grid in keV, shape ``(n_grid,)``. Integration is performed over
+        this grid, so it defines the band.
+    chunk :
+        Number of draws evaluated per block.
+
+    Returns
+    -------
+    (fluxes, total) :
+        ``fluxes`` maps each component enum to an array of shape ``(n,)``;
+        ``total`` has shape ``(n,)``. Both are in keV / cm^2 / s.
+    """
+    values = np.atleast_2d(np.asarray(values, dtype=float))
+
+    parts, totals = [], []
+    for start in range(0, values.shape[0], chunk):
+        block_fluxes, block_total = _component_energy_flux_block(model_name, values[start : start + chunk], energy)
+        parts.append(block_fluxes)
+        totals.append(block_total)
+
+    merged = {component: np.concatenate([p[component] for p in parts]) for component in parts[0]}
+    return merged, np.concatenate(totals)
+
+
+def draw_model_samples(model, n_samples: int = 10_000, seed: Optional[int] = None, rng=None):
+    """Draw fit-covariance parameter samples, filtered by physical constraints.
+
+    Mirrors the sampling half of :func:`mc_spectra_sampler` -- multivariate
+    normal draws from the (symmetrised) fit covariance, then
+    :meth:`ModelResampler.run_resampler` to reject unphysical rows -- but
+    returns the parameter draws instead of evaluated spectra, so callers can
+    compute their own derived quantities from correlated samples.
+    """
+    rng_instance = get_rng(seed=seed, rng=rng)
+
+    covariance = model.covariance_matrix_value
+    covariance = 0.5 * (covariance + covariance.T)
+    means = [p.value for p in model.parameters]
+
+    samples = rng_instance.multivariate_normal(mean=means, cov=covariance, size=n_samples)
+    return ModelResampler(model=model, samples=samples, rng=rng_instance, destroy=True).run_resampler()

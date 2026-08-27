@@ -5,7 +5,14 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 
 from .grb_atomic import Parameter, ParameterSet, CovarianceMatrix
-from .grb_calculations import FluxFluenceCalculator, ModelResampler, mc_e_iso_sampler
+from .grb_calculations import (
+    FluxFluenceCalculator,
+    ModelResampler,
+    component_energy_fluxes,
+    draw_model_samples,
+    get_rng,
+    mc_e_iso_sampler,
+)
 from .grb_constants import (
     LABEL_FONT_SIZE,
     LEGEND_FONT_SIZE,

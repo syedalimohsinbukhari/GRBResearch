@@ -18,16 +18,22 @@ def smoothly_broken_power_law(energy, amp, e_piv, index1, break_energy, delta, i
     m = (index2 - index1) / 2
     b = (index1 + index2) / 2
 
-    if break_energy < 0:
-        return np.full(shape=energy.shape, fill_value=np.nan)
+    # break_energy may be an array of Monte-Carlo draws, so the invalid case is
+    # masked rather than short-circuited: a scalar negative break energy still
+    # yields an all-NaN result, exactly as before. The placeholder keeps the
+    # log of a non-positive number from being evaluated at all.
+    break_energy = np.asarray(break_energy, dtype=float)
+    invalid = break_energy <= 0
+    safe_break = np.where(invalid, 1.0, break_energy)
 
-    a = np.log10(energy / break_energy) / delta
+    a = np.log10(energy / safe_break) / delta
     beta = m * delta * np.log(0.5 * (np.exp(a) + np.exp(-a)))
 
-    a_piv = np.log10(e_piv / break_energy) / delta
+    a_piv = np.log10(e_piv / safe_break) / delta
     beta_piv = m * delta * np.log(0.5 * (np.exp(a_piv) + np.exp(-a_piv)))
 
-    return amp * (energy / e_piv) ** b * 10.0 ** (beta - beta_piv)
+    spectrum = amp * (energy / e_piv) ** b * 10.0 ** (beta - beta_piv)
+    return np.where(invalid, np.nan, spectrum)
 
 
 def band_function(energy, amp, e_peak, index1, index2):
