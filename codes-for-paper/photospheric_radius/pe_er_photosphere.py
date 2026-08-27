@@ -57,6 +57,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from astropy.cosmology import FlatLambdaCDM
+from matplotlib.lines import Line2D
 
 from grb_research import (
     EpisodeMarkerResolver,
@@ -95,8 +96,8 @@ GRB_LIST = ["080916C", "131014A", "140206B", "231129C"]
 # Spectroscopic redshifts; None means unmeasured and therefore swept.
 REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
 
-# Redshift sweep for the bursts without a measured z: the bulk of the long-GRB
-# distribution, with z = 2 (close to the long-GRB median) as the fiducial.
+# Redshift sweep for the bursts without a measured z:
+# the bulk of the long-GRB distribution, with z = 2 (close to the long-GRB median) as the fiducial.
 Z_MIN, Z_MAX, Z_POINTS = 0.5, 5.0, 25
 Z_FIDUCIAL = 2.0
 
@@ -110,8 +111,8 @@ T90_MARKERS = ["o", "s", "X", "D"]
 # Line style per episode, so overlapping curves of one burst stay separable.
 EPISODE_LINESTYLES = ["-", "--", "-.", ":", (0, (3, 1, 1, 1))]
 
-# Edge width for hollow (BB-augmented) markers. Not covered by grb_constants,
-# which sets marker size but not edge weight.
+# Edge width for hollow (BB-augmented) markers.
+# Not covered by grb_constants, which sets marker size but not edge weight.
 MARKER_EDGE_WIDTH = 1.4
 
 # Observer-frame integration band and MC settings, matching Phase 1 exactly so
@@ -380,7 +381,7 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
     """r_0(z) and Gamma(z): swept bursts as curves, the fixed-z burst as points."""
     update_style()
 
-    figure, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 6.0))
+    figure, axes = plt.subplots(nrows=1, ncols=2, figsize=(12.5, 5.0))
 
     for axis, key, axis_label in (
         (axes[0], "r_zero", r"$r_0$ [cm]"),
@@ -403,7 +404,8 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
                 upper = np.array([getattr(r, key)[2] for r in track])
 
                 marker = resolver.resolve(track[0].interval_kind)
-                series_label = f"{grb} {episode} ({track[0].model_name})"
+                m_name = r"$_\text{" + f'{track[0].model_name.replace("_", "+")}' + r"}$"
+                series_label = f"{grb} {episode}{m_name}"
 
                 if track[0].z_source == "spectroscopic":
                     # Single measured redshift: one point per episode.
@@ -413,14 +415,12 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
                         color=colour, linestyle="none", capsize=3, label=series_label,
                     )
                 else:
-                    # Swept redshift: a curve per episode, distinguished by line
-                    # style, with a marker at the fiducial z so the episode is
-                    # identifiable without tracing the line.
+                    # Swept redshift: a curve per episode, distinguished by line style, with a marker at the fiducial z
+                    # so the episode is identifiable without tracing the line.
                     style = EPISODE_LINESTYLES[position % len(EPISODE_LINESTYLES)]
                     fiducial = int(np.argmin(np.abs(z_values - Z_FIDUCIAL)))
-                    # The marker must ride on the *labelled* artist, otherwise the
-                    # legend handle is a bare line and the per-episode marker --
-                    # which is what identifies TR1 vs TR2 vs EX0 -- never appears.
+                    # The marker must ride on the *labeled* artist, otherwise the legend handle is a bare line,
+                    # and the per-episode marker -- which is what identifies TR1 vs. TR2 vs. EX0 -- never appears.
                     axis.plot(
                         z_values, medians, color=colour, linewidth=LINE_WIDTH, linestyle=style,
                         marker=marker, markevery=[fiducial], markerfacecolor="none",
@@ -428,7 +428,7 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
                     )
                     axis.fill_between(z_values, medians - lower, medians + upper, color=colour, alpha=0.12)
 
-        axis.axvline(Z_FIDUCIAL, color="0.4", linestyle=":", linewidth=LINE_WIDTH)
+        axis.axvline(Z_FIDUCIAL, color="0.4", linestyle=":", linewidth=LINE_WIDTH, zorder=-10)
         axis.set_xscale("log")
         axis.set_yscale("log")
         # A log axis over 0.5-5 otherwise labels only the single decade tick.
@@ -448,7 +448,7 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
     # grouping readable top-to-bottom.
     handles, labels = axes[0].get_legend_handles_labels()
     figure.legend(handles, labels, loc="center left", ncols=1, fontsize=LEGEND_FONT_SIZE, frameon=True,
-                  bbox_to_anchor=(0.0, 0.5))
+                  bbox_to_anchor=(0.05, 0.5))
 
     plt.tight_layout(rect=(0.235, 0, 1, 1))
 
