@@ -108,7 +108,7 @@ plot_per_episode(values=beta_value_140206b, errors=beta_error_140206b, m_name=gr
 plot_per_episode(values=beta_value_231129c, errors=beta_error_231129c, m_name=grb_list[3], start=start_231129,
                  end=end_231129, difference=diff_231129, midpoints=midpoint_231129, axes=ax[3], has_BB=has_BB[3])
 
-[i.grid(True, which="both", alpha=0.5, ls="--") for i in ax]
+# [i.grid(True, which="both", alpha=0.5, ls="--") for i in ax]
 [v.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i >= 2]
 [v.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i % 2 == 0]
 plt.xticks(fontsize=TICK_FONT_SIZE)

@@ -79,7 +79,7 @@ axins.spines['right'].set_visible(False)
 axins.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE)
 axins.tick_params(labelsize=TICK_FONT_SIZE - 2)
 
-[i.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE) for i in ax]
+# [i.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE) for i in ax]
 [v.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i >= 2]
 [v.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i % 2 == 0]
 ax[2].set_ylim(top=3000)
