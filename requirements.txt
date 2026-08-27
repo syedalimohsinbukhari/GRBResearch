@@ -4,24 +4,28 @@ astropy==6.1.7 ; python_full_version < '3.11'
     # via grbresearchwork
 astropy==8.0.1 ; python_full_version >= '3.11'
     # via grbresearchwork
-astropy-iers-data==0.2026.8.18.14.22.31
+astropy-iers-data==0.2026.8.24.0.24.29
     # via astropy
 black==26.5.1
     # via grbresearchwork
-click==8.4.2
+click==8.5.0
     # via black
 colorama==0.4.6 ; sys_platform == 'win32'
-    # via
-    #   click
-    #   tqdm
+    # via tqdm
 contourpy==1.3.2 ; python_full_version < '3.11'
     # via matplotlib
 contourpy==1.3.3 ; python_full_version >= '3.11'
     # via matplotlib
-cramjam==2.11.0
+cramjam==2.11.0 ; python_full_version < '3.11'
     # via fastparquet
+cramjam==2.12.1 ; python_full_version >= '3.11'
+    # via fastparquet
+custom-inherit==2.4.1
+    # via pymultifit
 cycler==0.12.1
     # via matplotlib
+deprecated==1.3.1
+    # via grbresearchwork
 fastparquet==2026.5.0
     # via grbresearchwork
 fonttools==4.63.0
@@ -33,49 +37,33 @@ kiwisolver==1.5.0
 matplotlib==3.10.9 ; python_full_version < '3.11'
     # via
     #   grbresearchwork
+    #   mpyez
     #   plotez
+    #   pymultifit
     #   seaborn
 matplotlib==3.11.1 ; python_full_version >= '3.11'
     # via
     #   grbresearchwork
+    #   mpyez
     #   plotez
+    #   pymultifit
     #   seaborn
+mpyez==0.1.0
+    # via pymultifit
 mypy-extensions==1.1.0
     # via black
-numpy==2.2.6 ; python_full_version < '3.11'
+numpy==2.0.2
     # via
     #   astropy
     #   contourpy
     #   fastparquet
     #   grbresearchwork
     #   matplotlib
+    #   mpyez
     #   pandas
     #   plotez
     #   pyerfa
-    #   scipy
-    #   seaborn
-numpy==2.4.6 ; python_full_version == '3.11.*'
-    # via
-    #   astropy
-    #   contourpy
-    #   fastparquet
-    #   grbresearchwork
-    #   matplotlib
-    #   pandas
-    #   plotez
-    #   pyerfa
-    #   scipy
-    #   seaborn
-numpy==2.5.2 ; python_full_version >= '3.12'
-    # via
-    #   astropy
-    #   contourpy
-    #   fastparquet
-    #   grbresearchwork
-    #   matplotlib
-    #   pandas
-    #   plotez
-    #   pyerfa
+    #   pymultifit
     #   scipy
     #   seaborn
 packaging==26.3
@@ -84,12 +72,7 @@ packaging==26.3
     #   black
     #   fastparquet
     #   matplotlib
-pandas==2.3.3 ; python_full_version < '3.11'
-    # via
-    #   fastparquet
-    #   grbresearchwork
-    #   seaborn
-pandas==3.0.5 ; python_full_version >= '3.11'
+pandas==2.3.3
     # via
     #   fastparquet
     #   grbresearchwork
@@ -98,19 +81,21 @@ pathspec==1.1.1
     # via black
 pillow==12.3.0
     # via matplotlib
-platformdirs==4.11.3
+platformdirs==4.11.4
     # via black
-plotez==0.3.3.post1
+plotez==0.4.0
     # via grbresearchwork
 pyarrow==25.0.1
     # via grbresearchwork
 pyerfa==2.0.1.5
     # via astropy
+pymultifit==1.0.9
+    # via grbresearchwork
 pyparsing==3.3.2
     # via matplotlib
 pyqt6==6.11.0
     # via grbresearchwork
-pyqt6-qt6==6.11.1
+pyqt6-qt6==6.11.2
     # via pyqt6
 pyqt6-sip==13.12.0
     # via pyqt6
@@ -120,18 +105,26 @@ python-dateutil==2.9.0.post0
     #   pandas
 pytokens==0.4.1
     # via black
-pytz==2026.3.post1 ; python_full_version < '3.11'
+pytz==2026.3.post1
     # via pandas
 pyyaml==6.0.3
     # via astropy
 scipy==1.15.3 ; python_full_version < '3.11'
-    # via grbresearchwork
+    # via
+    #   grbresearchwork
+    #   pymultifit
 scipy==1.17.1 ; python_full_version == '3.11.*'
-    # via grbresearchwork
-scipy==1.18.0 ; python_full_version >= '3.12'
-    # via grbresearchwork
+    # via
+    #   grbresearchwork
+    #   pymultifit
+scipy==1.18.1 ; python_full_version >= '3.12'
+    # via
+    #   grbresearchwork
+    #   pymultifit
 seaborn==0.13.2
     # via grbresearchwork
+setuptools==84.0.0
+    # via mpyez
 six==1.17.0
     # via python-dateutil
 tomli==2.4.1 ; python_full_version < '3.11'
@@ -140,7 +133,9 @@ tqdm==4.70.0
     # via grbresearchwork
 typing-extensions==4.16.0 ; python_full_version < '3.11'
     # via black
-tzdata==2026.3 ; python_full_version < '3.11' or sys_platform == 'emscripten' or sys_platform == 'win32'
+tzdata==2026.3
     # via pandas
 uncertainties==3.2.3
     # via grbresearchwork
+wrapt==2.3.0
+    # via deprecated

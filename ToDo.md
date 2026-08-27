@@ -20,10 +20,14 @@
 
 ### Blackbody Component Diagnostics
 
-- [ ] **Photospheric radius & Lorentz factor:** Use BB temperature and flux to estimate the emitting radius and bulk Lorentz factor (e.g., Pe'er 2007 method).
-- [ ] **Multi-component decomposition:** Quantify the fractional BB contribution to total energy flux and track its evolution throughout the burst.
+- [x] **Photospheric radius & Lorentz factor:** Use BB temperature and flux to estimate the emitting radius and bulk Lorentz factor (e.g., Pe'er 2007 method).
+  <br>Done in `codes-for-paper/photospheric_radius/`. Implementation validated by reproducing Pe'er et al.'s own GRB 970828 worked example ($r_0$ to 3 significant figures). See `photospheric_radius.md`.
+- [x] **Multi-component decomposition:** Quantify the fractional BB contribution to total energy flux and track its evolution throughout the burst.
+  <br>Done in `codes-for-paper/bb_fraction/`. $f_\text{BB}$ computed for all 13 BB-inclusive episodes, in Pe'er's bolometric convention so it feeds the photospheric calculation directly. See `bb_fraction.md`.
 - [ ] **Fireball parameter estimation:** From $kT$ and flux, estimate additional fireball parameters such as baryon loading, initial radius, and possible jet magnetization.
-- [ ] **Lorentz factor lower limits:** Use opacity arguments (e.g., $\gamma\gamma$ pair production) to constrain the minimum bulk Lorentz factor.
+  <br>*Partially done.* Baryon loading $\eta$ and initial radius $r_0$ both fall out of the Pe'er method ($\eta = \Gamma$ in the coasting phase) and are reported. **Magnetization $\sigma_0$ is still outstanding** — Pe'er's pure-fireball equations cannot give it; it needs the hybrid-outflow framework of Gao \& Zhang (2015), now in the literature folder.
+- [x] **Lorentz factor lower limits:** Use opacity arguments (e.g., $\gamma\gamma$ pair production) to constrain the minimum bulk Lorentz factor.
+  <br>Done in `codes-for-paper/lorentz_factor/`, now evaluated per episode rather than for T90 alone, with MC errors. Note the limits are conservative and weaker than published treatments of the same burst — see `lorentz_factor.md` §5 for the uncertainty budget.
 
 ### Model Robustness and Alternatives
 

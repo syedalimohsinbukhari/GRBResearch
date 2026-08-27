@@ -18,4 +18,6 @@ dependencies = [
     "plotez",
     "pyarrow",
     "fastparquet",
+    "pymultifit>=1.0.9",
+    "deprecated[sphinx]>=1.3.1",
 ]
