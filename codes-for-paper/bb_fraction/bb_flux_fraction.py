@@ -50,6 +50,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from plotez import plot_errorband, ErrorBandConfig
 
 from grb_research import (
     EpisodeMarkerResolver,
@@ -59,7 +60,7 @@ from grb_research import (
     find_project_root,
     prepare_grbs,
     update_style,
-)
+    TITLE_FONT_SIZE)
 from grb_research.grb_constants import LEGEND_FONT_SIZE, SAVE_DPI, kev_to_erg
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 
@@ -74,8 +75,8 @@ T90_MARKERS = ["o", "s", "X", "D"]
 E_MIN_KEV, E_MAX_KEV = 1.0, 1.0e4
 N_GRID = 1_000
 
-# Monte-Carlo draws evaluated per vectorised block. Bounds peak memory at
-# roughly chunk * n_grid * 8 bytes per component array.
+# Monte-Carlo draws evaluated per vectorized block.
+# Bounds peak memory at roughly chunk * n_grid * 8 bytes per component array.
 CHUNK_SIZE = 2_000
 
 # MC settings — the project-wide convention (amati_relationship.py:39-41).
@@ -130,7 +131,7 @@ def analytic_bb_bolometric_flux(amp_bb, kt_bb):
 
         int_0^inf E N(E) dE = amp * kT^4 * Gamma(4) * zeta(4) = amp * kT^4 * pi^4 / 15.
     """
-    return amp_bb * kt_bb**4 * np.pi**4 / 15.0
+    return amp_bb * kt_bb ** 4 * np.pi ** 4 / 15.0
 
 
 # ─── Monte Carlo ─────────────────────────────────────────────────────────────
@@ -266,8 +267,8 @@ def make_plot(rows, path_stem="bb_flux_fraction"):
     _, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 9))
     axes = axes.flatten()
 
-    # A single y-range across all panels, so the burst-to-burst contrast in
-    # f_BB is readable at a glance rather than rescaled away per panel.
+    # A single y-range across all panels, so the burst-to-burst contrast in f_BB is readable at a glance rather than
+    # rescaled away per panel.
     highest = max(r.f_bb + r.f_bb_hi for r in rows)
     y_top = np.ceil(highest * 20.0) / 20.0 + 0.05
 
@@ -276,28 +277,44 @@ def make_plot(rows, path_stem="bb_flux_fraction"):
         subset = [r for r in rows if r.grb_name == grb]
 
         for r in subset:
+            r: FractionResult
             mid = 0.5 * (r.t_start + r.t_stop)
             half = 0.5 * (r.t_stop - r.t_start)
-            axis.errorbar(
-                mid,
-                r.f_bb,
-                xerr=half,
-                yerr=[[r.f_bb_lo], [r.f_bb_hi]],
-                marker=r.marker,
-                color=colour,
-                # Hollow markers denote BB-augmented models, per the project
-                # convention; every point here is BB-augmented by construction.
-                markerfacecolor="none",
-                markeredgewidth=MARKER_EDGE_WIDTH,
-                linestyle="none",
-                capsize=3,
-                label=f"{r.episode} ({r.model_name})",
-            )
+            m_name = r"$_\text{" + f'{r.model_name.replace("_", "+")}' + r"}$"
+            if r.episode != 'T90':
+                axis.errorbar(
+                    mid,
+                    r.f_bb,
+                    xerr=half,
+                    yerr=[[r.f_bb_lo], [r.f_bb_hi]],
+                    marker=r.marker,
+                    color=colour,
+                    # Hollow markers denote BB-augmented models, per the project convention;
+                    # construction BB-augments every point here.
+                    markerfacecolor="none",
+                    markeredgewidth=MARKER_EDGE_WIDTH,
+                    linestyle="none",
+                    capsize=3,
+                    label=f"{r.episode}{m_name}",
+                )
+            else:
+                plot_errorband([r.t_start, r.t_stop],
+                               [r.f_bb, r.f_bb],
+                               r.f_bb - r.f_bb_hi,
+                               r.f_bb + r.f_bb_lo, line=True,
+                               line_config={'c': 'k', 'ls': '--', 'lw': 2},
+                               band_config=ErrorBandConfig(color='k', alpha=0.15),
+                               data_label=f"{r.episode}{m_name}",
+                               axis=axis,
+                               plot_title='',
+                               x_label='',
+                               y_label='')
 
-        axis.set_title(grb)
+        # axis.set_title(grb)
         axis.set_ylim(0, y_top)
         if subset:
-            axis.legend(loc="upper right", ncols=1, fontsize=LEGEND_FONT_SIZE)
+            axis.legend(loc="upper right", title=grb, ncols=1, fontsize=LEGEND_FONT_SIZE,
+                        title_fontsize=TITLE_FONT_SIZE)
 
     for axis in axes[2:]:
         axis.set_xlabel(r"Time since $T_0$ [s]")
