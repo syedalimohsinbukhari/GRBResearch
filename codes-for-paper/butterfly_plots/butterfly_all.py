@@ -4,10 +4,9 @@ import json
 
 import numpy as np
 
-from grb_research import update_style
-from src.grb_research import GRBCatalog, find_project_root
-from src.grb_research.grb_calculations import plot_all_models
-from src.grb_research.grb_constants import short_to_long
+from grb_research import GRBCatalog, find_project_root, update_style
+from grb_research.grb_calculations import plot_all_models
+from grb_research.grb_constants import short_to_long
 
 update_style()
 
