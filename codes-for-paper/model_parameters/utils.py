@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import numpy as np
 from scipy.odr import ODR, Model as ODRModel, RealData
 
-from src.grb_research import (  # noqa: F401
+from grb_research import (  # noqa: F401
     EpisodeMarkerResolver,
     EpisodeTypes,
     GRBCatalog,
