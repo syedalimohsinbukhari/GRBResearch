@@ -18,14 +18,23 @@ observer-frame and bolometric. Pe'er et al. quote f_BB = 0.64 +/- 0.20 for
 GRB 970828 at its break time, which sets the scale to expect.
 
 Because f_BB is a ratio of two fluxes evaluated over the same band at the same
-epoch, it is independent of redshift and of the assumed cosmology -- neither
-enters this calculation, so neither is reported as a per-row assumption. What
-*is* an assumption is the integration band, which is reported explicitly.
+epoch, it is independent of redshift and of the assumed cosmology *within one
+episode* -- neither enters the observer-frame calculation below. This does
+*not* make f_BB comparable *across* bursts at different redshifts: a fixed
+observer-frame band is a different rest-frame band for each burst, and since
+the BB peaks near 3.92 kT, this changes how much of the BB's rest-frame shape
+falls inside vs outside a shared comparison window. So a second, rest-frame
+f_BB is also computed here (1 keV - 10 MeV rest-frame, matching the rest-frame
+band already used for S_bol/E_iso elsewhere in this work), using each burst's
+actual or assumed redshift -- z = 4.35 (measured) for GRB080916C, swept over
+[0.5, 5.0] with z = 2 marked as the fiducial for the other three, mirroring
+the precedent already established for this exact problem in
+photospheric_radius/pe_er_photosphere.py. See bb_fraction.md Sec 2.2b.
 
-The band is the observer-frame 1 keV - 10 MeV used for the bolometric fluence
-elsewhere in this work. The blackbody is fully contained within it: the script
-checks each interval's band-integrated BB flux against the analytic all-
-frequency result
+The observer-frame band is 1 keV - 10 MeV, matching the bolometric band used
+for fluence elsewhere in this work. The blackbody is fully contained within
+it: the script checks each interval's band-integrated BB flux (in both bands)
+against the analytic all-frequency result
 
     F_BB(0, inf) = amp_bb * (kT)^4 * pi^4 / 15
 
@@ -35,12 +44,14 @@ and reports the captured fraction, so the approximation to Pe'er's
 Uncertainties are propagated by Monte Carlo: parameters are drawn from the fit
 covariance and pushed through the model-specific physical constraints via
 ModelResampler (the same machinery mc_spectra_sampler uses), then f_BB is
-recomputed per draw and summarised by percentiles.
+recomputed per draw and summarised by percentiles. The same draws are reused
+for the observer-frame and every rest-frame/redshift evaluation, so the two
+are directly comparable rather than adding independent MC noise.
 
 Outputs:
-    bb_flux_fraction.csv   -- one row per BB-inclusive interval
-    bb_flux_fraction.png   -- f_BB vs time, one panel per GRB
-    bb_flux_fraction.pdf
+    bb_flux_fraction.csv            -- one row per BB-inclusive interval per redshift
+    bb_flux_fraction.png / .pdf     -- f_BB (observer-frame) vs time, one panel per GRB
+    bb_flux_fraction_rest_vs_z.png / .pdf  -- f_BB (rest-frame) vs redshift
 """
 
 from __future__ import annotations
@@ -61,7 +72,7 @@ from grb_research import (
     prepare_grbs,
     update_style,
     TITLE_FONT_SIZE)
-from grb_research.grb_constants import LEGEND_FONT_SIZE, SAVE_DPI, kev_to_erg
+from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 
 # ─── Configuration ───────────────────────────────────────────────────────────
@@ -71,9 +82,36 @@ GRB_LIST = ["080916C", "131014A", "140206B", "231129C"]
 # Per-GRB T90 marker, matching amati_relationship.py so the two figures agree.
 T90_MARKERS = ["o", "s", "X", "D"]
 
-# Observer-frame integration band, log10(keV): 1 keV - 10 MeV.
+# Line style per episode in the rest-vs-z plot, so overlapping curves of one
+# burst stay separable (matches pe_er_photosphere.py's convention).
+EPISODE_LINESTYLES = ["-", "--", "-.", ":", (0, (3, 1, 1, 1))]
+
+# Observer-frame integration band, fixed, log10(keV): 1 keV - 10 MeV.
 E_MIN_KEV, E_MAX_KEV = 1.0, 1.0e4
+
+# Rest-frame integration band, log10(keV): 1 keV - 10 MeV, matching the
+# rest-frame band already used for S_bol / E_iso elsewhere in this work.
+E_MIN_KEV_REST, E_MAX_KEV_REST = 1.0, 1.0e4
+
 N_GRID = 1_000
+
+# Spectroscopic redshifts; None means unmeasured and therefore swept.
+# Matches photospheric_radius/pe_er_photosphere.py's REDSHIFTS exactly, since
+# this is the same problem (three of four bursts lack a spectroscopic z).
+REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
+
+# Redshift sweep for the bursts without a measured z: the bulk of the
+# long-GRB distribution, with z = 2 (close to the long-GRB median) as the
+# fiducial -- same grid as pe_er_photosphere.py, so the two are comparable.
+Z_MIN, Z_MAX, Z_POINTS = 0.5, 5.0, 25
+Z_FIDUCIAL = 2.0
+
+# Cosmology -- Fana Dirirsa et al. (2019), the single cosmology used across
+# this project. Inert for the observer-frame columns (f_BB is
+# redshift/cosmology independent per-episode there); reported per CLAUDE.md
+# now that z is a genuine input for the rest-frame columns.
+H0 = 69.6
+OM0 = 0.286
 
 # Monte-Carlo draws evaluated per vectorized block.
 # Bounds peak memory at roughly chunk * n_grid * 8 bytes per component array.
@@ -93,7 +131,7 @@ MARKER_EDGE_WIDTH = 1.4
 
 @dataclass
 class FractionResult:
-    """f_BB and supporting quantities for a single interval."""
+    """f_BB (observer- and rest-frame, at one redshift) for a single interval."""
 
     grb_name: str
     episode: str
@@ -109,6 +147,12 @@ class FractionResult:
     flux_bb: tuple
     flux_total: tuple
     bb_captured: float
+    z: float
+    z_source: str
+    f_bb_rest: float
+    f_bb_rest_lo: float
+    f_bb_rest_hi: float
+    bb_captured_rest: float
 
 
 # ─── Spectral integration ────────────────────────────────────────────────────
@@ -138,15 +182,23 @@ def analytic_bb_bolometric_flux(amp_bb, kt_bb):
 
 
 def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
-    """Compute f_BB and its MC uncertainty for one BB-inclusive model."""
+    """Compute f_BB (observer- and rest-frame, at every z) for one BB-inclusive model.
+
+    Returns a list of ``FractionResult``, one per redshift in this burst's
+    z-grid (a single spectroscopic z, or the swept grid). The observer-frame
+    values are identical across the list -- they don't depend on z -- only
+    the rest-frame values and the z/z_source columns vary.
+    """
     energy = np.logspace(np.log10(E_MIN_KEV), np.log10(E_MAX_KEV), N_GRID)
-    rng_instance = rng if rng is not None else np.random.default_rng(seed)
 
     best_values = np.array([p.value for p in model.parameters])
     best_bb, best_total = split_energy_flux(model.name, best_values, energy)
     flux_bb_best = float(best_bb[0])
 
-    samples = draw_model_samples(model, n_samples=n_samples, rng=rng_instance)
+    # get_rng(seed=..., rng=...) is applied inside draw_model_samples itself,
+    # so the seed/rng are threaded straight through rather than building a
+    # second, redundant RNG here.
+    samples = draw_model_samples(model, n_samples=n_samples, seed=seed, rng=rng)
     sample_bb, sample_total = split_energy_flux(model.name, samples, energy)
     fractions = sample_bb / sample_total
 
@@ -154,8 +206,7 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
     # tails of amp_bb and are discarded rather than clipped, so the percentiles
     # are not artificially piled up at the boundaries.
     usable = np.isfinite(fractions) & (fractions > 0) & (fractions < 1)
-    fractions = fractions[usable]
-    lo, med, hi = np.percentile(fractions, PERCENTILES)
+    lo, med, hi = np.percentile(fractions[usable], PERCENTILES)
 
     def summarise(values):
         """(median, minus, plus) from the 16/50/84 percentiles."""
@@ -170,9 +221,10 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
     kt_bb = model.get_parameter_value("kt_bb")
     amp_bb = model.get_parameter_value("amp_bb")
     kt_err = next((p.error for p in model.parameters if p.name == "kt_bb"), np.nan)
-    captured = flux_bb_best / analytic_bb_bolometric_flux(amp_bb, kt_bb)
+    bb_bolometric = analytic_bb_bolometric_flux(amp_bb, kt_bb)
+    captured = flux_bb_best / bb_bolometric
 
-    return FractionResult(
+    common = dict(
         grb_name=f"GRB{grb_name}",
         episode=episode_label(model.interval),
         marker="",  # assigned by the caller, which knows the GRB's T90 marker
@@ -189,6 +241,50 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
         bb_captured=captured,
     )
 
+    measured_z = REDSHIFTS[grb_name]
+    if measured_z is not None:
+        z_grid, z_source = np.array([measured_z]), "spectroscopic"
+    else:
+        z_grid = np.logspace(np.log10(Z_MIN), np.log10(Z_MAX), Z_POINTS)
+        z_grid = np.unique(np.append(z_grid, Z_FIDUCIAL))
+        z_source = "swept"
+
+    results = []
+    for z in z_grid:
+        # The rest-frame band [E_MIN_KEV_REST, E_MAX_KEV_REST] is fixed; the fitted (observer-frame) spectrum must be
+        # evaluated at the observed energies that correspond to it, E_rest / (1 + z). Since logspace(a, b) / (1 + z)
+        # == logspace(a - s, b - s) with s = log10(1 + z), the shift is applied to the exponents directly, mirroring
+        # mc_e_iso_sampler (grb_calculations.py:394-396) -- pairing a rest-frame grid with an observed-frame variable
+        # underestimated E_iso by ~3.7x at z=4.35 once already (BUGS.md, BUG-11); the same care applies here.
+        redshift_shift = np.log10(1 + z)
+        e_rest_as_observed = np.logspace(
+            np.log10(E_MIN_KEV_REST) - redshift_shift,
+            np.log10(E_MAX_KEV_REST) - redshift_shift,
+            N_GRID,
+        )
+
+        rest_best_bb, _ = split_energy_flux(model.name, best_values, e_rest_as_observed)
+        captured_rest = float(rest_best_bb[0]) / bb_bolometric
+
+        rest_sample_bb, rest_sample_total = split_energy_flux(model.name, samples, e_rest_as_observed)
+        rest_fractions = rest_sample_bb / rest_sample_total
+        usable_rest = np.isfinite(rest_fractions) & (rest_fractions > 0) & (rest_fractions < 1)
+        rest_lo, rest_med, rest_hi = np.percentile(rest_fractions[usable_rest], PERCENTILES)
+
+        results.append(
+            FractionResult(
+                z=float(z),
+                z_source=z_source,
+                f_bb_rest=rest_med,
+                f_bb_rest_lo=rest_med - rest_lo,
+                f_bb_rest_hi=rest_hi - rest_med,
+                bb_captured_rest=captured_rest,
+                **common,
+            )
+        )
+
+    return results
+
 
 # ─── Driver ──────────────────────────────────────────────────────────────────
 
@@ -202,7 +298,7 @@ def episode_label(interval):
 
 
 def collect_results():
-    """Compute f_BB for every BB-inclusive BEST model in the sample."""
+    """Compute f_BB for every BB-inclusive BEST model in the sample, at every redshift."""
     root = find_project_root()
     _, _, grb_objects, _ = prepare_grbs(grb_list=GRB_LIST, result_file=root / "results.json", get_best=True)
 
@@ -212,19 +308,36 @@ def collect_results():
         for model in grb.get_all_best_models():
             if "BB" not in model.name:
                 continue
-            result = compute_fraction(model, short_name)
-            result.marker = resolver.resolve(model.interval)
-            rows.append(result)
+            results = compute_fraction(model, short_name)
+            marker = resolver.resolve(model.interval)
+            for result in results:
+                result.marker = marker
+            rows.extend(results)
+
+            shown = min(results, key=lambda r: abs(r.z - (REDSHIFTS[short_name] or Z_FIDUCIAL)))
             print(
-                f"  GRB{short_name:<9} {result.episode:<5} {model.name:<12} "
-                f"f_BB = {result.f_bb:6.4f} -{result.f_bb_lo:6.4f} +{result.f_bb_hi:6.4f}   "
-                f"(BB captured in band: {result.bb_captured * 100:5.2f}%)"
+                f"  GRB{short_name:<9} {shown.episode:<5} {model.name:<12} z={shown.z:<5.2f} ({shown.z_source})   "
+                f"f_BB(obs) = {shown.f_bb:6.4f} -{shown.f_bb_lo:6.4f} +{shown.f_bb_hi:6.4f}   "
+                f"f_BB(rest) = {shown.f_bb_rest:6.4f} -{shown.f_bb_rest_lo:6.4f} +{shown.f_bb_rest_hi:6.4f}"
             )
     return rows
 
 
+def _reference_rows(rows):
+    """One row per (grb, episode, model): the spectroscopic z, or the row nearest the fiducial z.
+
+    Observer-frame values don't depend on z, so any single row per group carries the correct
+    f_bb/flux_bb/bb_captured for the time-series plot; this only avoids re-plotting the same
+    point once per swept z. Mirrors pe_er_photosphere.py's table-collapse logic.
+    """
+    groups: dict = {}
+    for r in rows:
+        groups.setdefault((r.grb_name, r.episode, r.model_name), []).append(r)
+    return [min(group, key=lambda r: abs(r.z - Z_FIDUCIAL)) for group in groups.values()]
+
+
 def write_csv(rows, path="bb_flux_fraction.csv"):
-    """Write the results table, one self-describing row per interval."""
+    """Write the results table, one self-describing row per interval per redshift."""
     frame = pd.DataFrame(
         [
             {
@@ -248,6 +361,16 @@ def write_csv(rows, path="bb_flux_fraction.csv"):
                 "flux_total_err_lower_erg_cm2_s": r.flux_total[1],
                 "flux_total_err_upper_erg_cm2_s": r.flux_total[2],
                 "bb_fraction_captured_in_band": r.bb_captured,
+                "z": r.z,
+                "z_source": r.z_source,
+                "H0": H0,
+                "Om0": OM0,
+                "e_min_keV_rest": E_MIN_KEV_REST,
+                "e_max_keV_rest": E_MAX_KEV_REST,
+                "f_bb_rest": r.f_bb_rest,
+                "f_bb_rest_err_lower": r.f_bb_rest_lo,
+                "f_bb_rest_err_upper": r.f_bb_rest_hi,
+                "bb_fraction_captured_in_band_rest": r.bb_captured_rest,
                 "n_samples": N_SAMPLES,
                 "seed": SEED,
             }
@@ -255,26 +378,27 @@ def write_csv(rows, path="bb_flux_fraction.csv"):
         ]
     )
     frame.to_csv(path, index=False)
-    print(f"\nSaved: {path}")
+    print(f"\nSaved: {path}  ({len(frame)} rows)")
     return frame
 
 
 def make_plot(rows, path_stem="bb_flux_fraction"):
-    """f_BB against interval mid-time, one panel per GRB."""
+    """f_BB (observer-frame) against interval mid-time, one panel per GRB."""
     update_style()
 
+    reference = _reference_rows(rows)
     grbs = [f"GRB{g}" for g in GRB_LIST]
     _, axes = plt.subplots(nrows=2, ncols=2, figsize=(12, 9))
     axes = axes.flatten()
 
     # A single y-range across all panels, so the burst-to-burst contrast in f_BB is readable at a glance rather than
     # rescaled away per panel.
-    highest = max(r.f_bb + r.f_bb_hi for r in rows)
+    highest = max(r.f_bb + r.f_bb_hi for r in reference)
     y_top = np.ceil(highest * 20.0) / 20.0 + 0.05
 
     for i, (grb, axis) in enumerate(zip(grbs, axes)):
         colour = GRBPlotStyle.GRB_COLORS[grb]
-        subset = [r for r in rows if r.grb_name == grb]
+        subset = [r for r in reference if r.grb_name == grb]
 
         for r in subset:
             r: FractionResult
@@ -328,12 +452,83 @@ def make_plot(rows, path_stem="bb_flux_fraction"):
     print(f"Saved: {path_stem}.png / .pdf")
 
 
+def make_rest_vs_z_plot(rows, path_stem="bb_flux_fraction_rest_vs_z"):
+    """f_BB (rest-frame) vs redshift: swept bursts as curves, GRB080916C as fixed points.
+
+    Mirrors pe_er_photosphere.py's r_0(z)/Gamma(z) sweep plot -- same grid, same fiducial-marker
+    convention -- to show the full redshift dependence for the three bursts without a
+    spectroscopic z, rather than committing to one assumed value.
+    """
+    update_style()
+    figure, axis = plt.subplots(figsize=(7.5, 5.5))
+
+    for index, short_name in enumerate(GRB_LIST):
+        grb = f"GRB{short_name}"
+        colour = GRBPlotStyle.GRB_COLORS[grb]
+        subset = [r for r in rows if r.grb_name == grb]
+        if not subset:
+            continue
+
+        episodes = sorted({r.episode for r in subset})
+        for position, episode in enumerate(episodes):
+            track = sorted((r for r in subset if r.episode == episode), key=lambda r: r.z)
+            z_values = np.array([r.z for r in track])
+            medians = np.array([r.f_bb_rest for r in track])
+            lower = np.array([r.f_bb_rest_lo for r in track])
+            upper = np.array([r.f_bb_rest_hi for r in track])
+
+            first = track[0]
+            m_name = r"$_\text{" + f'{first.model_name.replace("_", "+")}' + r"}$"
+            series_label = f"{grb} {episode}{m_name}"
+
+            if first.z_source == "spectroscopic":
+                # Single measured redshift: one point per episode.
+                axis.errorbar(
+                    z_values, medians, yerr=[lower, upper],
+                    marker=first.marker, markerfacecolor="none", markeredgewidth=MARKER_EDGE_WIDTH,
+                    color=colour, linestyle="none", capsize=3, label=series_label,
+                )
+            else:
+                # Swept redshift: a curve per episode, distinguished by line style, with a marker at the fiducial z
+                # so the episode is identifiable without tracing the line. The marker must ride on the *labeled*
+                # artist, otherwise the legend handle is a bare line and the per-episode marker never appears.
+                style = EPISODE_LINESTYLES[position % len(EPISODE_LINESTYLES)]
+                fiducial = int(np.argmin(np.abs(z_values - Z_FIDUCIAL)))
+                axis.plot(
+                    z_values, medians, color=colour, linewidth=LINE_WIDTH, linestyle=style,
+                    marker=first.marker, markevery=[fiducial], markerfacecolor="none",
+                    markeredgewidth=MARKER_EDGE_WIDTH, label=series_label,
+                )
+                axis.fill_between(z_values, medians - lower, medians + upper, color=colour, alpha=0.12)
+
+    axis.axvline(Z_FIDUCIAL, color="0.4", linestyle=":", linewidth=LINE_WIDTH, zorder=-10)
+    axis.set_xscale("log")
+    z_ticks = [0.5, 1.0, 2.0, 3.0, 5.0]
+    axis.set_xticks(z_ticks, minor=False)
+    axis.set_xticklabels([f"{t:g}" for t in z_ticks])
+    axis.set_xticks([], minor=True)
+    axis.set_xlabel(r"Redshift $z$")
+    axis.set_ylabel(r"$f_\mathrm{BB}^\mathrm{rest} = F_\mathrm{BB}/F_\mathrm{total}$ (rest-frame band)")
+
+    axis.legend(loc="upper right", ncols=1, fontsize=LEGEND_FONT_SIZE)
+    plt.tight_layout()
+
+    for extension in ("png", "pdf"):
+        plt.savefig(f"./{path_stem}.{extension}", dpi=SAVE_DPI)
+    plt.close()
+    print(f"Saved: {path_stem}.png / .pdf")
+
+
 def main():
-    print("Computing blackbody flux fractions "
-          f"({E_MIN_KEV:g}-{E_MAX_KEV:g} keV, observer frame, {N_SAMPLES} MC samples)\n")
+    print(
+        "Computing blackbody flux fractions "
+        f"(observer {E_MIN_KEV:g}-{E_MAX_KEV:g} keV; rest-frame {E_MIN_KEV_REST:g}-{E_MAX_KEV_REST:g} keV, "
+        f"z swept {Z_MIN:g}-{Z_MAX:g} for unmeasured-z bursts, fiducial z={Z_FIDUCIAL:g}; {N_SAMPLES} MC samples)\n"
+    )
     rows = collect_results()
     write_csv(rows)
     make_plot(rows)
+    make_rest_vs_z_plot(rows)
 
 
 if __name__ == "__main__":

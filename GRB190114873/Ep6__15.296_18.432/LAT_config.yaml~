@@ -1,0 +1,14 @@
+source_name: 'GRB190114C'
+positional_arguments:
+    ra: 54.57
+    dec: -26.99
+time:
+    t_start: 15.296
+    t_stop: 18.432
+    trigger_time: 569192227.62590
+input_files:
+    event_file: '/home/syedalimohsinbukhari/NCGSA/0001__analysis_data/0002__download_and_making_LAT_data/ev.txt'
+    spacecraft_file: '/home/syedalimohsinbukhari/NCGSA/0001__analysis_data/0002__download_and_making_LAT_data/sc.fits'
+misc:
+    multiprocessor: True
+    n_cores: 6

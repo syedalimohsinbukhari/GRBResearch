@@ -1,0 +1,14 @@
+source_name: 'GRB190114CC'
+positional_arguments:
+    ra: 54.57
+    dec: -26.99
+time:
+    t_start: 0.704
+    t_stop: 117.056
+    trigger_time: 569192227.62590
+input_files:
+    event_file: '/home/sarl-ws-5/fermidata/018__GRB080916009/others/LAT/raw_lat_data/ev.txt'
+    spacecraft_file: '/home/sarl-ws-5/fermidata/018__GRB080916009/others/LAT/raw_lat_data/sc.fits'
+misc:
+    multiprocessor: True
+    n_cores: 6
