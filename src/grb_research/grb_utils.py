@@ -383,11 +383,29 @@ def break_e_to_e_peak(index1_sbpl, break_energy_sbpl, index2_sbpl):
     return break_energy_sbpl * 10 ** f3
 
 
-def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, axes, has_BB=None):
+def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, axes, has_BB=None,
+                      episode_labels=None, model_names=None, markers=None):
+    """Plot one GRB's values-vs-time panel: index 0 is the T90 reference band, the rest
+    are per-episode points.
+
+    ``episode_labels``/``model_names``, when given, must be parallel arrays to
+    ``start``/``end``/``values`` (same index -> same episode) -- if provided, each
+    point's legend entry identifies its episode and fitted model, per this project's
+    legend convention (a bare "GRB<name>" entry alone doesn't say which episode/model a
+    point is). Omit both to keep the old behaviour (single GRB-name legend entry only).
+
+    ``markers``, when given, is a parallel array of per-episode marker shapes (e.g. from
+    ``EpisodeMarkerResolver``), so EX0/EX1/TRn are visually distinguishable rather than
+    all sharing the same dot. Omit to keep the old fixed "." marker for every point.
+    """
     errors = np.asarray(errors)
 
-    axes.plot([], [], ls="none", marker=None, label=f"GRB{m_name}")
-    axes.plot([start[0], end[0]], [values[0], values[0]], c="k", ls="--", lw=2)
+    def _point_label(i):
+        if episode_labels is None or model_names is None:
+            return None
+        return f"{episode_labels[i]}" + r"$_\text{" + model_names[i].replace("_", "+") + r"}$"
+
+    axes.plot([start[0], end[0]], [values[0], values[0]], c="k", ls="--", lw=2, label=_point_label(0))
 
     if errors.ndim == 1:
         y_low = values[0] - errors[0]
@@ -413,10 +431,11 @@ def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, 
             xerr=difference[i],
             yerr=y_err,
             color=col,
-            marker=".",
+            marker=markers[i] if markers is not None else ".",
             mfc='w' if has_BB[i] else col,
-            ms=10,
+            # ms=10,
             capsize=5,
+            label=_point_label(i),
         )
 
 
