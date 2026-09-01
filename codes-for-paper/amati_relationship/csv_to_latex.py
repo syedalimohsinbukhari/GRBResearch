@@ -109,8 +109,8 @@ def csv_to_latex_table(csv_path="amati_relationship.csv", output_path="amati_rel
     latex_lines.append(
         "    \\caption{Intrinsic peak energy $E_\\text{i,p}$ and isotropic equivalent energy \\eiso "
         "for the time-integrated and time-resolved episodes of GRBs with known redshifts.\n"
-        "        Values are the median and the asymmetric errors on the posterior distribution "
-        "derived from $10^4$ MCMC samples.}"
+        "        Values are the median and asymmetric $1\\sigma$ errors from $10^4$ "
+        "Monte Carlo samples.}"
     )
     latex_lines.append("    \\label{tab:eiso}")
     latex_lines.append("    \\renewcommand{\\arraystretch}{1.25}")

@@ -112,7 +112,10 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
             "the energy radiated in $\\gamma$-rays; the scalings are "
             "$\\Gamma \\propto Y^{1/4}$, $r_0 \\propto Y^{-3/2}$ and $r_\\mathrm{ph} \\propto Y^{1/4}$.\n"
             f"        All quantities carry asymmetric $1\\sigma$ intervals from ${n_samples}$ Monte Carlo samples "
-            f"(seed ${seed}$).}}"
+            f"(seed ${seed}$), including $kT$, whose median here is the Monte Carlo-sampled statistic of the "
+            "same fit reported directly (fit value and native error) in \\cref{tab:bbfraction}; the two are "
+            "expected to agree only within the stated uncertainties, not exactly, since they summarize the "
+            "same underlying distribution differently.}"
         ),
         "    \\label{tab:photospheric}",
         "    \\renewcommand{\\arraystretch}{1.25}",

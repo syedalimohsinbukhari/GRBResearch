@@ -126,6 +126,8 @@ Redshift dependence is mild and analytically understandable: $\Gamma$ rises mono
 
 This CSV's `kt_bb_keV`/error columns are the median (and 16th/84th-percentile spread) of the resampled `kt_bb` draws used to propagate uncertainty into $\Gamma$, $r_0$, $r_\text{ph}$ — consistent with §2.4's point that everything here shares one draw set with Phase 1. `bb_flux_fraction.csv` has a same-named `kt_bb_keV` column that is instead the raw point-estimate fit value, so the two disagree at the ~0.01–0.02% level despite the shared name. Found and confirmed during the Phase 4 spot-check, `BUGS.md` OBS-09 — not a bug, but worth knowing before diffing the two files.
 
+**Surfaced to the reader, 2026-09-01:** `grb_paper_weaknesses_and_fixes.md`'s Priority 3 editorial pass flagged the resulting kT mismatch between `tab:photospheric` (this table) and `tab:bbfraction` (44.46 vs 44.45 keV for GRB080916C T90) as a possible inconsistency. `csv_to_latex.py`'s caption now cross-references `tab:bbfraction` explicitly, stating the two are different statistics of the same fit and are expected to agree only within their stated uncertainties — see `review-resolution.md` Priority 3 item 5.
+
 ## 5. Limitations and open questions
 
 - **$Y$ is unconstrained.** Everything scales with it as above. If $Y \sim 3$, $\Gamma$ rises by only $\sim 32\%$ but $r_0$ falls by a factor $\sim 5$ — $r_0$ is by far the more $Y$-sensitive quantity.

@@ -128,8 +128,10 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
             f"remaining bursts $f_\\mathrm{{BB}}^\\mathrm{{rest}}$ is quoted at a fiducial $z = "
             f"{Z_FIDUCIAL:g}$ and the full redshift dependence is shown in "
             "\\cref{fig:bbfraction-rest-vs-z}.\n"
-            f"        Values are the median and asymmetric $1\\sigma$ errors from ${n_samples}$ "
-            f"Monte Carlo samples (seed ${seed}$).}}"
+            "        $kT$ is the fitted blackbody temperature and its $1\\sigma$ error taken directly "
+            "from the joint spectral fit, not a Monte Carlo-derived quantity; the remaining columns "
+            f"are the median and asymmetric $1\\sigma$ errors from ${n_samples}$ "
+            f"Monte Carlo samples (seed ${seed}$) drawn from the same fit.}}"
         ),
         "    \\label{tab:bbfraction}",
         "    \\renewcommand{\\arraystretch}{1.25}",
