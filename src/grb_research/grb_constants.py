@@ -35,6 +35,7 @@ __all__ = [
     "FIGURE_DPI",
     "SAVE_DPI",
     "DEFAULT_FIGURE_SIZE",
+    "FIGURE_SIZE_4x4",
     "LINE_WIDTH",
     "MARKER_SIZE",
     "CAP_SIZE",
@@ -55,17 +56,22 @@ from .grb_enums import ModelGroupType
 
 LABEL_FONT_SIZE = 12
 LEGEND_FONT_SIZE = 10
-LEGEND_TITLE_FONT_SIZE = LEGEND_FONT_SIZE
-TICK_FONT_SIZE = 12
+LEGEND_TITLE_FONT_SIZE = LABEL_FONT_SIZE
+TICK_FONT_SIZE = LEGEND_FONT_SIZE
 TITLE_FONT_SIZE = 13
-ANNOTATION_FONT_SIZE = 10
+ANNOTATION_FONT_SIZE = 8
 
 # Figure / line / marker geometry
 FIGURE_DPI = 150
 SAVE_DPI = 600
 DEFAULT_FIGURE_SIZE = (8, 6)
+FIGURE_SIZE_4x4 = (12, 8)
 LINE_WIDTH = 1.0
-MARKER_SIZE = 6
+# MARKER_SIZE = 6
+# Matches gamma_comparison_plot.py's convention (previously a local MARKER_SIZE * 1.4 override there);
+# promoted to the shared default so every plot relying on update_style()'s rcParam gets it uniformly.
+# changed to MARKER_SIZE * 1.3 for default (Sep 2, 2026, 11:40:03)
+MARKER_SIZE = 7.8
 CAP_SIZE = 5
 AXES_LINE_WIDTH = 0.8
 

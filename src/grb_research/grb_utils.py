@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn
+from matplotlib.figure import Figure
 from matplotlib.patches import Ellipse
 from scipy import stats
 
-from .grb_constants import MODEL_PARAMETERS, NOK_THRESHOLD, OK_THRESHOLD, model_n_pars
+from .grb_constants import MODEL_PARAMETERS, NOK_THRESHOLD, OK_THRESHOLD, model_n_pars, SAVE_DPI
 from .grb_enums import GRBModelsCombinations, ModelStatus
 from .grb_model import Model
 
@@ -384,7 +385,7 @@ def break_e_to_e_peak(index1_sbpl, break_energy_sbpl, index2_sbpl):
 
 
 def plot_per_episode(values, errors, m_name, start, end, difference, midpoints, axes, has_BB=None,
-                      episode_labels=None, model_names=None, markers=None):
+                     episode_labels=None, model_names=None, markers=None):
     """Plot one GRB's values-vs-time panel: index 0 is the T90 reference band, the rest
     are per-episode points.
 
@@ -767,3 +768,12 @@ class EpisodeMarkerResolver:
         if kind_name == "SP":
             return "k"
         return "b"
+
+
+def save_fig(fig_: Figure, path: str | Path, second: str = 'png', bbox_extra_artists=None):
+    if bbox_extra_artists is None:
+        fig_.tight_layout()
+    format_ = ['pdf'] + [second]
+    for _f in format_:
+        fig_.savefig(f"{path}.{_f}", dpi=SAVE_DPI, bbox_extra_artists=bbox_extra_artists)
+    plt.close(fig_)

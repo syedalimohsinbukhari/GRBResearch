@@ -12,14 +12,14 @@ from numpy.typing import ArrayLike
 from scipy.integrate import simpson
 from tqdm import tqdm
 
-from .grb_constants import kev_to_erg, LABEL_FONT_SIZE
+from .grb_constants import kev_to_erg, model_n_pars
 from .grb_enums import GRBModelsCombinations as gmC
 from .grb_fits_io import build_composite_schema
 from .grb_model import Model
-from .grb_constants import model_n_pars
 from .grb_sed import MODEL_MAP, SpectralModels
 from .grb_seds import band_function, black_body, cutoff_powerlaw, powerlaw, smoothly_broken_power_law
 from .grb_time import EpisodeTypes
+from .grb_utils import save_fig
 
 
 def get_rng(seed: int | None = None, rng: np.random.Generator | None = None) -> np.random.Generator:
@@ -440,7 +440,7 @@ def mc_e_iso_sampler(
     # astropy already returns d_L(z); integrating it over z would give \int_0^z d_L dz', which is not a distance
     lum_distance = FlatLambdaCDM(h0, omega_m).luminosity_distance(z).cgs.value
 
-    return 4 * np.pi * lum_distance**2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
+    return 4 * np.pi * lum_distance ** 2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
 
 
 def plot_best_models(best_models, n_rows=2, n_cols=None, grb_name=None, fig_size=(15, 4), save=True):
@@ -553,13 +553,12 @@ def plot_all_models(
     rng = get_rng(seed=seed, rng=rng)
 
     n_grid = 500
-    n_samples = 10_000 if os.cpu_count() > 10 else 5_000
+    n_samples = 10_000 if os.cpu_count() > 10 else 10
     x = np.logspace(1, 7, n_grid)
 
-    # legend position per panel — keeps legend away from the spectral peaks
-    legend_loc = {0: "lower left", 1: "lower left", 2: "lower left", 3: "upper right"}
+    legend_col = {0: 3, 1: 1, 2: 3, 3: 1}
 
-    f, ax = plt.subplots(n_rows, n_cols, figsize=fig_size, sharey=True, sharex=True)
+    figure, ax = plt.subplots(n_rows, n_cols, figsize=fig_size, sharey=True, sharex=True)
     ax = ax.flatten()
 
     for i, v in enumerate(best_models):
@@ -597,26 +596,22 @@ def plot_all_models(
                              label=f"{sub}" + r"$_\text{" + f'{w.name.replace("_", "+")}' + r"}$")
                 ax[i].fill_between(x, low * x ** 2, high * x ** 2, alpha=0.2)
 
-            ax[i].set_ylim(bottom=3.2e-10, top=8.7e-5)
+            ax[i].set_ylim(bottom=3.2e-10, top=1.65e-4)
 
         # -- legend fix --------------------------------------------------------
-        ax[i].legend(
-            ncols=3, title=f"GRB{grb_name[i]}", shadow=True, loc=legend_loc.get(i, "best"), fontsize=7, title_fontsize=8
-        )
+        ax[i].legend(ncols=legend_col.get(i, 3), title=f"GRB{grb_name[i]}", loc="upper right")
         # ---------------------------------------------------------------------
 
         if i % n_cols == 0:  # fixed: was hardcoded % 2, now uses n_cols
-            ax[i].set_ylabel("Energy Flux\n" + r"[erg/cm$^2$/s]", fontsize=LABEL_FONT_SIZE)
+            ax[i].set_ylabel("Energy Flux\n" + r"[erg/cm$^2$/s]")
 
-    [i.grid(True, axis="both", ls="--", alpha=0.5, zorder=-10) for i in ax]
     [
-        ax[i].set_xlabel("Energy [keV]", fontsize=LABEL_FONT_SIZE)
+        ax[i].set_xlabel("Energy [keV]")
         for i in range(len(best_models) - n_cols, len(best_models))
     ]  # fixed: was hardcoded [ax[2], ax[3]]
-    plt.tight_layout()
+
     if save:
-        [plt.savefig(f"butterfly_all.{i}", dpi=300) for i in ["png", "pdf"]]
-        plt.close()
+        save_fig(figure, "butterfly_all")
     else:
         plt.show()
 
@@ -901,7 +896,7 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
 
     parts, totals = [], []
     for start in range(0, values.shape[0], chunk):
-        block_fluxes, block_total = _component_energy_flux_block(model_name, values[start : start + chunk], energy)
+        block_fluxes, block_total = _component_energy_flux_block(model_name, values[start: start + chunk], energy)
         parts.append(block_fluxes)
         totals.append(block_total)
 
