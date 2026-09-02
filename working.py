@@ -11,6 +11,9 @@ import src.grb_research.safe_good_best as sgb
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_filename = f"cstat_run_{timestamp}.log"
 
+req_dir = ['GRB080916009', 'GRB131014215', 'GRB140206275', 'GRB231129779']
+req_dir.append('GRB131014215GBM')
+
 orig_stdout, orig_stderr = sys.stdout, sys.stderr
 with open(log_filename, "w", buffering=1) as log_file:
     sys.stdout = log_file
@@ -22,6 +25,7 @@ with open(log_filename, "w", buffering=1) as log_file:
         res_best, res_marginal = {}, {}
         cwd_ = os.getcwd()
         outer_dirs = utils.get_directories_in_current_folder()
+        outer_dirs = [x for x in outer_dirs if x in req_dir]
         for out_ in outer_dirs:
             inner_dirs = utils.get_directories_in_current_folder(f"{cwd_}/{out_}")
             for in_ in inner_dirs:
