@@ -61,8 +61,8 @@ def compute_flux_fluence(
         "grb_name": None,  # Will be filled in loop
         "ep_type": episode_label(model),
         "model_name": model.name,
-        "e_min_keV": 10.0**log_energy_range[0],
-        "e_max_keV": 10.0**log_energy_range[1],
+        "e_min_keV": 10.0 ** log_energy_range[0],
+        "e_max_keV": 10.0 ** log_energy_range[1],
         "flux_ph_cm2_s": flux_val,
         "flux_err_lower_ph_cm2_s": flux_lo,
         "flux_err_upper_ph_cm2_s": flux_hi,

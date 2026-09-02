@@ -383,10 +383,7 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
 
     figure, axes = plt.subplots(nrows=1, ncols=2, figsize=(12.5, 5.0))
 
-    for axis, key, axis_label in (
-        (axes[0], "r_zero", r"$r_0$ [cm]"),
-        (axes[1], "gamma", r"$\Gamma$"),
-    ):
+    for axis, key, axis_label in ((axes[0], "r_zero", r"$r_0$ [cm]"), (axes[1], "gamma", r"$\Gamma$")):
         for short_name in GRB_LIST:
             grb = f"GRB{short_name}"
             colour = GRBPlotStyle.GRB_COLORS[grb]
@@ -410,9 +407,16 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
                 if track[0].z_source == "spectroscopic":
                     # Single measured redshift: one point per episode.
                     axis.errorbar(
-                        z_values, medians, yerr=[lower, upper],
-                        marker=marker, markerfacecolor="none", markeredgewidth=MARKER_EDGE_WIDTH,
-                        color=colour, linestyle="none", capsize=3, label=series_label,
+                        z_values,
+                        medians,
+                        yerr=[lower, upper],
+                        marker=marker,
+                        markerfacecolor="none",
+                        markeredgewidth=MARKER_EDGE_WIDTH,
+                        color=colour,
+                        linestyle="none",
+                        capsize=3,
+                        label=series_label,
                     )
                 else:
                     # Swept redshift: a curve per episode, distinguished by line style, with a marker at the fiducial z
@@ -422,9 +426,16 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
                     # The marker must ride on the *labeled* artist, otherwise the legend handle is a bare line,
                     # and the per-episode marker -- which is what identifies TR1 vs. TR2 vs. EX0 -- never appears.
                     axis.plot(
-                        z_values, medians, color=colour, linewidth=LINE_WIDTH, linestyle=style,
-                        marker=marker, markevery=[fiducial], markerfacecolor="none",
-                        markeredgewidth=MARKER_EDGE_WIDTH, label=series_label,
+                        z_values,
+                        medians,
+                        color=colour,
+                        linewidth=LINE_WIDTH,
+                        linestyle=style,
+                        marker=marker,
+                        markevery=[fiducial],
+                        markerfacecolor="none",
+                        markeredgewidth=MARKER_EDGE_WIDTH,
+                        label=series_label,
                     )
                     axis.fill_between(z_values, medians - lower, medians + upper, color=colour, alpha=0.12)
 
@@ -447,8 +458,9 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
     # GRB140206B track entirely), and a single column keeps the burst/episode
     # grouping readable top-to-bottom.
     handles, labels = axes[0].get_legend_handles_labels()
-    figure.legend(handles, labels, loc="center left", ncols=1, fontsize=LEGEND_FONT_SIZE, frameon=True,
-                  bbox_to_anchor=(0.05, 0.5))
+    figure.legend(
+        handles, labels, loc="center left", ncols=1, fontsize=LEGEND_FONT_SIZE, frameon=True, bbox_to_anchor=(0.05, 0.5)
+    )
 
     plt.tight_layout(rect=(0.235, 0, 1, 1))
 

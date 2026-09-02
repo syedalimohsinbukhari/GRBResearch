@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 
-
 # Significant figures to preserve on the smallest error in a column.
 ERROR_SIG_FIGS = 2
 
@@ -93,12 +92,8 @@ def csv_to_latex_table(csv_path="amati_relationship.csv", output_path="amati_rel
     # Read CSV
     df = pd.read_csv(csv_path)
 
-    ep_decimals = decimals_for(
-        np.r_[df["E_i_peak_err_lower__1e+03_keV"], df["E_i_peak_err_upper__1e+03_keV"]]
-    )
-    ei_decimals = decimals_for(
-        np.r_[df["E_0_iso_err_lower__1e+52_erg"], df["E_0_iso_err_upper__1e+52_erg"]]
-    )
+    ep_decimals = decimals_for(np.r_[df["E_i_peak_err_lower__1e+03_keV"], df["E_i_peak_err_upper__1e+03_keV"]])
+    ei_decimals = decimals_for(np.r_[df["E_0_iso_err_lower__1e+52_erg"], df["E_0_iso_err_upper__1e+52_erg"]])
 
     # Start building LaTeX table
     latex_lines = []

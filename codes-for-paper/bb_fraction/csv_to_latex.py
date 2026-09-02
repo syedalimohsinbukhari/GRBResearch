@@ -63,8 +63,7 @@ def decimals_for(errors, norm, sig=ERROR_SIG_FIGS, cap=6):
 def format_normalised(value, err_lower, err_upper, norm, decimals):
     """Render value/norm with asymmetric errors, the exponent living in the header."""
     return (
-        f"${value / norm:.{decimals}f}_{{-{err_lower / norm:.{decimals}f}}}"
-        f"^{{+{err_upper / norm:.{decimals}f}}}$"
+        f"${value / norm:.{decimals}f}_{{-{err_lower / norm:.{decimals}f}}}" f"^{{+{err_upper / norm:.{decimals}f}}}$"
     )
 
 
@@ -161,17 +160,25 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
 
         z_cell = f"${row['z']:.2f}$" if row["z_source"] == "spectroscopic" else f"${row['z']:.2f}^{{\\dagger}}$"
         kt = f"${row['kt_bb_keV']:.2f} \\pm {row['kt_bb_err_keV']:.2f}$"
-        f_bb_cell = format_normalised(row["f_bb"], row["f_bb_err_lower"], row["f_bb_err_upper"], F_BB_NORM,
-                                       f_bb_decimals)
-        f_bb_rest_cell = format_normalised(row["f_bb_rest"], row["f_bb_rest_err_lower"], row["f_bb_rest_err_upper"],
-                                            F_BB_NORM, f_bb_rest_decimals)
+        f_bb_cell = format_normalised(
+            row["f_bb"], row["f_bb_err_lower"], row["f_bb_err_upper"], F_BB_NORM, f_bb_decimals
+        )
+        f_bb_rest_cell = format_normalised(
+            row["f_bb_rest"], row["f_bb_rest_err_lower"], row["f_bb_rest_err_upper"], F_BB_NORM, f_bb_rest_decimals
+        )
         flux_bb_cell = format_normalised(
-            row["flux_bb_erg_cm2_s"], row["flux_bb_err_lower_erg_cm2_s"],
-            row["flux_bb_err_upper_erg_cm2_s"], FLUX_BB_NORM, flux_bb_decimals,
+            row["flux_bb_erg_cm2_s"],
+            row["flux_bb_err_lower_erg_cm2_s"],
+            row["flux_bb_err_upper_erg_cm2_s"],
+            FLUX_BB_NORM,
+            flux_bb_decimals,
         )
         flux_total_cell = format_normalised(
-            row["flux_total_erg_cm2_s"], row["flux_total_err_lower_erg_cm2_s"],
-            row["flux_total_err_upper_erg_cm2_s"], FLUX_TOTAL_NORM, flux_total_decimals,
+            row["flux_total_erg_cm2_s"],
+            row["flux_total_err_lower_erg_cm2_s"],
+            row["flux_total_err_upper_erg_cm2_s"],
+            FLUX_TOTAL_NORM,
+            flux_total_decimals,
         )
         lines.append(
             f"        {format_model_name(row['model_name'])} & {row['episode']} & {z_cell} & {kt} & "

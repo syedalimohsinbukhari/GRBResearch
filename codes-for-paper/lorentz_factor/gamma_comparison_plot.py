@@ -20,9 +20,17 @@ import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from grb_research import EpisodeMarkerResolver, find_project_root, prepare_grbs, update_style
-from grb_research.grb_constants import LABEL_FONT_SIZE, LEGEND_FONT_SIZE, LINE_WIDTH, MARKER_SIZE, SAVE_DPI, \
-    TITLE_FONT_SIZE, CAP_SIZE
+from grb_research import EpisodeMarkerResolver, find_project_root, prepare_grbs, update_style, TICK_FONT_SIZE
+from grb_research.grb_constants import (
+    LABEL_FONT_SIZE,
+    LEGEND_FONT_SIZE,
+    LINE_WIDTH,
+    MARKER_SIZE,
+    SAVE_DPI,
+    TITLE_FONT_SIZE,
+    CAP_SIZE,
+)
+from grb_research.grb_utils import save_fig
 
 from lorentz_factor import episode_label
 
@@ -34,13 +42,9 @@ LORENTZ_DIR = ROOT / "codes-for-paper" / "lorentz_factor"
 PHOTOSPHERIC_CSV = ROOT / "codes-for-paper" / "photospheric_radius" / "pe_er_photosphere.csv"
 
 # Method identity -> colour (Okabe-Ito, colourblind-safe). Deliberately not
-# GRBPlotStyle.GRB_COLORS: this figure shows a single burst, so colour here
+# GRBPlotStyle.GRB_COLORS: this figure shows a single burst, so the colour here
 # encodes *method*, not GRB.
-METHOD_COLORS = {
-    "limit_a": "#0072B2",  # blue
-    "limit_b": "#D55E00",  # vermillion
-    "thermal": "#009E73",  # bluish green
-}
+METHOD_COLORS = {"limit_a": "#0072B2", "limit_b": "#D55E00", "thermal": "#009E73"}  # blue # vermillion # bluish green
 METHOD_LABELS = {
     "limit_a": "$\\Gamma_{\\min}$ (Limit A)\n$\\gamma\\gamma$ annihilation",
     "limit_b": "$\\Gamma_{\\min,B}$ (Limit B)\nCompton on $e^{\\pm}$",
@@ -111,82 +115,93 @@ def make_plot(limit_a, limit_b, thermal, path_stem="gamma_comparison"):
             median, lower, upper = row[y_col], row[f"{y_col}_err_lower"], row[f"{y_col}_err_upper"]
 
             axis.errorbar(
-                x_positions[episode], median, yerr=[[lower], [upper]],
-                marker=resolver.resolve(intervals[episode]), markersize=MARKER_SIZE * 1.4,
-                markerfacecolor="none" if hollow else color, markeredgecolor=color,
-                markeredgewidth=MARKER_EDGE_WIDTH, color=color, linestyle="none",
-                capsize=CAP_SIZE, elinewidth=LINE_WIDTH, zorder=3,
+                x_positions[episode],
+                median,
+                yerr=[[lower], [upper]],
+                marker=resolver.resolve(intervals[episode]),
+                markersize=MARKER_SIZE,
+                markerfacecolor="none" if hollow else color,
+                markeredgecolor=color,
+                markeredgewidth=MARKER_EDGE_WIDTH,
+                color=color,
+                linestyle="none",
+                capsize=CAP_SIZE,
+                elinewidth=LINE_WIDTH,
+                zorder=3,
             )
 
     axis.set_yscale("log")
-    axis.margins(y=0.15)  # headroom so no marker (esp. the high thermal-Gamma points) touches the frame
     axis.set_xticks(range(len(episodes)))
     axis.xaxis.minorticks_off()
     axis.set_xticklabels(episodes, fontsize=LABEL_FONT_SIZE)
-    axis.set_xlabel("Episode", fontsize=LABEL_FONT_SIZE)
     axis.set_ylabel(r"$\Gamma$", fontsize=LABEL_FONT_SIZE)
-    axis.set_title(rf"{GRB_NAME}: $\gamma\gamma$-opacity limits vs. Thermal $\Gamma$", fontsize=TITLE_FONT_SIZE)
 
     # Shrink the axes (not the whole canvas) to leave room on the right for the two out-of-axes legends --
     # the Method legend's labels are multi-line/long, so the legends need real width, but the figure itself doesn't
     # need to keep growing.
-    figure.subplots_adjust(right=0.62)
+    figure.subplots_adjust(right=0.60)
 
     method_handles = [
         mlines.Line2D(
-            [], [], linestyle="none", marker="o", color=METHOD_COLORS[k],
-            markerfacecolor=METHOD_COLORS[k], markersize=MARKER_SIZE * 1.4, label=METHOD_LABELS[k],
+            [],
+            [],
+            linestyle="none",
+            marker="o",
+            color=METHOD_COLORS[k],
+            markerfacecolor=METHOD_COLORS[k],
+            markersize=MARKER_SIZE,
+            label=METHOD_LABELS[k],
         )
         for k in ("limit_a", "limit_b", "thermal")
     ]
 
-    # Marker legend: episode + best-fit model, keyed off Limit A's rows since every
-    # episode with LAT coverage appears there. Legend entries identify episode *and*
-    # model, per CLAUDE.md's convention, never a bare episode label.
+    # Marker legend: episode + best-fit model, keyed off Limit A's rows since every episode with LAT coverage appears
+    # there.
+    # Legend entries identify episode *and* model, per CLAUDE.md's convention, never a bare episode label.
     episode_models = limit_a.set_index("episode")["model"].to_dict()
     # print(f'{episode_models=}')
     episode_handles = [
         mlines.Line2D(
-            [], [], linestyle="none", marker=resolver.resolve(intervals[episode]), color="#444444",
+            [],
+            [],
+            linestyle="none",
+            marker=resolver.resolve(intervals[episode]),
+            color="#444444",
             markerfacecolor="none" if is_bb_model(episode_models[episode]) else "#444444",
-            markeredgecolor="#444444", markeredgewidth=MARKER_EDGE_WIDTH, markersize=MARKER_SIZE * 1.4,
+            markeredgecolor="#444444",
+            markeredgewidth=MARKER_EDGE_WIDTH,
+            markersize=MARKER_SIZE,
             label=f"{episode}" + r"$_\text{" + f'{episode_models[episode].replace("_", "+")}' + r"}$",
         )
         for episode in episodes
     ]
 
-    # Both legends sit outside the axes, not "upper left"/"upper right" inside it --
-    # an in-axes legend previously hid real data in this project (BUGS.md BUG-15,
-    # pe_er_photosphere.py), and the same collision showed up here in review: the
-    # thermal-Gamma points are the highest values on this log axis, so an in-axes
-    # "upper left" box sat directly on top of them.
+    # Both legends sit outside the axes, not "upper left"/"upper right" inside it -- an in-axes legend previously hid
+    # real data in this project (BUGS.md BUG-15, pe_er_photosphere.py), and the same collision showed up here in review:
+    # the thermal-Gamma points are the highest values on this log axis, so an in-axes "upper left" box sat directly on
+    # top of them.
     legend1 = axis.legend(
-        handles=method_handles, loc="upper left", bbox_to_anchor=(1.02, 1.0),
-        fontsize=LEGEND_FONT_SIZE, frameon=True,
+        handles=method_handles, loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=LEGEND_FONT_SIZE, frameon=True
     )
     axis.add_artist(legend1)
     legend2 = axis.legend(
-        handles=episode_handles, bbox_to_anchor=(1.06, 0.55),
-        fontsize=LEGEND_FONT_SIZE, title=f"BEST model", title_fontsize=LEGEND_FONT_SIZE,
-        frameon=True, ncols=1,
+        handles=episode_handles,
+        bbox_to_anchor=(1.06, 0.55),
+        fontsize=LEGEND_FONT_SIZE,
+        title=f"BEST model",
+        title_fontsize=LEGEND_FONT_SIZE,
+        frameon=True,
+        ncols=1,
     )
 
-    # No tight_layout() here: it conflicts with the tight savefig bbox (both fight
-    # over how much room the out-of-axes legends get).
+    # No tight_layout() here:
+    # it conflicts with the tight savefig bbox (both fight over how much room the out-of-axes legends get).
     #
-    # update_style() already sets rcParams["savefig.bbox"] = "tight", but that alone
-    # still clipped legend1 during review: a legend added via axis.add_artist() (as
-    # opposed to the axes' own current legend) is not reliably picked up by
-    # matplotlib's automatic tight-bbox artist search. Passing bbox_extra_artists
-    # explicitly is the documented fix -- verified below by re-inspecting the actual
-    # saved pixels, not just re-running the script.
-    for extension in ("png", "pdf"):
-        plt.savefig(
-            f"./{path_stem}.{extension}", dpi=SAVE_DPI, bbox_inches="tight",
-            bbox_extra_artists=(legend1, legend2),
-        )
-    plt.close()
-    print(f"Saved: {path_stem}.png / .pdf")
+    # update_style() already sets rcParams["savefig.bbox"] = "tight", but that alone still clipped legend1 during review:
+    # a legend added via axis.add_artist() (as opposed to the axes' own current legend) is not reliably picked up by
+    # matplotlib's automatic tight-bbox artist search. Passing bbox_extra_artists explicitly is the documented fix --
+    # verified below by re-inspecting the actual saved pixels, not just re-running the script.
+    save_fig(figure, path_stem, bbox_extra_artists=(legend1, legend2))
 
 
 def main():

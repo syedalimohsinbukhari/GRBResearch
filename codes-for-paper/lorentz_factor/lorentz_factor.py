@@ -77,11 +77,7 @@ E_1MEV_KEV = 1000.0
 
 # Parameter holding the high-energy photon index, per continuum model.
 # The Lithwick & Sari index is its negative.
-HIGH_ENERGY_INDEX_PARAM = {
-    gmC.BAND: "index2_band",
-    gmC.SBPL: "index2_sbpl",
-    gmC.PL: "index1_pl",
-}
+HIGH_ENERGY_INDEX_PARAM = {gmC.BAND: "index2_band", gmC.SBPL: "index2_sbpl", gmC.PL: "index1_pl"}
 
 # Per-episode LAT products, read from LAT_analysis/lat_photons.csv, which is built from the gtburst/gtlike output files by LAT_analysis/txt_to_csv.py.
 # These values used to be transcribed by hand from the paper's appendix table, so an edit to the table left this script silently stale -- BUGS.md OBS-08.
@@ -216,7 +212,7 @@ def compute_tau_hat(alpha_LS, f_1, delta_T_s, z):
     d_L_cm = cosmo.luminosity_distance(z).cgs.value
     d_7Gpc = d_L_cm / (7.0 * 3.0857e27)
 
-    return 2.1e11 * d_7Gpc ** 2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
+    return 2.1e11 * d_7Gpc**2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
 
 
 def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
@@ -248,7 +244,7 @@ def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
     e3 = (alpha_LS - 1) / (alpha_LS + 1)
 
     # 0.511 MeV = m_e c^2, matching the MeV convention used for f_1 and tau_hat above.
-    gamma_min = tau_hat ** e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
+    gamma_min = tau_hat**e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
     return gamma_min, tau_hat
 
 
@@ -315,9 +311,7 @@ def main():
                 f1_draws = f1_from_values(model.name, samples)
 
                 usable = np.isfinite(f1_draws) & (f1_draws > 0) & (alpha_draws > 1.0)
-                gamma_draws, _ = compute_gamma_min(
-                    alpha_draws[usable], f1_draws[usable], e_max_mev, delta_t, redshift
-                )
+                gamma_draws, _ = compute_gamma_min(alpha_draws[usable], f1_draws[usable], e_max_mev, delta_t, redshift)
                 gamma_draws = gamma_draws[np.isfinite(gamma_draws)]
                 lo, med, hi = np.percentile(gamma_draws, PERCENTILES)
                 gamma_lo, gamma_hi = med - lo, hi - med
@@ -402,9 +396,7 @@ def build_latex_table(results):
         if gamma is None:
             gamma_str = r"\ldots"
         else:
-            gamma_str = (
-                f"${gamma}_{{-{r['Gamma_min_err_lower']:.0f}}}^{{+{r['Gamma_min_err_upper']:.0f}}}"
-            )
+            gamma_str = f"${gamma}_{{-{r['Gamma_min_err_lower']:.0f}}}^{{+{r['Gamma_min_err_upper']:.0f}}}"
             if r["low_significance"]:
                 gamma_str += r"\,^{\ddagger}"
             gamma_str += "$"

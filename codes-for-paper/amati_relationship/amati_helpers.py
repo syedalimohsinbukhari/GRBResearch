@@ -5,7 +5,7 @@ from typing import List, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from grb_research import EpisodeMarkerResolver, ModelResampler, break_e_to_e_peak, mc_e_iso_sampler
+from grb_research import EpisodeMarkerResolver, MARKER_SIZE, ModelResampler, break_e_to_e_peak, mc_e_iso_sampler
 
 # ---------------------------------------------------------------------------
 # Normalization — single source of truth for axis units
@@ -14,13 +14,15 @@ from grb_research import EpisodeMarkerResolver, ModelResampler, break_e_to_e_pea
 EP_NORM = 1e3  # E_{i,peak} plotted in units of keV x 1e3 → x-axis in 1e3 keV
 EI_NORM = 1e52  # E_iso plotted in units of erg x 1e52 → y-axis in 1e52 erg
 
+_ff = lambda x: r"$_\text{" + x.replace("_", "+") + r"}$"
+
 
 def _episode_label(m) -> str:
     """Produce the legend label for a single model's episode."""
     kind_name = m.interval.kind.name
     if kind_name in ("T90", "EX0", "EX1"):
-        return str(m.interval.kind)
-    return f"{m.interval.kind}{m.interval.index}"
+        return f"{m.interval.kind}{_ff(m.name)}"
+    return f"{m.interval.kind}{m.interval.index}{_ff(m.name)}"
 
 
 # Define base models that have an e_peak parameter
@@ -125,14 +127,16 @@ def _plot_model_point(
 
     p50_ei, p50_ep, x_err, y_err = percentile_calculator(ei_s, ep_s)
 
-    # Normalise to plotting units
+    # Normalize to plotting units
     p50_ep /= EP_NORM
     p50_ei /= EI_NORM
     x_err /= EP_NORM
     y_err /= EI_NORM
 
     if axis is not None:
-        axis.scatter(p50_ep, p50_ei, marker=marker, s=25, color=color, alpha=alpha, label=label, zorder=3)
+        # scatter's `s` is area (points^2); squaring MARKER_SIZE matches the visual diameter
+        # used by markersize= elsewhere (plot/errorbar), per the project-wide marker convention.
+        axis.scatter(p50_ep, p50_ei, marker=marker, s=MARKER_SIZE ** 2, color=color, alpha=alpha, label=label, zorder=3)
         axis.errorbar(p50_ep, p50_ei, xerr=x_err, ms=0, color=color, alpha=alpha, zorder=2, capsize=5)
 
     return p50_ep, p50_ei, x_err, y_err
@@ -211,7 +215,7 @@ def plot_grbs_over_amati_relationship(
     best_model_list,
     redshift_list: List[float],
     t90_marker_list: List[str],
-    n_grid: int = 10_000,
+    n_grid: int = 1_000,
     n_sample: int = 10_000,
     seed_number: int = 0,
     alpha: float = 1.0,
@@ -295,7 +299,7 @@ def plot_unknown_redshift_grb(
     models,
     t90_marker: str,
     z_values: Sequence[float] = (1, 3, 5, 7),
-    n_grid: int = 10_000,
+    n_grid: int = 1_000,
     n_sample: int = 10_000,
     seed_number: int = 0,
     axis=None,

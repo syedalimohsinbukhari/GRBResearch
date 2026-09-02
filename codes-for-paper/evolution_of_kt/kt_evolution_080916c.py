@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from plotez import plot_errorbar, ErrorPlotConfig
+
 # from pymultifit.fitters import LineFitter
 
 from grb_research import GRB, ModelSet, find_project_root, prepare_grbs
@@ -22,7 +23,7 @@ kt = bb_params[1::2, :]
 
 x = np.arange(len(amp))
 print(x)
-amp_v, amp_e = amp.T #/ 1e-6
+amp_v, amp_e = amp.T  # / 1e-6
 kt_v, kt_e = kt.T
 
 kt_v, amp_v, kt_e, amp_e = zip(*sorted(zip(amp_v, kt_v, amp_e, kt_e)))

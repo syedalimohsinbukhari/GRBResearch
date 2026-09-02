@@ -1,6 +1,14 @@
 """Created on May 26 20:25:58 2026"""
 
-from grb_research import EpisodeMarkerResolver, EpisodeTypes, TimeInterval, long_to_short, update_style
+from grb_research import EpisodeMarkerResolver, EpisodeTypes, TimeInterval, update_style
+from grb_research.grb_constants import (
+    ANNOTATION_FONT_SIZE,
+    CAP_SIZE,
+    LEGEND_FONT_SIZE,
+    LINE_WIDTH,
+    MARKER_SIZE,
+)
+from grb_research.grb_utils import save_fig
 
 """
 GRB Spectral Properties Visualization Script
@@ -22,6 +30,8 @@ df = pd.read_csv("./flux_energy_flux.csv")
 
 update_style()
 
+# MARKER_SIZE /= 1.4
+
 t90_markers = ["o", "s", "X", "D"]
 
 grbs = df["grb_name"].unique()
@@ -29,7 +39,7 @@ grbs = df["grb_name"].unique()
 # ============================================================
 # 5. FIGURE 3: Flux vs Fluence Correlation
 # ============================================================
-fig, ax = plt.subplots(2, 2, figsize=(9, 7), squeeze=False, sharex=True, sharey=True)
+fig, ax = plt.subplots(2, 2, figsize=(10, 8), squeeze=False, sharex=True, sharey=True)
 ax_flat = ax.flatten()
 
 [i.set_xscale("log") for i in ax_flat]
@@ -53,9 +63,26 @@ for idx2, grb in enumerate(grbs):
             col_ = emr.get_color(ep_type)
             tr_count += 1
 
-        ax_flat[idx2].scatter(row["flux"], row["fluence"], marker=mm, color=col_, label=row["ep_type"], zorder=1)
+        # errorbar (not scatter) so the flux/fluence MC uncertainty already in the CSV is shown,
+        # per CLAUDE.md's "error bars wherever the underlying value has an MC uncertainty" rule.
+        ax_flat[idx2].errorbar(
+            row["flux_ph_cm2_s"],
+            row["fluence_erg_cm2"],
+            xerr=[[row["flux_err_lower_ph_cm2_s"]], [row["flux_err_upper_ph_cm2_s"]]],
+            yerr=[[row["fluence_err_lower_erg_cm2"]], [row["fluence_err_upper_erg_cm2"]]],
+            marker=mm,
+            markersize=MARKER_SIZE,
+            color=col_,
+            linestyle="none",
+            capsize=CAP_SIZE,
+            elinewidth=LINE_WIDTH,
+            label=row["ep_type"],
+            zorder=1,
+        )
 
-        ax_flat[idx2].legend(loc="best", title=f"GRB{long_to_short[grb]}", ncol=3, fontsize=8)
+        # grb_name is already the paper name (e.g., GRB080916C), not the raw directory name
+        # long_to_short expects -- no lookup needed.
+        ax_flat[idx2].legend(loc="best", title=grb, ncol=2, fontsize=LEGEND_FONT_SIZE)
 
     for ls, e_kev in zip(["--", ":", "-."], [10, 100, 300]):
         e_erg = e_kev * kev_to_erg
@@ -64,18 +91,14 @@ for idx2, grb in enumerate(grbs):
             flux_ref[-1],
             e_erg * flux_ref[-1],
             f"⟨E⟩ = {e_kev / 1e3} MeV",
-            fontsize=8,
+            fontsize=ANNOTATION_FONT_SIZE,
             color="gray",
             va="bottom",
             ha="right",
         )
 
-# plt.xlim(left=0.75)
-# plt.ylim(top=4.5e-4)
-
+[i.set_xlim(left=0.75) for i in ax_flat[2:]]
 [i.set_xlabel(r"Flux (ph cm$^{-2}$ s$^{-1}$)") for i in ax_flat[2:]]
 [i.set_ylabel(r"Energy flux (erg cm$^{-2}$ s$^{-1}$)") for i in ax_flat[::2]]
-[i.grid(True, which="both") for i in ax_flat]
-plt.tight_layout()
-# plt.show()
-[plt.savefig(f"flux_vs_energy_flux.{i}") for i in ["png", "pdf"]]
+
+save_fig(fig, 'flux_vs_energy_flux')

@@ -31,7 +31,7 @@ with open("best_names.txt", "w") as f:
                     f.write(f"  +BB: {bb_model.name}\n  {bb_params_str}\n")
                     if unconstrained:
                         f.write(f"  Unconstrained: {', '.join(unconstrained)}\n")
-                        unc_error = [f'{p.relative_error:.3%}' for p in bb_model.parameters if p.is_unconstrained]
+                        unc_error = [f"{p.relative_error:.3%}" for p in bb_model.parameters if p.is_unconstrained]
                         f.write(f"  Error: {', '.join(unc_error)}\n\n")
                     else:
                         f.write(f"  cstat={bb_model.cstat:.4g}, dof={bb_model.dof}\n")

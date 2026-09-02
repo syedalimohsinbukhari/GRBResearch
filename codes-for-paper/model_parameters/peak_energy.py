@@ -6,8 +6,19 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, ticker
 
-from grb_research import (GRID_ALPHA, GRID_LINESTYLE, LABEL_FONT_SIZE, LEGEND_FONT_SIZE, SAVE_DPI, TICK_FONT_SIZE,
-                          find_project_root, plot_per_episode, prepare_grbs, update_style, EpisodeMarkerResolver)
+from grb_research import (
+    GRID_ALPHA,
+    GRID_LINESTYLE,
+    LABEL_FONT_SIZE,
+    LEGEND_FONT_SIZE,
+    SAVE_DPI,
+    TICK_FONT_SIZE,
+    find_project_root,
+    plot_per_episode,
+    prepare_grbs,
+    update_style,
+    EpisodeMarkerResolver,
+)
 from utils import convert_sbpl_to_band, extract_parameter, prepare_panel_data
 
 update_style()
@@ -68,25 +79,40 @@ for i, (panel, (values, errors_lo, errors_hi, _)) in enumerate(zip(panels, ep_re
     # own y_low/y_high computation (errors[0]=lower magnitude, errors[1]=upper magnitude).
     # The previous version passed [hi, lo] here, silently swapping the error-bar direction
     # for every SBPL-modeled (asymmetric-error) episode -- fixed as part of this rewrite.
-    plot_per_episode(values=values, errors=[errors_lo, errors_hi], m_name=grb_list[i], start=panel.start,
-                     end=panel.end, difference=panel.diff, midpoints=panel.midpoint, axes=ax[i],
-                     has_BB=panel.has_bb, episode_labels=panel.episode_labels, model_names=panel.model_names,
-                     markers=panel.markers)
+    plot_per_episode(
+        values=values,
+        errors=[errors_lo, errors_hi],
+        m_name=grb_list[i],
+        start=panel.start,
+        end=panel.end,
+        difference=panel.diff,
+        midpoints=panel.midpoint,
+        axes=ax[i],
+        has_BB=panel.has_bb,
+        episode_labels=panel.episode_labels,
+        model_names=panel.model_names,
+        markers=panel.markers,
+    )
 
 # --- Inset zoom on the trailing CPL episode of 140206B ---
 values_140206, errors_lo_140206, errors_hi_140206, _ = ep_results[2]
 panel_140206 = panels[2]
 axins = ax[2].inset_axes([100, 1500, 55, 1300], transform=ax[2].transData)
-axins.errorbar(panel_140206.midpoint[-1:], values_140206[-1:],
-               xerr=panel_140206.diff[-1:] / 2,
-               yerr=[errors_lo_140206[-1:], errors_hi_140206[-1:]],
-               fmt=panel_140206.markers[-1], capsize=5, color='g')
+axins.errorbar(
+    panel_140206.midpoint[-1:],
+    values_140206[-1:],
+    xerr=panel_140206.diff[-1:] / 2,
+    yerr=[errors_lo_140206[-1:], errors_hi_140206[-1:]],
+    fmt=panel_140206.markers[-1],
+    capsize=5,
+    color="g",
+)
 axins.text(panel_140206.midpoint[-1] + 2.5, values_140206[-1] + 250, "CPL", fontsize=LABEL_FONT_SIZE)
 axins.set_xlim(100, 155)
 axins.set_ylim(5500, 8500)
 axins.xaxis.set_major_locator(ticker.MultipleLocator(20))
-axins.spines['top'].set_visible(False)
-axins.spines['right'].set_visible(False)
+axins.spines["top"].set_visible(False)
+axins.spines["right"].set_visible(False)
 # axins.grid(True, which="both", alpha=GRID_ALPHA, ls=GRID_LINESTYLE)
 axins.tick_params(labelsize=TICK_FONT_SIZE - 2)
 
@@ -99,8 +125,16 @@ plt.yticks(fontsize=TICK_FONT_SIZE)
 # legend into columns so the box stays compact instead of running down the panel.
 legend_ncols = {0: 2, 2: 2}
 loc_ = {0: "upper center", 1: "upper right", 2: "center left", 3: "upper right"}
-[a.legend(loc=loc_.get(i, None), fontsize=LEGEND_FONT_SIZE, title=f"GRB{grb_list[i]}",
-          title_fontsize=LEGEND_FONT_SIZE, ncols=legend_ncols.get(i, 1)) for i, a in enumerate(ax)]
+[
+    a.legend(
+        loc=loc_.get(i, None),
+        fontsize=LEGEND_FONT_SIZE,
+        title=f"GRB{grb_list[i]}",
+        title_fontsize=LEGEND_FONT_SIZE,
+        ncols=legend_ncols.get(i, 1),
+    )
+    for i, a in enumerate(ax)
+]
 plt.tight_layout()
 for extension in ("png", "pdf"):
     plt.savefig(f"./peak_energy_best__all.{extension}", dpi=SAVE_DPI)

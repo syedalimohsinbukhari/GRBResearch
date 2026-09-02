@@ -90,7 +90,7 @@ def compute_gamma_min_limit_b(alpha_LS, f_1, delta_T_s, z):
     e1 = 1.0 / (alpha_LS + 3)
     e2 = (alpha_LS - 1) / (alpha_LS + 3)
 
-    gamma_min = tau_hat ** e1 * (1 + z) ** e2
+    gamma_min = tau_hat**e1 * (1 + z) ** e2
     return gamma_min, tau_hat
 
 

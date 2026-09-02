@@ -4,9 +4,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from grb_research import (EpisodeTypes, LABEL_FONT_SIZE, LEGEND_FONT_SIZE,
-                          LEGEND_TITLE_FONT_SIZE, MARKER_SIZE, SAVE_DPI, find_project_root, prepare_grbs,
-                          update_style)
+from grb_research import (
+    EpisodeTypes,
+    LABEL_FONT_SIZE,
+    LEGEND_FONT_SIZE,
+    LEGEND_TITLE_FONT_SIZE,
+    MARKER_SIZE,
+    SAVE_DPI,
+    find_project_root,
+    prepare_grbs,
+    update_style,
+)
 from grb_research.grb_constants import CAP_SIZE
 from utils import extract_kt_epeak_from_models, fit_and_plot_odr
 
@@ -74,13 +82,17 @@ bb_status_231129C = ["Y", "Y", "Y", "X"]
 # -- Extract kT / E_peak -----------------------------------------------------
 
 kt_080916C, ep_080916C, mkr_080916C, clr_080916C, lbl_080916C, mc_080916C = extract_kt_epeak_from_models(
-    models_080916C, seed=SEED)
+    models_080916C, seed=SEED
+)
 kt_140206B, ep_140206B, mkr_140206B, clr_140206B, lbl_140206B, mc_140206B = extract_kt_epeak_from_models(
-    models_140206B, seed=SEED)
+    models_140206B, seed=SEED
+)
 kt_131014A, ep_131014A, mkr_131014A, clr_131014A, lbl_131014A, mc_131014A = extract_kt_epeak_from_models(
-    models_131014A, seed=SEED)
+    models_131014A, seed=SEED
+)
 kt_231129C, ep_231129C, mkr_231129C, clr_231129C, lbl_231129C, mc_231129C = extract_kt_epeak_from_models(
-    models_231129C, seed=SEED)
+    models_231129C, seed=SEED
+)
 
 # -- Plot ---------------------------------------------------------------------
 
@@ -103,7 +115,7 @@ for a, kt, ep, mkrs, clrs, lbls, status_list in grb_panels:
             yerr=[[ep_i[0]], [ep_i[2]]],
             fmt=mkr,
             mfc="w" if status == "X" else None,
-            ms=MARKER_SIZE * 1.3,
+            ms=MARKER_SIZE,
             capsize=CAP_SIZE,
             color=clr,
             linestyle="--" if status == "X" else "-",
@@ -113,21 +125,20 @@ for a, kt, ep, mkrs, clrs, lbls, status_list in grb_panels:
 # -- ODR fits -----------------------------------------------------------------
 
 # GRB 080916C: "all" points, then "restricted" to the Y-marked full set.
-odr_all_080916C = fit_and_plot_odr(kt_080916C, ep_080916C, ax[0], color='teal', annotation_xy=(0.05, 0.12))
+odr_all_080916C = fit_and_plot_odr(kt_080916C, ep_080916C, ax[0], color="teal", annotation_xy=(0.05, 0.12))
 full_mask_080916C = [s == "Y" for s in bb_status_080916C]
 odr_full_080916C = fit_and_plot_odr(kt_080916C, ep_080916C, ax[0], mask=full_mask_080916C)
 
-odr_all_140206B = fit_and_plot_odr(kt_140206B, ep_140206B, ax[1], color='teal', annotation_xy=(0.05, 0.82))
+odr_all_140206B = fit_and_plot_odr(kt_140206B, ep_140206B, ax[1], color="teal", annotation_xy=(0.05, 0.82))
 full_mask_140206B = [s == "Y" for s in bb_status_140206B]
 odr_full_140206B = fit_and_plot_odr(kt_140206B, ep_140206B, ax[1], mask=full_mask_140206B)
 
 # GRB 131014A: every point is already "Y" -- a single unmasked fit covers both cases.
 odr_all_131014A = fit_and_plot_odr(kt_131014A, ep_131014A, ax[2])
 
-odr_all_231129C = fit_and_plot_odr(kt_231129C, ep_231129C, ax[3], color='teal', annotation_xy=(0.05, 0.12))
+odr_all_231129C = fit_and_plot_odr(kt_231129C, ep_231129C, ax[3], color="teal", annotation_xy=(0.05, 0.12))
 full_mask_231129C = [s == "Y" for s in bb_status_231129C]
-odr_full_231129C = fit_and_plot_odr(kt_231129C, ep_231129C, ax[3], mask=full_mask_231129C,
-                                    annotation_xy=(0.05, 0.22))
+odr_full_231129C = fit_and_plot_odr(kt_231129C, ep_231129C, ax[3], mask=full_mask_231129C, annotation_xy=(0.05, 0.22))
 
 ax[-1].set_xlabel("kT [keV]", fontsize=LABEL_FONT_SIZE)
 [a.set_ylabel(r"$E_\text{peak}$ [keV]", fontsize=LABEL_FONT_SIZE) for i, a in enumerate(ax) if i % 2 == 0]
@@ -175,27 +186,69 @@ pd.DataFrame(points_rows).to_csv("epeak_vs_kt_points.csv", index=False)
 print(f"Saved: epeak_vs_kt_points.csv  ({len(points_rows)} rows)")
 
 odr_rows = [
-    {"grb_name": "GRB080916C", "fit_type": "all", "n_points": len(kt_080916C),
-     "slope": odr_all_080916C.beta[0], "slope_err": odr_all_080916C.sd_beta[0],
-     "intercept": odr_all_080916C.beta[1], "intercept_err": odr_all_080916C.sd_beta[1]},
-    {"grb_name": "GRB080916C", "fit_type": "restricted", "n_points": int(sum(full_mask_080916C)),
-     "slope": odr_full_080916C.beta[0], "slope_err": odr_full_080916C.sd_beta[0],
-     "intercept": odr_full_080916C.beta[1], "intercept_err": odr_full_080916C.sd_beta[1]},
-    {"grb_name": "GRB140206B", "fit_type": "all", "n_points": len(kt_140206B),
-     "slope": odr_all_140206B.beta[0], "slope_err": odr_all_140206B.sd_beta[0],
-     "intercept": odr_all_140206B.beta[1], "intercept_err": odr_all_140206B.sd_beta[1]},
-    {"grb_name": "GRB140206B", "fit_type": "restricted", "n_points": int(sum(full_mask_140206B)),
-     "slope": odr_full_140206B.beta[0], "slope_err": odr_full_140206B.sd_beta[0],
-     "intercept": odr_full_140206B.beta[1], "intercept_err": odr_full_140206B.sd_beta[1]},
-    {"grb_name": "GRB131014A", "fit_type": "all", "n_points": len(kt_131014A),
-     "slope": odr_all_131014A.beta[0], "slope_err": odr_all_131014A.sd_beta[0],
-     "intercept": odr_all_131014A.beta[1], "intercept_err": odr_all_131014A.sd_beta[1]},
-    {"grb_name": "GRB231129C", "fit_type": "all", "n_points": len(kt_231129C),
-     "slope": odr_all_231129C.beta[0], "slope_err": odr_all_231129C.sd_beta[0],
-     "intercept": odr_all_231129C.beta[1], "intercept_err": odr_all_231129C.sd_beta[1]},
-    {"grb_name": "GRB231129C", "fit_type": "restricted", "n_points": int(sum(full_mask_231129C)),
-     "slope": odr_full_231129C.beta[0], "slope_err": odr_full_231129C.sd_beta[0],
-     "intercept": odr_full_231129C.beta[1], "intercept_err": odr_full_231129C.sd_beta[1]},
+    {
+        "grb_name": "GRB080916C",
+        "fit_type": "all",
+        "n_points": len(kt_080916C),
+        "slope": odr_all_080916C.beta[0],
+        "slope_err": odr_all_080916C.sd_beta[0],
+        "intercept": odr_all_080916C.beta[1],
+        "intercept_err": odr_all_080916C.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB080916C",
+        "fit_type": "restricted",
+        "n_points": int(sum(full_mask_080916C)),
+        "slope": odr_full_080916C.beta[0],
+        "slope_err": odr_full_080916C.sd_beta[0],
+        "intercept": odr_full_080916C.beta[1],
+        "intercept_err": odr_full_080916C.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB140206B",
+        "fit_type": "all",
+        "n_points": len(kt_140206B),
+        "slope": odr_all_140206B.beta[0],
+        "slope_err": odr_all_140206B.sd_beta[0],
+        "intercept": odr_all_140206B.beta[1],
+        "intercept_err": odr_all_140206B.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB140206B",
+        "fit_type": "restricted",
+        "n_points": int(sum(full_mask_140206B)),
+        "slope": odr_full_140206B.beta[0],
+        "slope_err": odr_full_140206B.sd_beta[0],
+        "intercept": odr_full_140206B.beta[1],
+        "intercept_err": odr_full_140206B.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB131014A",
+        "fit_type": "all",
+        "n_points": len(kt_131014A),
+        "slope": odr_all_131014A.beta[0],
+        "slope_err": odr_all_131014A.sd_beta[0],
+        "intercept": odr_all_131014A.beta[1],
+        "intercept_err": odr_all_131014A.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB231129C",
+        "fit_type": "all",
+        "n_points": len(kt_231129C),
+        "slope": odr_all_231129C.beta[0],
+        "slope_err": odr_all_231129C.sd_beta[0],
+        "intercept": odr_all_231129C.beta[1],
+        "intercept_err": odr_all_231129C.sd_beta[1],
+    },
+    {
+        "grb_name": "GRB231129C",
+        "fit_type": "restricted",
+        "n_points": int(sum(full_mask_231129C)),
+        "slope": odr_full_231129C.beta[0],
+        "slope_err": odr_full_231129C.sd_beta[0],
+        "intercept": odr_full_231129C.beta[1],
+        "intercept_err": odr_full_231129C.sd_beta[1],
+    },
 ]
 pd.DataFrame(odr_rows).to_csv("epeak_vs_kt_odr_fits.csv", index=False)
 print(f"Saved: epeak_vs_kt_odr_fits.csv  ({len(odr_rows)} rows)")

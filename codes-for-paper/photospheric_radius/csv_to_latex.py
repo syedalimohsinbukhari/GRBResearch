@@ -63,8 +63,7 @@ def exponent_label(norm):
 def format_normalised(value, err_lower, err_upper, norm, decimals):
     """Render value/norm with asymmetric errors, the exponent living in the header."""
     return (
-        f"${value / norm:.{decimals}f}_{{-{err_lower / norm:.{decimals}f}}}"
-        f"^{{+{err_upper / norm:.{decimals}f}}}$"
+        f"${value / norm:.{decimals}f}_{{-{err_lower / norm:.{decimals}f}}}" f"^{{+{err_upper / norm:.{decimals}f}}}$"
     )
 
 
@@ -143,9 +142,7 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
         f_bb_cell = format_normalised(
             row["f_bb"], row["f_bb_err_lower"], row["f_bb_err_upper"], F_BB_NORM, f_bb_decimals
         )
-        r0_cell = format_normalised(
-            row["r0_cm"], row["r0_err_lower_cm"], row["r0_err_upper_cm"], R0_NORM, r0_decimals
-        )
+        r0_cell = format_normalised(row["r0_cm"], row["r0_err_lower_cm"], row["r0_err_upper_cm"], R0_NORM, r0_decimals)
         r_ph_cell = format_normalised(
             row["r_ph_cm"], row["r_ph_err_lower_cm"], row["r_ph_err_upper_cm"], R_PH_NORM, r_ph_decimals
         )

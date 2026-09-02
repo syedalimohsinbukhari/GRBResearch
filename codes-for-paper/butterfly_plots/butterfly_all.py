@@ -6,7 +6,7 @@ import numpy as np
 
 from grb_research import GRBCatalog, find_project_root, update_style
 from grb_research.grb_calculations import plot_all_models
-from grb_research.grb_constants import short_to_long
+from grb_research.grb_constants import short_to_long, FIGURE_SIZE_4x4
 
 update_style()
 
@@ -27,4 +27,10 @@ is_ex = [sum(i) for i in is_ex]
 
 rng = np.random.default_rng(seed=42)
 
-plot_all_models(grb_best, grb_name, 2, 2, save=True, rng=rng)
+plot_all_models(best_models=grb_best,
+                grb_name=grb_name,
+                n_rows=2,
+                n_cols=2,
+                save=True,
+                rng=rng,
+                fig_size=FIGURE_SIZE_4x4)

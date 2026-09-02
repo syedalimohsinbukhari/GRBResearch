@@ -7,8 +7,16 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from plotez.typing import ArrayLike
 
-from grb_research import (LABEL_FONT_SIZE, LEGEND_FONT_SIZE, SAVE_DPI, TICK_FONT_SIZE, find_project_root,
-                          plot_per_episode, prepare_grbs, update_style)
+from grb_research import (
+    LABEL_FONT_SIZE,
+    LEGEND_FONT_SIZE,
+    SAVE_DPI,
+    TICK_FONT_SIZE,
+    find_project_root,
+    plot_per_episode,
+    prepare_grbs,
+    update_style,
+)
 from utils import extract_parameter, prepare_panel_data
 
 update_style()
@@ -72,9 +80,20 @@ _, ax = plt.subplots(2, 2, figsize=(11.5, 8.5))
 ax = ax.flatten()
 
 for i, (panel, (values, errors)) in enumerate(zip(panels, beta_results)):
-    plot_per_episode(values=values, errors=errors, m_name=grb_list[i], start=panel.start, end=panel.end,
-                     difference=panel.diff, midpoints=panel.midpoint, axes=ax[i], has_BB=panel.has_bb,
-                     episode_labels=panel.episode_labels, model_names=panel.model_names, markers=panel.markers)
+    plot_per_episode(
+        values=values,
+        errors=errors,
+        m_name=grb_list[i],
+        start=panel.start,
+        end=panel.end,
+        difference=panel.diff,
+        midpoints=panel.midpoint,
+        axes=ax[i],
+        has_BB=panel.has_bb,
+        episode_labels=panel.episode_labels,
+        model_names=panel.model_names,
+        markers=panel.markers,
+    )
 
 [v.set_xlabel("Time [s]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i >= 2]
 [v.set_ylabel("Energy [keV]", fontsize=LABEL_FONT_SIZE) for i, v in enumerate(ax) if i % 2 == 0]
@@ -85,8 +104,16 @@ plt.yticks(fontsize=TICK_FONT_SIZE)
 # GRB140206B's wide box collides with its EX0/TR1 points under "lower right"; its data
 # clusters at low x/high y, so "upper right" is the clear corner instead.
 legend_ncols = {0: 2, 2: 2}
-[a.legend(loc="lower right", fontsize=LEGEND_FONT_SIZE, title=f"GRB{grb_list[i]}",
-          title_fontsize=LEGEND_FONT_SIZE, ncols=legend_ncols.get(i, 1)) for i, a in enumerate(ax)]
+[
+    a.legend(
+        loc="lower right",
+        fontsize=LEGEND_FONT_SIZE,
+        title=f"GRB{grb_list[i]}",
+        title_fontsize=LEGEND_FONT_SIZE,
+        ncols=legend_ncols.get(i, 1),
+    )
+    for i, a in enumerate(ax)
+]
 plt.tight_layout()
 for extension in ("png", "pdf"):
     plt.savefig(f"./high_index_best__all.{extension}", dpi=SAVE_DPI)

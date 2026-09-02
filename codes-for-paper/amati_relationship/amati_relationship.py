@@ -13,7 +13,9 @@ from amati_helpers import (
     EP_NORM,
     EI_NORM,
 )
-from grb_research import ModelSet, find_project_root, prepare_grbs, update_style
+from grb_research import ModelSet, find_project_root, prepare_grbs, update_style, LABEL_FONT_SIZE, LEGEND_FONT_SIZE, \
+    LEGEND_TITLE_FONT_SIZE
+from grb_research.grb_utils import save_fig
 
 # ---------------------------------------------------------------------------
 # Data
@@ -71,7 +73,8 @@ for i, a in enumerate([ax[0]]):
         axis=a,
     )
 
-    a.legend(loc="best", ncols=3, title=f"GRB{grb_list[i]}")
+    a.legend(loc="best", title=f"GRB{grb_list[i]}",
+             fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE)
 
     ep_total.append(_[0])
     ei_total.append(_[1])
@@ -97,7 +100,8 @@ for idx, m_ in enumerate(grb_best[1:]):
             axis=ax[idx + 1],
         )
 
-    ax[idx + 1].legend(loc="best", ncols=3, title=f"GRB{grb_list[idx + 1]}")
+    ax[idx + 1].legend(loc="best", title=f"GRB{grb_list[idx + 1]}",
+             fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE)
 
 ep_total = list(chain.from_iterable(ep_total))
 ei_total = list(chain.from_iterable(ei_total))
@@ -159,14 +163,10 @@ q.to_csv("amati_relationship.csv", index=False)
 # ---------------------------------------------------------------------------
 
 for a in ax[2:]:
-    a.set_xlabel(r"$E_{i,\mathrm{peak}}^{3}$ [keV]")
-    a.tick_params(axis="both")
+    a.set_xlabel(r"$E_{i,\mathrm{peak}}^{2}$ [keV]", fontsize=LABEL_FONT_SIZE)
+    # a.tick_params(axis="both")
 for a in ax[::2]:
-    a.set_ylabel(r"$E_\mathrm{iso}^{52}$ [erg]")
-    a.tick_params(axis="both")
+    a.set_ylabel(r"$E_\mathrm{iso}^{52}$ [erg]", fontsize=LABEL_FONT_SIZE)
+#     a.tick_params(axis="both")
 
-plt.tight_layout()
-# plt.show()
-for fmt in ("png", "pdf"):
-    plt.savefig(f"./amati_relationship.{fmt}")
-plt.close()
+save_fig(f, "amati_relationship")
