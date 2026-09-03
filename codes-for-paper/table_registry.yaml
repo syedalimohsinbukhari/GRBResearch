@@ -1,0 +1,55 @@
+# Source-of-truth registry for every generated LaTeX table the paper actually uses
+# (codes-for-paper/sync_paper_assets.py reads this, alongside figure_registry.yaml).
+#
+# `source` is relative to GRBResearchWork/, `dest` is always `tex_files/generated/<name>.tex` in
+# GRBResearchPaper/ -- every generated table lands there per CLAUDE.md's "Generated LaTeX tables"
+# convention, never directly in appendices/ (those hold hand-authored wrapper files that `\input`
+# the generated table -- see appendix_LAT_info.tex / appendix_seeding_table.tex for the pattern).
+#
+# Same convention as seed_registry.yaml: a table is never silently dropped from this file.
+#   active           -- copied by the runner.
+#   no_known_source  -- exists in GRBResearchPaper/tex_files/generated/ or appendices/ today
+#                        (the 8 per-GRB `table_*_large.tex` files, `table_template.tex`,
+#                        `time-integrated-table.tex`), but no generating script was found in
+#                        GRBResearchWork during a search of this repo; not auto-copyable, so not
+#                        the runner's job -- listed so it's clear this was checked, not missed.
+
+active:
+  amati_relationship_table:
+    source: codes-for-paper/amati_relationship/amati_relationship_table.tex
+    dest: tex_files/generated/amati_relationship_table.tex
+  bb_fraction_table:
+    source: codes-for-paper/bb_fraction/bb_fraction_table.tex
+    dest: tex_files/generated/bb_fraction_table.tex
+  fluence_table:
+    source: codes-for-paper/fluence/fluence_table.tex
+    dest: tex_files/generated/fluence_table.tex
+  lat_info_table:
+    source: LAT_analysis/lat_info_table.tex
+    dest: tex_files/generated/lat_info_table.tex
+  lorentz_table:
+    source: codes-for-paper/lorentz_factor/lorentz_table.tex
+    dest: tex_files/generated/lorentz_table.tex
+  lorentz_table_limit_b:
+    source: codes-for-paper/lorentz_factor/lorentz_table_limit_b.tex
+    dest: tex_files/generated/lorentz_table_limit_b.tex
+  photospheric_table:
+    source: codes-for-paper/photospheric_radius/photospheric_table.tex
+    dest: tex_files/generated/photospheric_table.tex
+  seed_table:
+    source: codes-for-paper/seed_table.tex
+    dest: tex_files/generated/seed_table.tex
+
+no_known_source:
+  per_grb_large_tables:
+    dest_pattern: "appendices/table_<GRB>_large.tex"
+    note: >
+      8 files exist (080916C, 131014A, 140206B, 231129C -- used by main.tex's appendix;
+      110721A, 110731A, 150210A, 190114C -- not \input anywhere, non-paper-sample GRBs per
+      CLAUDE.md). No generating script found in GRBResearchWork via search.
+  table_template:
+    dest: appendices/table_template.tex
+    note: "no generating script found; appears hand-authored"
+  time_integrated_table:
+    dest: appendices/time-integrated-table.tex
+    note: "no generating script found; appears hand-authored"

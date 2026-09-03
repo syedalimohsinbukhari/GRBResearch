@@ -148,14 +148,18 @@ per-episode error bar.
     fits' draws seemed like a reasonable way to "pair" them, but validation showed it was wrong: because both fits
     use the same model form with a similar covariance structure, sharing a seed made the two draws' kt_bb nearly
     perfectly correlated (measured r = 0.9996 for T90's BAND_BB), which collapsed the ratio's spread to an
-    artificially tight ~0.15%-wide interval — about 20x tighter than either an independent-seed MC run or the
+    artificially tight ~0.15%-wide interval — about 20x tighter than either an independent-draw MC run or the
     original linearized estimate, which agree with each other at the few-percent level. That tightness was a
     seed-sharing artifact (both draws dominated by the same underlying random vector, not by anything physical about
     correlated fits), not a real reduction in uncertainty. Caught by directly checking the correlation coefficient
     and comparing against the earlier delta-method numbers before accepting the result -- the ~20x jump was the
-    signal that something was wrong, not a discovery. Fixed by drawing the two fits' samples with different seeds
-    (`seed` and `seed + 1`); the two fits are separate RMFIT optimizations with no actual joint covariance available
-    to justify treating them as paired in the first place.
+    signal that something was wrong, not a discovery. Fixed by drawing the two fits' samples sequentially from one
+    shared, non-reseeded `rng` (Joint's draw advances the generator's state, then GBM-only's draw continues from
+    there) rather than two independently-seeded generators (`seed`/`seed + 1`, the original fix, superseded during
+    the RNG/seeding overhaul so this file's `rng` is built and threaded the same way as every other script in
+    `codes-for-paper/`); the two fits are separate RMFIT optimizations with no actual joint covariance available
+    to justify treating them as paired in the first place, and a single advancing generator gives the same
+    practical decorrelation as two independent seeds without a per-call reseed.
 - **Legend split into fit-type (colour) and episode (marker), per user request (2026-09-01).** Colour: yellow
   (`JOINT_COLOR = "gold"`, not the project's per-GRB `GRBPlotStyle` colour, since both series here are the *same*
   burst -- colour encodes fit type in this folder, not GRB identity) for Joint, black for GBM-only. Marker: taken
@@ -167,9 +171,10 @@ per-episode error bar.
 - **f_BB and MC settings copied from `bb_fraction/bb_flux_fraction.py`**, not imported, per the cross-folder-import
   convention (CLAUDE.md) — `episode_label`, `analytic_bb_bolometric_flux`, `split_energy_flux`, and the percentile
   MC pattern in `compute_f_bb` are verbatim copies. Same energy band (1 keV - 10 MeV observer-frame), same
-  `N_SAMPLES=10000`, `SEED=12345`, so the joint-fit `f_bb_joint` column here should reproduce
-  `bb_flux_fraction.csv`'s values for GRB131014A up to MC noise (not bit-for-bit, since the seed produces different
-  draws in a differently-shaped call, but the same distribution) — not cross-checked against that file line-by-line,
+  `N_SAMPLES=10000`; the seed itself is now derived independently per file (`seed_from_name(__file__)`, RNG/seeding
+  overhaul Phase B), so the joint-fit `f_bb_joint` column here should reproduce `bb_flux_fraction.csv`'s values for
+  GRB131014A up to MC noise (not bit-for-bit, since the two files draw from differently-seeded generators in a
+  differently-shaped call, but the same distribution) — not cross-checked against that file line-by-line,
   since the two are computed independently from the same model objects for a different purpose (a comparison table,
   not the paper's fraction figure). Decided by Claude.
 - **No z / cosmology columns.** f_BB in the 1 keV - 10 MeV observer-frame band is redshift- and
@@ -218,7 +223,8 @@ per-episode error bar.
   short-name mapping. This is fine for a one-off comparison script but would need a name-mapping entry if this key
   is ever consumed by another script in this project.
 - The paired-MC ratio still doesn't use the *true* joint covariance between the two fits (which doesn't exist --
-  they're separate RMFIT optimizations), so it's still an approximation: independent-seed draws are a reasonable
-  default in the absence of that information, not a claim that the two fits are actually statistically independent
+  they're separate RMFIT optimizations), so it's still an approximation: sequential draws from one shared,
+  non-reseeded generator are a reasonable default in the absence of that information, not a claim that the two
+  fits are actually statistically independent
   (they share the same underlying GBM photon counts). No sensitivity check was run on how much the paired-MC
   intervals would change under a partial, hand-specified correlation.

@@ -1,0 +1,63 @@
+# Source-of-truth registry for the paper's canonical RNG-seed table (codes-for-paper/seed_table_to_latex.py reads this).
+#
+# Maps a short, readable slug -> the script the seed is actually derived from.
+#  The seed integer itself is NEVER written here -- it is always computed live via seed_from_name(script), the same
+# way every script computes its own.
+#
+# Three categories, so a script is never silently dropped from view:
+#   active -- rendered into the paper's seed-table appendix, in this order (figures first, in
+#               the order they appear in the paper, tables last -- see SEED_PLAN-implementation.md).
+#   unused -- uses the seeding scheme but isn't referenced by any figure or table in the current
+#               draft.
+#   dormant -- uses the seeding scheme but has no caller anywhere in codes-for-paper/.
+#
+# unused/dormant scripts are still asserted to exist on disk and still get a computed seed in seed_table.csv, just
+# excluded from the rendered paper table.
+
+active:
+    butterfly_seds:
+        script: butterfly_plots/butterfly_all.py
+        item: "Butterfly SEDs (all four bursts)"
+        cref: "\\cref{fig:butterfly}"
+    peak_energy_distribution:
+        script: model_parameters/peak_energy.py
+        item: "Peak energy distribution"
+        cref: "\\cref{fig:peakenergybestall}"
+    amati_relation:
+        script: amati_relationship/amati_relationship.py
+        item: "Amati relation"
+        cref: "\\cref{fig:amati_relationship}"
+    lorentz_limit_a:
+        script: lorentz_factor/lorentz_factor.py
+        item: "Lorentz factor, Limit A"
+        cref: "\\cref{fig:gamma_comparison}"
+    lorentz_limit_b:
+        script: lorentz_factor/lorentz_factor_limit_b.py
+        item: "Lorentz factor, Limit B"
+        cref: "\\cref{fig:gamma_comparison}"
+    photospheric_radius:
+        script: photospheric_radius/pe_er_photosphere.py
+        item: "Photospheric radius / thermal $\\Gamma$"
+        cref: "\\cref{fig:photospheric,fig:gamma_comparison}"
+    bb_flux_fraction:
+        script: bb_fraction/bb_flux_fraction.py
+        item: "Blackbody flux fraction $f_\\mathrm{BB}$"
+        cref: "\\cref{fig:bbfraction,fig:bbfraction-rest-vs-z}"
+    gbm_only_refit:
+        script: gbm_only_refit/gbm_only_refit.py
+        item: "\\ac{GBM}-only refit comparison"
+        cref: "near \\cref{fig:gbmonly-kt} (not itself \\ac{MC}-derived)"
+    gbm_fluence_table:
+        script: fluence/grb_fluence.py
+        item: "\\ac{GBM} fluence"
+        cref: "\\cref{tab:fluence}"
+
+unused:
+    kt_epeak_correlation:
+        script: model_parameters/epeak_vs_kt.py
+        note: "not referenced by any figure or table in the current draft"
+
+dormant:
+    norris_pulse_fit_tv:
+        script: "variability_analysis/norris..py"
+        note: "no caller anywhere in codes-for-paper/"

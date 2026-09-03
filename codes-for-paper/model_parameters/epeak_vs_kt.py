@@ -12,10 +12,12 @@ from grb_research import (
     MARKER_SIZE,
     SAVE_DPI,
     find_project_root,
+    get_rng,
     prepare_grbs,
+    seed_from_name,
     update_style,
 )
-from grb_research.grb_constants import CAP_SIZE
+from grb_research.grb_constants import CAP_SIZE, N_SAMPLES
 from utils import extract_kt_epeak_from_models, fit_and_plot_odr
 
 # -- Load data ----------------------------------------------------------------
@@ -31,8 +33,8 @@ grb_080916C, grb_140206B, grb_131014A, grb_231129C = grb_objs
 
 # The SBPL -> Band E_peak conversion inside extract_kt_epeak_from_models is Monte-Carlo;
 # BAND/CPL rows read e_peak directly from the fit and carry no MC provenance.
-SEED = 1234
-N_SAMPLES = 10_000
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 
 # -- Fetch models (curated selection) -----------------------------------------
 #
@@ -82,16 +84,16 @@ bb_status_231129C = ["Y", "Y", "Y", "X"]
 # -- Extract kT / E_peak -----------------------------------------------------
 
 kt_080916C, ep_080916C, mkr_080916C, clr_080916C, lbl_080916C, mc_080916C = extract_kt_epeak_from_models(
-    models_080916C, seed=SEED
+    models_080916C, rng=rng
 )
 kt_140206B, ep_140206B, mkr_140206B, clr_140206B, lbl_140206B, mc_140206B = extract_kt_epeak_from_models(
-    models_140206B, seed=SEED
+    models_140206B, rng=rng
 )
 kt_131014A, ep_131014A, mkr_131014A, clr_131014A, lbl_131014A, mc_131014A = extract_kt_epeak_from_models(
-    models_131014A, seed=SEED
+    models_131014A, rng=rng
 )
 kt_231129C, ep_231129C, mkr_231129C, clr_231129C, lbl_231129C, mc_231129C = extract_kt_epeak_from_models(
-    models_231129C, seed=SEED
+    models_231129C, rng=rng
 )
 
 # -- Plot ---------------------------------------------------------------------

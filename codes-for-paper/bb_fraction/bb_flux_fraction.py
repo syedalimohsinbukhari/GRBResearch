@@ -65,11 +65,13 @@ from grb_research import (
     component_energy_fluxes,
     draw_model_samples,
     find_project_root,
+    get_rng,
     prepare_grbs,
+    seed_from_name,
     update_style,
     TITLE_FONT_SIZE,
 )
-from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg
+from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg, N_SAMPLES
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 from grb_research.grb_utils import save_fig
 
@@ -115,8 +117,8 @@ OM0 = 0.286
 CHUNK_SIZE = 2_000
 
 # MC settings — the project-wide convention (amati_relationship.py:39-41).
-N_SAMPLES = 10_000
-SEED = 12345
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 
 # Percentiles for the median and the 1-sigma asymmetric interval.
 PERCENTILES = (16.0, 50.0, 84.0)
@@ -180,7 +182,7 @@ def analytic_bb_bolometric_flux(amp_bb, kt_bb):
 # --- Monte Carlo -------------------------------------------------------------
 
 
-def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
+def compute_fraction(model, grb_name, n_samples=N_SAMPLES, *, rng):
     """Compute f_BB (observer- and rest-frame, at every z) for one BB-inclusive model.
 
     Returns a list of ``FractionResult``, one per redshift in this burst's z-grid (a single spectroscopic z, or the
@@ -194,9 +196,7 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, seed=SEED, rng=None):
     best_bb, best_total = split_energy_flux(model.name, best_values, energy)
     flux_bb_best = float(best_bb[0])
 
-    # get_rng(seed=..., rng=...) is applied inside draw_model_samples itself, so the seed/rng are threaded straight
-    # through rather than building a second, redundant RNG here.
-    samples = draw_model_samples(model, n_samples=n_samples, seed=seed, rng=rng)
+    samples = draw_model_samples(model, n_samples=n_samples, rng=rng)
     sample_bb, sample_total = split_energy_flux(model.name, samples, energy)
     fractions = sample_bb / sample_total
 
@@ -304,7 +304,7 @@ def collect_results():
         for model in grb.get_all_best_models():
             if "BB" not in model.name:
                 continue
-            results = compute_fraction(model, short_name)
+            results = compute_fraction(model, short_name, rng=rng)
             marker = resolver.resolve(model.interval)
             for result in results:
                 result.marker = marker

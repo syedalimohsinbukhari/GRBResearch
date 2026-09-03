@@ -12,9 +12,11 @@ from .grb_calculations import (
     draw_model_samples,
     get_rng,
     mc_e_iso_sampler,
+    seed_from_name,
 )
 from .grb_constants import (
     LABEL_FONT_SIZE,
+    MASTER_SEED,
     LEGEND_FONT_SIZE,
     LEGEND_TITLE_FONT_SIZE,
     TICK_FONT_SIZE,

@@ -14,23 +14,26 @@ from grb_research import (
     SAVE_DPI,
     TICK_FONT_SIZE,
     find_project_root,
+    get_rng,
     plot_per_episode,
     prepare_grbs,
+    seed_from_name,
     update_style,
     EpisodeMarkerResolver,
 )
+from grb_research.grb_constants import N_SAMPLES
 from utils import convert_sbpl_to_band, extract_parameter, prepare_panel_data
 
 update_style()
 
 # SBPL -> Band E_peak conversion is Monte-Carlo (utils.convert_sbpl_to_band); BAND/CPL
 # rows read e_peak directly from the fit and carry no MC provenance.
-SEED = 42
-N_SAMPLES = 10_000
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 
 
 def extract_peak_energy(
-    model_collection, seed: int = SEED, n_samples: int = N_SAMPLES
+    model_collection, rng=None, n_samples: int = N_SAMPLES
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Extract peak energy (Ep) values and asymmetric errors from a model set.
 
@@ -46,7 +49,7 @@ def extract_peak_energy(
 
     for model in model_collection:
         if "SBPL" in model.name:
-            err_lo, median, err_hi = convert_sbpl_to_band(model, n_sample=n_samples, seed=seed)
+            err_lo, median, err_hi = convert_sbpl_to_band(model, n_sample=n_samples, rng=rng)
             is_mc.append(True)
         else:
             result = extract_parameter(model, "e_peak")
@@ -69,7 +72,7 @@ result_file = SOURCE_ROOT / "results.json"
 _, _, grb_objs, grb_best = prepare_grbs(grb_list, result_file, get_best=True)
 panels = prepare_panel_data(grb_objs)
 
-ep_results = [extract_peak_energy(best) for best in grb_best]
+ep_results = [extract_peak_energy(best, rng=rng) for best in grb_best]
 
 _, ax = plt.subplots(2, 2, figsize=(11.5, 8.5))
 ax = ax.flatten()

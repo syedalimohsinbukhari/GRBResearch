@@ -134,7 +134,7 @@ def sbpl_mask(index1_sbpl, index2_sbpl, e_break_sbpl):
     return np.logical_and(np.abs((index1_sbpl + index2_sbpl + 4) / (index1_sbpl - index2_sbpl)) < 1, e_break_sbpl > 0)
 
 
-def convert_sbpl_to_band(model, n_sample: int = 10_000, seed=None, rng=None):
+def convert_sbpl_to_band(model, n_sample: int = 10_000, *, rng: np.random.Generator):
     """Convert SBPL break energy to Band E_peak via Monte-Carlo.
 
     Draws ``1.5 × n_sample`` multivariate-normal samples from the parameter
@@ -146,9 +146,6 @@ def convert_sbpl_to_band(model, n_sample: int = 10_000, seed=None, rng=None):
     tuple of (error_lo, median, error_hi)
         From the 16 / 50 / 84 percentiles.
     """
-    if seed is not None:
-        rng = np.random.default_rng(seed)
-
     parameters = model.parameters
     cov_matrix = model.covariance_matrix_value
     raw = model.get_parameter_set.get_populated_values(cov_matrix, size=int(1.5 * n_sample), rng=rng)
@@ -264,7 +261,7 @@ def fit_and_plot_odr(
 # -- Batch kT / E_peak extraction --------------------------------------------
 
 
-def extract_kt_epeak_from_models(models, t90_marker="o", seed=1234):
+def extract_kt_epeak_from_models(models, t90_marker="o", *, rng: np.random.Generator):
     """Extract kT and E_peak arrays, markers, colours, and labels from models.
 
     For SBPL models the E_peak is derived via :func:`convert_sbpl_to_band`;
@@ -276,8 +273,9 @@ def extract_kt_epeak_from_models(models, t90_marker="o", seed=1234):
         Spectral models to process.
     t90_marker : str
         Marker to use for the T90 episode.
-    seed : int
-        Random seed for the SBPL Monte-Carlo conversion.
+    rng : np.random.Generator
+        Shared generator for the SBPL Monte-Carlo conversion; threaded into every
+        model in `models`, so state advances across calls rather than resetting.
 
     Returns
     -------
@@ -299,7 +297,7 @@ def extract_kt_epeak_from_models(models, t90_marker="o", seed=1234):
         kt_values.append(extract_parameter(model_, "kt", return_asymmetric=True))
 
         if "SBPL" in model_.name:
-            ep_values.append(convert_sbpl_to_band(model_, seed=seed))
+            ep_values.append(convert_sbpl_to_band(model_, rng=rng))
             is_mc.append(True)
         elif "BAND" in model_.name or "CPL" in model_.name:
             ep_values.append(extract_parameter(model_, "e_peak", return_asymmetric=True))
