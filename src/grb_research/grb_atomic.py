@@ -1,10 +1,11 @@
 """Created on Dec 26 00:30:38 2025"""
 
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 from numpy.linalg import LinAlgError, cholesky, inv
+
+from .grb_constants import N_SAMPLES
 
 FOUR_TABS = "\t\t\t\t"
 
@@ -37,24 +38,23 @@ class ParameterSet:
         self,
         cov_matrix,
         parameter_name=None,
-        size=10_000,
-        seed: Optional[int] = None,
-        rng: Optional[np.random.Generator] = None,
+        size: int = N_SAMPLES,
+        *,
+        rng: np.random.Generator,
     ):
         """
         Returns a multivariate normal sample from the parameter set with a given covariance matrix.
 
         Parameters
         ----------
-        cov_matrix : np.ndarray
+        cov_matrix :
             Covariance matrix for the parameters.
-        parameter_name : str or list of str, optional
-            Specific parameter name(s) to return. If None, returns all parameters.
-        size : int, optional
-            Number of samples to generate (default: 10,000).
-        seed : int, optional
-            Random seed for reproducibility. Ignored if rng is provided.
-        rng : np.random.Generator, optional
+        parameter_name :
+            Specific parameter name(s) to return.
+            If None, returns all parameters.
+        size :
+            Number of samples to generate (default: 10_000).
+        rng :
             Random number generator instance for reproducibility.
 
         Returns
@@ -66,11 +66,7 @@ class ParameterSet:
         values = [i.value for i in self.parameters]
         names = [i.name for i in self.parameters]
 
-        # Get or create RNG
-        if rng is not None:
-            rng_instance = rng
-        else:
-            rng_instance = np.random.default_rng(seed)
+        rng_instance = rng
 
         if parameter_name is not None:
             if isinstance(parameter_name, str):

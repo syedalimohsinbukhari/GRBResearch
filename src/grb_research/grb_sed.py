@@ -1,12 +1,12 @@
 """Created on Dec 31 16:27:26 2025"""
 
 from dataclasses import dataclass
-from typing import Callable, Tuple
+from typing import Callable
 
 import numpy as np
 
 from .grb_atomic import Parameter
-from .grb_constants import kev_to_erg, model_n_pars
+from .grb_constants import kev_to_erg, model_n_pars, N_SAMPLES, N_GRID
 from .grb_enums import GRBModelsCombinations as gmC
 from .grb_model import Model
 from .grb_seds import band_function, black_body, cutoff_powerlaw, powerlaw, smoothly_broken_power_law
@@ -43,9 +43,9 @@ class SpectralModels:
     model: Model
     model_type: str = "counts"
 
-    n_sample: int = 10_000
-    energy_range: Tuple[int, int] = (1, 7)
-    n_grid: int = 10_000
+    n_sample: int = N_SAMPLES
+    energy_range: tuple[float, float] = (1.0, 7.0)
+    n_grid: int = N_GRID
 
     redshift: float = 0.0
 
@@ -80,11 +80,11 @@ class SpectralModels:
         p_name,
         p_vals,
         cov_,
-        n_samples=10_000,
-        n_grid=10_000,
-        model_type="counts",
-        e_range=(1, 7),
-        redshift=0,
+        n_samples: int = N_SAMPLES,
+        n_grid: int = N_GRID,
+        model_type: str = "counts",
+        e_range: tuple[float, float] = (1.0, 7.0),
+        redshift: int = 0,
     ):
         """Build a SpectralModel from legacy data."""
         errors = np.sqrt(np.diag(cov_))

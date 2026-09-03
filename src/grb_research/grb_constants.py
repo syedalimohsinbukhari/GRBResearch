@@ -11,6 +11,7 @@ __all__ = [
     "NOK_THRESHOLD",
     "OK_THRESHOLD",
     "kev_to_erg",
+    "MASTER_SEED",
     "model_n_pars",
     "short_to_long",
     "long_to_short",
@@ -49,6 +50,9 @@ __all__ = [
     # Grid
     "GRID_ALPHA",
     "GRID_LINESTYLE",
+    # Others
+    "N_SAMPLES",
+    "N_GRID",
 ]
 
 from .grb_enums import GRBModelsCombinations as gmC
@@ -64,8 +68,8 @@ ANNOTATION_FONT_SIZE = 8
 # Figure / line / marker geometry
 FIGURE_DPI = 150
 SAVE_DPI = 600
-DEFAULT_FIGURE_SIZE = (8, 6)
-FIGURE_SIZE_4x4 = (12, 8)
+DEFAULT_FIGURE_SIZE = (8.0, 6.0)
+FIGURE_SIZE_4x4 = (12.0, 8.0)
 LINE_WIDTH = 1.0
 # MARKER_SIZE = 6
 # Matches gamma_comparison_plot.py's convention (previously a local MARKER_SIZE * 1.4 override there);
@@ -91,8 +95,13 @@ NOK_THRESHOLD = 1.0
 
 kev_to_erg = 1.6021766208e-09
 
+MASTER_SEED = 2828702241  # drawn via secrets.randbits(32), 2026-09-02T15:40:46 UTC — see SEEDING.md
+
 GRB_COLORS = ["#0072B2", "#E69F00", "#CC79A7", "#009E73"]
 GRB_EP_COLOR = {"T90": "r", "TR": "g", "EX": "b"}
+
+N_SAMPLES = 10_000
+N_GRID = 5_000
 
 # ==================== AUTO-GENERATED FROM ENUMS - DO NOT EDIT DIRECTLY ====================
 

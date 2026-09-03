@@ -4,7 +4,7 @@ import json
 import os
 from itertools import chain
 from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -114,9 +114,7 @@ def filter_covariance(cov_matrix, param_names):
     return filtered_cov, filtered_names, keep_idx
 
 
-def plot_covariance_corner(
-    model: Model, seed: Optional[int] = None, rng: Optional[np.random.Generator] = None
-):
+def plot_covariance_corner(model: Model, *, rng: np.random.Generator):
     """
     Corner-style plot with histograms on the diagonal and covariance ellipses off-diagonal.
 
@@ -128,9 +126,7 @@ def plot_covariance_corner(
         Covariance matrix.
     param_names : list of str
         Names of parameters (length N).
-    seed : int, optional
-        Random seed for reproducibility. Ignored if rng is provided.
-    rng : np.random.Generator, optional
+    rng : np.random.Generator
         Random number generator instance for reproducibility.
     """
     means = np.asarray([i.value for i in model.parameters], dtype=float)
@@ -151,11 +147,7 @@ def plot_covariance_corner(
     if n_params == 0:
         raise ValueError("cov_matrix has no non-zero variance parameters to plot")
 
-    # Get or create RNG
-    if rng is not None:
-        rng_instance = rng
-    else:
-        rng_instance = np.random.default_rng(seed)
+    rng_instance = rng
 
     stds = np.sqrt(np.diag(cov_matrix))
     n_stds = range(1, 4)

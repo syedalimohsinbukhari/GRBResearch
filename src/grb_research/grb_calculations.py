@@ -1,5 +1,6 @@
 """Created on Jan 07 15:37:00 2026"""
 
+import hashlib
 import os
 import warnings
 from multiprocessing import Pool, cpu_count
@@ -12,7 +13,7 @@ from numpy.typing import ArrayLike
 from scipy.integrate import simpson
 from tqdm import tqdm
 
-from .grb_constants import kev_to_erg, model_n_pars
+from .grb_constants import kev_to_erg, MASTER_SEED, model_n_pars, N_SAMPLES, N_GRID, FIGURE_SIZE_4x4
 from .grb_enums import GRBModelsCombinations as gmC
 from .grb_fits_io import build_composite_schema
 from .grb_model import Model
@@ -44,6 +45,31 @@ def get_rng(seed: int | None = None, rng: np.random.Generator | None = None) -> 
     if rng is not None:
         return rng
     return np.random.default_rng(seed)
+
+
+def seed_from_name(name: str, master_seed: int = MASTER_SEED) -> int:
+    """
+    Derive a deterministic 32-bit seed from a file name and a master seed.
+
+    Hashes the basename of `name` together with `master_seed` so different scripts get different, reproducible seeds
+    without any script hardcoding a literal seed value.
+    Uses `os.path.basename` rather than full path so the derived seed is stable across machines and checkout locations.
+
+    Parameters
+    ----------
+    name :
+        Path or file name to derive the seed from.
+        Typically, a script's ``__file__``.
+    master_seed :
+        Project-wide master seed mixed into the hash (default: `MASTER_SEED`).
+
+    Returns
+    -------
+    int
+        A deterministic seed in [0, 2**32).
+    """
+    digest = hashlib.sha256(f"{os.path.basename(name)}-{master_seed}".encode()).hexdigest()
+    return int(digest, 16) % (2 ** 32)
 
 
 def legacy_build_mp(pars):
@@ -101,12 +127,12 @@ def mc_spectra_sampler(
     model: Model,
     model_type="counts",
     e_range=(1, 7),
-    n_samples: int = 10_000,
-    n_grid: int = 10_000,
+    n_samples: int = N_SAMPLES,
+    n_grid: int = N_GRID,
     n_workers: int | None = None,
     samples: ArrayLike | None = None,
-    seed: Optional[int] = None,
-    rng: Optional[np.random.Generator] = None,
+    *,
+    rng: np.random.Generator,
 ):
     """
     Parallel Monte-Carlo sampler for spectral model parameter estimation.
@@ -127,15 +153,13 @@ def mc_spectra_sampler(
         Number of parallel workers (default: CPU count).
     samples : np.ndarray, optional
         Pre-generated samples. If None, samples will be generated.
-    seed : int, optional
-        Random seed for reproducibility. Ignored if rng is provided.
-    rng : np.random.Generator, optional
+    rng : np.random.Generator
         Random number generator instance for reproducibility.
 
     Returns
     -------
     list
-        List of evaluated model values for each sample.
+        A list of evaluated model values for each sample.
     """
     m_keys = [i.name for i in model.parameters]
     m_vals = [i.value for i in model.parameters]
@@ -144,7 +168,7 @@ def mc_spectra_sampler(
     covar_ = 0.5 * (covar_ + covar_.T)
 
     if samples is None:
-        rng_instance = get_rng(seed=seed, rng=rng)
+        rng_instance = rng
         samples = rng_instance.multivariate_normal(mean=m_vals, cov=covar_, size=n_samples)
         m_res = ModelResampler(model=model, samples=samples, rng=rng_instance, destroy=True)
         samples = m_res.run_resampler()
@@ -168,18 +192,13 @@ class ModelResampler:
         self,
         model: Model,
         samples: np.ndarray,
-        rng: Optional[np.random.Generator] = None,
-        seed=None,
+        *,
+        rng: np.random.Generator,
         destroy: bool = True,
     ):
         self.model = model
         self._samples = samples if destroy else samples.copy()
-        if seed is None and rng is None:
-            raise ValueError("Either seed or rng must be definend.")
-        if rng is None:
-            self.rng: np.random.Generator = np.random.default_rng(seed)
-        else:
-            self.rng: np.random.Generator = rng
+        self.rng: np.random.Generator = rng
 
         self.m_val = [i.value for i in model.parameters]
         self.errs = np.sqrt(np.diag(model.covariance_matrix_value))
@@ -335,8 +354,8 @@ def credible_interval_partition(samples: np.ndarray) -> Tuple[np.ndarray, np.nda
 def mc_e_iso_sampler(
     model: Model,
     z: float = 1.0,
-    n_samples: int = 100,
-    n_grid: int = 100,
+    n_samples: int = N_SAMPLES,
+    n_grid: int = N_GRID,
     det_min: float = 1.0,
     det_max: float = 7.0,
     bol_min: float = 0.0,
@@ -345,8 +364,8 @@ def mc_e_iso_sampler(
     omega_m: float = 0.286,
     method=1,
     samples=None,
-    seed_number=1234,
-    rng: Optional[np.random.Generator] = None,
+    *,
+    rng: np.random.Generator,
 ) -> float:
     """
     Draw MC samples and compute isotropic-equivalent energy (E_iso).
@@ -377,8 +396,6 @@ def mc_e_iso_sampler(
         Method to use for calculation (default: 1).
     samples :
         Pre-generated samples. If None, samples will be generated.
-    seed_number :
-        Random seed for reproducibility (default: 1234). Ignored if rng is provided.
     rng :
         Random number generator instance for reproducibility.
 
@@ -387,7 +404,7 @@ def mc_e_iso_sampler(
     np.ndarray
         Array of E_iso samples in erg with shape (1, n_samples).
     """
-    rng_instance = get_rng(seed=seed_number, rng=rng)
+    rng_instance = rng
     bolometric_fluence = 0
 
     # The bolometric band [bol_min, bol_max] is defined in the REST frame, so the fitted (observer-frame) spectrum must
@@ -443,117 +460,18 @@ def mc_e_iso_sampler(
     return 4 * np.pi * lum_distance ** 2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
 
 
-def plot_best_models(best_models, n_rows=2, n_cols=None, grb_name=None, fig_size=(15, 4), save=True):
-    """
-    Plots the energy flux of the best-fitting models for gamma-ray burst (GRB) intervals.
-
-    This function creates subplots to display the results of spectral fits for a set of best models
-    applied to a GRB dataset. It computes the median and credible interval from MC samples for
-    each model and visualizes them with log-log plots. Each subplot corresponds to a specific
-    model or time interval.
-
-    Parameters
-    ----------
-    best_models :
-        A list of best-fitting spectral models, where each model contains
-        attributes such as interval type and name.
-    n_rows :
-        Number of rows in the subplot grid. Default is 2.
-    n_cols :
-        Number of columns in the subplot grid. If None, it will be determined dynamically.
-    grb_name :
-        Name of the GRB for labeling and saving output files. Default is None.
-    fig_size :
-        Figure size for the plot, specified as (width, height). Default is (15, 4).
-
-    Returns
-    -------
-    None
-    """
-    n_grid = 500
-    n_samples = 10_000 if os.cpu_count() > 10 else 1_000
-    x = np.logspace(1, 7, n_grid)
-
-    f, ax = plt.subplots(n_rows, n_cols, figsize=fig_size, sharex=True, sharey=True)
-    ax = ax.flatten()
-
-    has_cpl_bb = False
-
-    for i, v in enumerate(best_models):
-        if "BB" in v.name or "CPL" in v.name:
-            has_cpl_bb = True
-        color = (
-            "k"
-            if v.interval.kind == EpisodeTypes.T90
-            else (
-                "b"
-                if v.interval.kind in [EpisodeTypes.EX0, EpisodeTypes.EX1]
-                else "g" if v.interval.kind == EpisodeTypes.SP else "r"
-            )
-        )
-        print(f"processing {v.name}")
-        samples = mc_spectra_sampler(v, n_samples=n_samples, n_grid=n_grid)
-        samples = np.array(samples)
-
-        med, low, high = credible_interval_partition(samples)
-        med, low, high = med * kev_to_erg, low * kev_to_erg, high * kev_to_erg
-        ax[i].loglog(
-            x, med * x ** 2, f"{color}--", label=f"{v.name.replace('_', '+')}\n({v.interval.start} - {v.interval.end})"
-        )
-        ax[i].fill_between(x, low * x ** 2, high * x ** 2, color=color, alpha=0.2)
-        ax[i].legend()
-
-    [v.set_xlabel("Energy [keV]") for i, v in enumerate(ax) if i > (n_cols - 1)]
-    [v.set_ylabel("Energy Flux\n" + r"[erg/cm$^2$/s]") for i, v in enumerate(ax) if i % n_cols == 0]
-
-    if has_cpl_bb:
-        ax[-1].set_ylim(bottom=3.2e-10, top=2.8e-4)
-
-    f.tight_layout()
-    if save:
-        [plt.savefig(f"butterfly_{grb_name}.{i}", dpi=300) for i in ["png", "pdf"]]
-        plt.close()
-    else:
-        plt.show()
-
-
 def plot_all_models(
     best_models,
     grb_name,
     n_rows: int = 2,
     n_cols: int | None = None,
-    fig_size: tuple[float, float] = (12.0, 8.0),
+    n_grid: int = N_GRID,
+    n_samples: int = N_SAMPLES,
+    fig_size: tuple[float, float] = FIGURE_SIZE_4x4,
     save: bool = False,
-    seed: int | None = None,
-    rng: np.random.Generator | None = None,
+    *,
+    rng: np.random.Generator,
 ):
-    """
-    Generates a grid of plots displaying spectral energy distributions for a collection of models.
-
-    Parameters
-    ----------
-    :param best_models: A nested list where each sublist contains spectral models for a specific GRB.
-        Each model within a sublist should contain spectral information and interval data.
-    :param grb_name: A list of strings corresponding to the names of the GRBs.
-        This is used to label the plots and to save the output files.
-    :param n_rows: The number of rows in the grid of plots. Default is 2.
-    :param n_cols: The number of columns in the grid of plots.
-        If None (default), it is automatically determined based on the number of GRBs and `n_rows`.
-    :param fig_size: A tuple of floats representing the size of the figure in inches.
-        Default is (12, 8).
-    :param save: A boolean flag indicating whether to save the generated plots.
-        If True, the plots will be saved as PNG and PDF files in the current working directory.
-        If False, the plots will be displayed on the screen.
-    :param seed: An optional integer seed for reproducibility.
-        If provided, it will be used to initialize the random number generator.
-    :param rng: An optional instance of `np.random.Generator` for reproducible results.
-        If provided, it will be used instead of the default random number generator.
-
-    """
-    rng = get_rng(seed=seed, rng=rng)
-
-    n_grid = 500
-    n_samples = 10_000 if os.cpu_count() > 10 else 10
     x = np.logspace(1, 7, n_grid)
 
     legend_col = {0: 3, 1: 1, 2: 3, 3: 1}
@@ -702,20 +620,16 @@ class FluxFluenceCalculator:
         self,
         spectral_model: Model,
         log_energy_range: tuple[float, float] = (1, 3),
-        n_samples: int = 10_000,
-        n_grid: int = 500,
-        seed: int | None = None,
-        rng: np.random.Generator | None = None,
+        n_samples: int = N_SAMPLES,
+        n_grid: int = N_GRID,
+        *,
+        rng: np.random.Generator,
     ):
         self.spectral_model = spectral_model
         self.log_energy_range = log_energy_range
         self.n_samples = n_samples
         self.n_grid = n_grid
 
-        if seed is None and rng is None:
-            raise ValueError("Either seed or rng must be definend.")
-        if seed:
-            rng = np.random.default_rng(seed)
         self.rng = rng
 
     def _flux(self) -> np.ndarray:
@@ -841,7 +755,7 @@ _SED_FUNCTIONS = {
 
 
 def _component_energy_flux_block(model_name, values, energy):
-    """Vectorised per-component energy-flux integration for a block of draws."""
+    """Vectorized per-component energy-flux integration for a block of draws."""
     components = MODEL_MAP.get(gmC(model_name.lower()), (gmC(model_name.lower()),))
     energy_row = energy[None, :]
 
@@ -904,7 +818,7 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
     return merged, np.concatenate(totals)
 
 
-def draw_model_samples(model, n_samples: int = 10_000, seed: Optional[int] = None, rng=None):
+def draw_model_samples(model, n_samples: int = 10_000, *, rng: np.random.Generator):
     """Draw fit-covariance parameter samples, filtered by physical constraints.
 
     Mirrors the sampling half of :func:`mc_spectra_sampler` -- multivariate
@@ -913,7 +827,7 @@ def draw_model_samples(model, n_samples: int = 10_000, seed: Optional[int] = Non
     returns the parameter draws instead of evaluated spectra, so callers can
     compute their own derived quantities from correlated samples.
     """
-    rng_instance = get_rng(seed=seed, rng=rng)
+    rng_instance = rng
 
     covariance = model.covariance_matrix_value
     covariance = 0.5 * (covariance + covariance.T)
