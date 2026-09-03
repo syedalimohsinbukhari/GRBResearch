@@ -69,7 +69,7 @@ from grb_research.grb_constants import (
     LEGEND_FONT_SIZE,
     LINE_WIDTH,
     MARKER_SIZE,
-    TICK_FONT_SIZE, CAP_SIZE, N_SAMPLES,
+    TICK_FONT_SIZE, CAP_SIZE, N_SAMPLES, N_GRID,
 )
 from grb_research.grb_core import GRB
 from grb_research.grb_enums import GRBModelsCombinations as gmC
@@ -90,7 +90,6 @@ T90_MARKER = "s"
 # f_BB is redshift/cosmology-independent per-episode in this band (established
 # there), so no z or cosmology column is carried in the output CSV.
 E_MIN_KEV, E_MAX_KEV = 1.0, 1.0e4
-N_GRID = 1_000
 CHUNK_SIZE = 2_000
 
 # MC settings -- the project-wide convention (amati_relationship.py:39-41).

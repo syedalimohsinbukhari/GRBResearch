@@ -71,7 +71,7 @@ from grb_research import (
     update_style,
     TITLE_FONT_SIZE,
 )
-from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg, N_SAMPLES
+from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, kev_to_erg, N_SAMPLES, N_GRID
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 from grb_research.grb_utils import save_fig
 
@@ -92,8 +92,6 @@ E_MIN_KEV, E_MAX_KEV = 1.0, 1.0e4
 # Rest-frame integration band, log10(keV): 1 keV - 10 MeV, matching the rest-frame band already used for
 # S_bol / E_iso elsewhere in this work.
 E_MIN_KEV_REST, E_MAX_KEV_REST = 1.0, 1.0e4
-
-N_GRID = 1_000
 
 # Spectroscopic redshifts; None means unmeasured and therefore swept.
 # Matches photospheric_radius/pe_er_photosphere.py's REDSHIFTS exactly, since this is the same problem (three of four
@@ -246,24 +244,35 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, *, rng):
         z_grid = np.unique(np.append(z_grid, Z_FIDUCIAL))
         z_source = "swept"
 
+    # The rest-frame band [E_MIN_KEV_REST, E_MAX_KEV_REST] is fixed; the fitted (observer-frame) spectrum must be
+    # evaluated at the observed energies that correspond to it, E_rest / (1 + z).
+    # Since logspace(a, b) / (1 + z) == logspace(a - s, b - s) with s = log10(1 + z), the shift is applied to the
+    # exponents directly, mirroring mc_e_iso_sampler (grb_calculations.py:394-396) -- pairing a rest-frame grid
+    # with an observed-frame variable underestimated E_iso by ~3.7x at z=4.35 once already (BUGS.md, BUG-11);
+    # the same care applies here.
+    #
+    # Every z's shifted grid is stacked into one (n_z, N_GRID) array and integrated in a single batched call rather
+    # than one call per z: component_energy_fluxes/_component_energy_flux_block accept a 2D energy grid for exactly
+    # this, verified bit-identical to looping per z (see that function's docstring). This is the dominant cost of
+    # this script -- profiling showed ~96% of compute_fraction's time was re-running the full N_SAMPLES x N_GRID
+    # integration once per swept z; batching removes the per-call Python/chunking overhead of doing that N_z times.
+    redshift_shifts = np.log10(1 + z_grid)
+    e_rest_as_observed_2d = np.stack(
+        [
+            np.logspace(np.log10(E_MIN_KEV_REST) - shift, np.log10(E_MAX_KEV_REST) - shift, N_GRID)
+            for shift in redshift_shifts
+        ]
+    )
+
+    rest_best_bb_2d, _ = split_energy_flux(model.name, best_values, e_rest_as_observed_2d)
+    captured_rest_all = rest_best_bb_2d[0] / bb_bolometric  # shape (n_z,)
+
+    rest_sample_bb_2d, rest_sample_total_2d = split_energy_flux(model.name, samples, e_rest_as_observed_2d)
+    rest_fractions_2d = rest_sample_bb_2d / rest_sample_total_2d  # shape (n_samples, n_z)
+
     results = []
-    for z in z_grid:
-        # The rest-frame band [E_MIN_KEV_REST, E_MAX_KEV_REST] is fixed; the fitted (observer-frame) spectrum must be
-        # evaluated at the observed energies that correspond to it, E_rest / (1 + z).
-        # Since logspace(a, b) / (1 + z) == logspace(a - s, b - s) with s = log10(1 + z), the shift is applied to the
-        # exponents directly, mirroring mc_e_iso_sampler (grb_calculations.py:394-396) -- pairing a rest-frame grid
-        # with an observed-frame variable underestimated E_iso by ~3.7x at z=4.35 once already (BUGS.md, BUG-11);
-        # the same care applies here.
-        redshift_shift = np.log10(1 + z)
-        e_rest_as_observed = np.logspace(
-            np.log10(E_MIN_KEV_REST) - redshift_shift, np.log10(E_MAX_KEV_REST) - redshift_shift, N_GRID
-        )
-
-        rest_best_bb, _ = split_energy_flux(model.name, best_values, e_rest_as_observed)
-        captured_rest = float(rest_best_bb[0]) / bb_bolometric
-
-        rest_sample_bb, rest_sample_total = split_energy_flux(model.name, samples, e_rest_as_observed)
-        rest_fractions = rest_sample_bb / rest_sample_total
+    for i, z in enumerate(z_grid):
+        rest_fractions = rest_fractions_2d[:, i]
         usable_rest = np.isfinite(rest_fractions) & (rest_fractions > 0) & (rest_fractions < 1)
         rest_lo, rest_med, rest_hi = np.percentile(rest_fractions[usable_rest], PERCENTILES)
 
@@ -274,7 +283,7 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, *, rng):
                 f_bb_rest=rest_med,
                 f_bb_rest_lo=rest_med - rest_lo,
                 f_bb_rest_hi=rest_hi - rest_med,
-                bb_captured_rest=captured_rest,
+                bb_captured_rest=float(captured_rest_all[i]),
                 **common,
             )
         )
@@ -456,7 +465,7 @@ def make_rest_vs_z_plot(rows, path_stem="bb_flux_fraction_rest_vs_z"):
     assumed value.
     """
     update_style()
-    figure, axis = plt.subplots(figsize=(8, 5.5))
+    figure, axis = plt.subplots(figsize=(10.0, 6.5))
 
     for index, short_name in enumerate(GRB_LIST):
         grb = f"GRB{short_name}"
@@ -520,7 +529,7 @@ def make_rest_vs_z_plot(rows, path_stem="bb_flux_fraction_rest_vs_z"):
     axis.set_xlabel(r"Redshift $[z]$")
     axis.set_ylabel(r"$f_\mathrm{BB}^\mathrm{rest} = F_\mathrm{BB}/F_\mathrm{total}$" + "\nRest-frame band")
 
-    axis.legend(loc="upper right", ncols=1, fontsize=LEGEND_FONT_SIZE, bbox_to_anchor=(1.5, 0.85))
+    axis.legend(loc="upper right", fontsize=LEGEND_FONT_SIZE, bbox_to_anchor=(1.5, 0.85))
 
     save_fig(figure, path_stem)
     print(f"Saved: {path_stem}.png / .pdf")
