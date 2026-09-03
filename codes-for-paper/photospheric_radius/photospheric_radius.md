@@ -60,7 +60,7 @@ The code computes both $r_\text{ph}$ and $r_s$ per Monte Carlo draw and records 
 
 $\mathcal{R}$, $f_\text{BB}$, $F^\text{ob}$ and $kT$ all derive from the **same** parameter draws, so their uncertainties stay correlated when combined into $\Gamma$ and $r_0$. Recomputing Phase 1 here rather than reading its CSV is what makes this possible — combining two independent MC runs would have treated correlated quantities as independent and mis-stated the error bars.
 
-Same seed (12345), sample count (10 000), energy band (observer-frame 1 keV – 10 MeV) and grid as Phase 1, so `f_bb` in this CSV is numerically the same quantity as in `bb_flux_fraction.csv`.
+Same sample count (10 000), energy band (observer-frame 1 keV – 10 MeV) and grid as Phase 1, so `f_bb` in this CSV is the same quantity as in `bb_flux_fraction.csv` up to MC noise. **Updated in the RNG/seeding overhaul (Phase B, 2026-09-02):** the two files no longer share a literal seed (`12345`) — each derives its own via `seed_from_name(__file__)`, so a rerun of this file reproduces itself exactly but is no longer bit-for-bit against `bb_flux_fraction.csv`'s draws; only the underlying distribution is unchanged.
 
 ### 2.5 Shared decomposition code — *Claude*
 

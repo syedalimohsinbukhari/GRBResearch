@@ -44,7 +44,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from grb_research import draw_model_samples, find_project_root, prepare_grbs
+from grb_research import draw_model_samples, find_project_root, get_rng, prepare_grbs, seed_from_name
 
 from lorentz_factor import (
     GRB_LIST,
@@ -52,7 +52,6 @@ from lorentz_factor import (
     N_SAMPLES,
     PERCENTILES,
     REDSHIFTS,
-    SEED,
     TEX_NAMES,
     H0,
     OM0,
@@ -63,6 +62,10 @@ from lorentz_factor import (
     high_energy_index_param_name,
     variability_timescale,
 )
+
+# Independent of lorentz_factor.py's SEED -- __file__ differs naturally, decorrelating Limit A vs Limit B draws.
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 
 
 def compute_gamma_min_limit_b(alpha_LS, f_1, delta_T_s, z):
@@ -125,7 +128,7 @@ def main():
                 alpha_ls = -beta
                 gamma, tau_hat = compute_gamma_min_limit_b(alpha_ls, f_1, delta_t, redshift)
 
-                samples = draw_model_samples(model, n_samples=N_SAMPLES, seed=SEED)
+                samples = draw_model_samples(model, n_samples=N_SAMPLES, rng=rng)
                 index_position = [q.name for q in model.parameters].index(high_energy_index_param_name(model))
                 alpha_draws = -samples[:, index_position]
                 f1_draws = f1_from_values(model.name, samples)

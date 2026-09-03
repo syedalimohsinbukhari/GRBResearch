@@ -3,10 +3,10 @@
 import numpy as np
 from pymultifit.fitters.backend import BaseFitter
 
-from grb_research.grb_calculations import get_rng
+from grb_research import get_rng, seed_from_name
 
 N_SAMPLES = 10_000
-SEED = 12345
+SEED = seed_from_name(__file__)
 
 
 def norris_pulse(x: np.ndarray, params) -> np.ndarray:
@@ -52,6 +52,11 @@ def tv_mc_summary(fitter: NorrisFitter, pulse_index: int, seed: int = SEED, n_sa
 
     Draws from the full fit covariance's 4x4 sub-block for this pulse, discards draws with
     non-positive tau1/tau2 (unphysical), and reports the fraction kept.
+
+    `seed` is a plain function parameter here, not a module global, so this call in isolation is fine. A future
+    caller that loops over `pulse_index` should build one `rng` (via `get_rng`) and thread `rng=` through each
+    call instead of reusing `seed=SEED` per iteration -- reseeding an identical generator per iteration is exactly
+    the reuse-across-loop-iterations bug this Phase B pass fixes elsewhere in codes-for-paper.
     """
     n_par = fitter.n_par
     start = (pulse_index - 1) * n_par

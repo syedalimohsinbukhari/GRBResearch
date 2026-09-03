@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 from black import Path
 
-from grb_research import EpisodeTypes, FluxFluenceCalculator, find_project_root, prepare_grbs
+from grb_research import EpisodeTypes, FluxFluenceCalculator, find_project_root, get_rng, prepare_grbs, seed_from_name
+from grb_research.grb_constants import N_SAMPLES
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -13,8 +14,7 @@ from grb_research import EpisodeTypes, FluxFluenceCalculator, find_project_root,
 SOURCE_ROOT = find_project_root()
 RESULT_FILE = SOURCE_ROOT / "results.json"
 GRB_LIST = ["080916C", "140206B", "131014A", "231129C"]
-N_SAMPLES = 10_000
-RANDOM_SEED = 12345
+RANDOM_SEED = seed_from_name(__file__)
 
 # GBM selection-criterion band, matching section-1-introduction.tex's stated
 # "8 keV--40 MeV" range for the paper's "high GBM fluence" sample-selection
@@ -44,7 +44,7 @@ def episode_label(model) -> str:
 def compute_flux_fluence(
     model,
     rng: np.random.Generator,
-    n_samples: int = 10,
+    n_samples: int = N_SAMPLES,
     get_energy_flux: bool = False,
     log_energy_range: tuple[float, float] = LOG_ENERGY_RANGE,
 ) -> dict:
@@ -81,7 +81,7 @@ def compute_flux_fluence(
 # Prepare GRB data
 gc, grb_list_long, grb_objs, grb_best = prepare_grbs(GRB_LIST, RESULT_FILE, get_best=True)
 
-rng = np.random.default_rng(RANDOM_SEED)
+rng = get_rng(seed=RANDOM_SEED)
 
 s1, s2 = rng.spawn(2)
 

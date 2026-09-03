@@ -13,8 +13,8 @@ from amati_helpers import (
     EP_NORM,
     EI_NORM,
 )
-from grb_research import ModelSet, find_project_root, prepare_grbs, update_style, LABEL_FONT_SIZE, LEGEND_FONT_SIZE, \
-    LEGEND_TITLE_FONT_SIZE
+from grb_research import ModelSet, find_project_root, get_rng, prepare_grbs, seed_from_name, update_style, \
+    LABEL_FONT_SIZE, LEGEND_FONT_SIZE, LEGEND_TITLE_FONT_SIZE
 from grb_research.grb_utils import save_fig
 
 # ---------------------------------------------------------------------------
@@ -40,7 +40,8 @@ t90_markers = ["o", "s", "X", "D"]
 
 n_sample = 5_000
 n_grid = 1000
-n_seed = 12345
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 
 # ---------------------------------------------------------------------------
 # Figure
@@ -69,7 +70,7 @@ for i, a in enumerate([ax[0]]):
         t90_marker_list=[t90_markers[i]],
         n_grid=n_grid,
         n_sample=n_sample,
-        seed_number=n_seed,
+        rng=rng,
         axis=a,
     )
 
@@ -96,7 +97,7 @@ for idx, m_ in enumerate(grb_best[1:]):
             z_values=(1, 3, 5, 7),
             n_grid=n_grid,
             n_sample=n_sample,
-            seed_number=n_seed,
+            rng=rng,
             axis=ax[idx + 1],
         )
 
@@ -132,6 +133,9 @@ if n_unknown > 0:
     ei_err_lower = np.concatenate([ei_err_lower, np.full(shape=n_unknown, fill_value=np.nan)])
     ei_err_upper = np.concatenate([ei_err_upper, np.full(shape=n_unknown, fill_value=np.nan)])
 
+n_samples_col = np.full(len(g_name), n_sample)
+seed_col = np.full(len(g_name), SEED)
+
 q = pd.DataFrame(
     [
         g_name,
@@ -143,6 +147,8 @@ q = pd.DataFrame(
         ei_total,  # already in units of EI_NORM (10⁵² erg)
         ei_err_lower,
         ei_err_upper,
+        n_samples_col,
+        seed_col,
     ]
 ).T
 q.columns = [
@@ -155,6 +161,8 @@ q.columns = [
     f"E_0_iso__{EI_NORM:.0e}_erg",
     f"E_0_iso_err_lower__{EI_NORM:.0e}_erg",
     f"E_0_iso_err_upper__{EI_NORM:.0e}_erg",
+    "n_samples",
+    "seed",
 ]
 q.to_csv("amati_relationship.csv", index=False)
 

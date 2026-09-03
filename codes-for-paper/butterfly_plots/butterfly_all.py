@@ -2,9 +2,7 @@
 
 import json
 
-import numpy as np
-
-from grb_research import GRBCatalog, find_project_root, update_style
+from grb_research import GRBCatalog, find_project_root, get_rng, seed_from_name, update_style
 from grb_research.grb_calculations import plot_all_models
 from grb_research.grb_constants import short_to_long, FIGURE_SIZE_4x4
 
@@ -14,7 +12,6 @@ SOURCE_ROOT = find_project_root()
 result_file = SOURCE_ROOT / "results.json"
 
 grb_name = ["080916C", "131014A", "140206B", "231129C"]
-# grb_name = ["150210A"]
 
 with open(result_file, "r") as f:
     data = json.load(f)
@@ -25,7 +22,7 @@ grb_best = [i.get_all_best_models() for i in grb]
 is_ex = [[i.interval.is_ex for i in j] for j in grb_best]
 is_ex = [sum(i) for i in is_ex]
 
-rng = np.random.default_rng(seed=42)
+rng = get_rng(seed=seed_from_name(__file__))
 
 plot_all_models(best_models=grb_best,
                 grb_name=grb_name,

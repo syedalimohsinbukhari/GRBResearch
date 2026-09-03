@@ -40,8 +40,8 @@ import numpy as np
 import pandas as pd
 from astropy.cosmology import FlatLambdaCDM
 
-from grb_research import draw_model_samples, find_project_root, prepare_grbs
-from grb_research.grb_constants import model_n_pars
+from grb_research import draw_model_samples, find_project_root, get_rng, prepare_grbs, seed_from_name
+from grb_research.grb_constants import model_n_pars, N_SAMPLES
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 from grb_research.grb_sed import MODEL_MAP
 from grb_research.grb_seds import band_function, cutoff_powerlaw, powerlaw, smoothly_broken_power_law
@@ -123,8 +123,8 @@ REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
 VARIABILITY_TIMESCALE: dict = {}
 
 # Monte-Carlo settings, matching the rest of the project.
-N_SAMPLES = 10_000
-SEED = 12345
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 PERCENTILES = (16.0, 50.0, 84.0)
 
 
@@ -212,7 +212,7 @@ def compute_tau_hat(alpha_LS, f_1, delta_T_s, z):
     d_L_cm = cosmo.luminosity_distance(z).cgs.value
     d_7Gpc = d_L_cm / (7.0 * 3.0857e27)
 
-    return 2.1e11 * d_7Gpc**2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
+    return 2.1e11 * d_7Gpc ** 2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
 
 
 def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
@@ -244,7 +244,7 @@ def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
     e3 = (alpha_LS - 1) / (alpha_LS + 1)
 
     # 0.511 MeV = m_e c^2, matching the MeV convention used for f_1 and tau_hat above.
-    gamma_min = tau_hat**e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
+    gamma_min = tau_hat ** e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
     return gamma_min, tau_hat
 
 
@@ -305,7 +305,7 @@ def main():
                 gamma, tau_hat = compute_gamma_min(alpha_ls, f_1, e_max_mev, delta_t, redshift)
 
                 # Statistical uncertainty: propagate the fit covariance through both f_1 and alpha, which are correlated because they come from the same spectral parameters.
-                samples = draw_model_samples(model, n_samples=N_SAMPLES, seed=SEED)
+                samples = draw_model_samples(model, n_samples=N_SAMPLES, rng=rng)
                 index_position = [q.name for q in model.parameters].index(high_energy_index_param_name(model))
                 alpha_draws = -samples[:, index_position]
                 f1_draws = f1_from_values(model.name, samples)

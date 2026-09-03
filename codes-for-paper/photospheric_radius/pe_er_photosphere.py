@@ -57,7 +57,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from astropy.cosmology import FlatLambdaCDM
-from matplotlib.lines import Line2D
 
 from grb_research import (
     EpisodeMarkerResolver,
@@ -65,10 +64,12 @@ from grb_research import (
     component_energy_fluxes,
     draw_model_samples,
     find_project_root,
+    get_rng,
     prepare_grbs,
+    seed_from_name,
     update_style,
 )
-from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg
+from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg, N_SAMPLES, N_GRID
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 
 # ─── Physical constants (CGS) ────────────────────────────────────────────────
@@ -118,9 +119,8 @@ MARKER_EDGE_WIDTH = 1.4
 # Observer-frame integration band and MC settings, matching Phase 1 exactly so
 # f_BB here is the same quantity as in bb_flux_fraction.py.
 E_MIN_KEV, E_MAX_KEV = 1.0, 1.0e4
-N_GRID = 1_000
-N_SAMPLES = 10_000
-SEED = 12345
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 PERCENTILES = (16.0, 50.0, 84.0)
 
 
@@ -150,18 +150,18 @@ class PhotosphereResult:
 def script_r(flux_bb, kt_kev):
     """R = (F_BB / sigma T^4)^(1/2), Pe'er+07 eq. (1). Dimensionless."""
     temperature_k = kt_kev * KEV_TO_KELVIN
-    return np.sqrt(flux_bb / (SIGMA_SB * temperature_k**4))
+    return np.sqrt(flux_bb / (SIGMA_SB * temperature_k ** 4))
 
 
 def lorentz_factor(flux_total, r_value, z, d_l, y_ratio=Y_RATIO):
     """Gamma = eta, Pe'er+07 eq. (4). Coasting phase, so Gamma equals eta."""
     numerator = PREFACTOR_R * (1 + z) ** 2 * d_l * y_ratio * flux_total * SIGMA_T
-    return (numerator / (2 * M_P * C_LIGHT**3 * r_value)) ** 0.25
+    return (numerator / (2 * M_P * C_LIGHT ** 3 * r_value)) ** 0.25
 
 
 def base_radius_unsaturated(f_bb, r_value, z, d_l, y_ratio=Y_RATIO):
     """r_0 for r_ph > r_s, Pe'er+07 eq. (5) [cm]."""
-    prefactor = 4**1.5 / (PREFACTOR_T**6 * PREFACTOR_R**4)
+    prefactor = 4 ** 1.5 / (PREFACTOR_T ** 6 * PREFACTOR_R ** 4)
     return prefactor * d_l / (1 + z) ** 2 * (f_bb / y_ratio) ** 1.5 * r_value
 
 
@@ -186,7 +186,7 @@ def validate_against_peer2007(verbose=True):
     Returns the computed (gamma, r_0, r_ph, r_s).
     """
     z, kt, r_value, f_bb, d_l = 0.9578, 78.5, 1.88e-19, 0.64, 1.94e28
-    flux_bb = r_value**2 * SIGMA_SB * (kt * KEV_TO_KELVIN) ** 4
+    flux_bb = r_value ** 2 * SIGMA_SB * (kt * KEV_TO_KELVIN) ** 4
     flux_total = flux_bb / f_bb
 
     gamma = lorentz_factor(flux_total, r_value, z, d_l)
@@ -209,14 +209,14 @@ def validate_against_peer2007(verbose=True):
 # ─── Per-interval computation ────────────────────────────────────────────────
 
 
-def interval_samples(model, n_samples=N_SAMPLES, seed=SEED):
+def interval_samples(model, n_samples=N_SAMPLES, rng=None):
     """MC draws of (F_BB, F_total, kT) for one interval, in CGS.
 
     All three come from the *same* parameter draws, so their errors stay
     correlated when combined into R, Gamma and r_0.
     """
     energy = np.logspace(np.log10(E_MIN_KEV), np.log10(E_MAX_KEV), N_GRID)
-    samples = draw_model_samples(model, n_samples=n_samples, seed=seed)
+    samples = draw_model_samples(model, n_samples=n_samples, rng=rng)
 
     fluxes, total = component_energy_fluxes(model.name, samples, energy)
     flux_bb = fluxes[gmC.BB] * kev_to_erg
@@ -273,7 +273,7 @@ def collect_results():
             if "BB" not in model.name:
                 continue
 
-            flux_bb, flux_total, kt_kev = interval_samples(model)
+            flux_bb, flux_total, kt_kev = interval_samples(model, rng=rng)
 
             for z in z_grid:
                 r_value, f_bb, gamma, r_zero, r_ph, r_sat, saturated = evaluate_at_redshift(

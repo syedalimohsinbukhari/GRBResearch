@@ -5,7 +5,14 @@ from typing import List, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from grb_research import EpisodeMarkerResolver, MARKER_SIZE, ModelResampler, break_e_to_e_peak, mc_e_iso_sampler
+from grb_research import (
+    EpisodeMarkerResolver,
+    MARKER_SIZE,
+    ModelResampler,
+    break_e_to_e_peak,
+    mc_e_iso_sampler,
+)
+from grb_research.grb_constants import N_SAMPLES, N_GRID
 
 # ---------------------------------------------------------------------------
 # Normalization — single source of truth for axis units
@@ -64,9 +71,7 @@ def _get_base_model_name(m_name: str) -> str:
     return base
 
 
-def _compute_ep_eiso(
-    m, redshift: float, n_sample: int, n_grid: int, seed_number: int, rng
-) -> tuple[ArrayLike, ArrayLike]:
+def _compute_ep_eiso(m, redshift: float, n_sample: int, n_grid: int, rng) -> tuple[ArrayLike, ArrayLike]:
     m_name = m.name
     pc = m.get_parameter_set
     pc_names = [p.name for p in pc]
@@ -92,7 +97,7 @@ def _compute_ep_eiso(
     ############################################
 
     eiso_samples = mc_e_iso_sampler(
-        m, redshift, n_samples=n_sample, n_grid=n_grid, method=2, samples=samples_arr, seed_number=seed_number, rng=rng
+        m, redshift, n_samples=n_sample, n_grid=n_grid, method=2, samples=samples_arr, rng=rng
     )
 
     ep_intrinsic = ep_samples * (1 + redshift)
@@ -106,7 +111,6 @@ def _plot_model_point(
     color: str,
     n_grid: int,
     n_sample: int,
-    seed_number: int,
     rng,
     alpha: int | float,
     label: str,
@@ -123,7 +127,7 @@ def _plot_model_point(
         Asymmetric 1-sigma errors shaped (2, 1) for E_peak and E_iso.
         First row is lower error, second row is upper error.
     """
-    ep_s, ei_s = _compute_ep_eiso(m, redshift, n_sample, n_grid, seed_number, rng)
+    ep_s, ei_s = _compute_ep_eiso(m, redshift, n_sample, n_grid, rng)
 
     p50_ei, p50_ep, x_err, y_err = percentile_calculator(ei_s, ep_s)
 
@@ -215,9 +219,10 @@ def plot_grbs_over_amati_relationship(
     best_model_list,
     redshift_list: List[float],
     t90_marker_list: List[str],
-    n_grid: int = 1_000,
-    n_sample: int = 10_000,
-    seed_number: int = 0,
+    n_grid: int = N_GRID,
+    n_sample: int = N_SAMPLES,
+    *,
+    rng: np.random.Generator,
     alpha: float = 1.0,
     axis=None,
 ) -> tuple[list, list, list, list, list, list]:
@@ -237,8 +242,8 @@ def plot_grbs_over_amati_relationship(
         Grid resolution for E_iso integration.
     n_sample :
         Posterior sample count.
-    seed_number :
-        Base RNG seed; incremented per model to keep runs reproducible.
+    rng :
+        Shared generator, threaded through every model's MC draws.
     alpha :
         Scatter / errorbar opacity.
     axis :
@@ -262,16 +267,14 @@ def plot_grbs_over_amati_relationship(
     if axis is None:
         raise ValueError("An axis must be provided.")
 
-    rng = np.random.default_rng(seed_number)
-
     ep_total, ei_total = [], []
     ep_err_total, ei_err_total = [], []
     ep_labels = []
     _models = []
 
-    for index, (models, redshift, t90_marker) in enumerate(zip(best_model_list, redshift_list, t90_marker_list)):
+    for models, redshift, t90_marker in zip(best_model_list, redshift_list, t90_marker_list):
         resolver = EpisodeMarkerResolver(t90_marker=t90_marker)
-        for index2, m in enumerate(models):
+        for m in models:
             ep, ei, ep_err, ei_err = _plot_model_point(
                 m=m,
                 redshift=redshift,
@@ -279,7 +282,6 @@ def plot_grbs_over_amati_relationship(
                 color=resolver.get_color(m.interval),
                 n_grid=n_grid,
                 n_sample=n_sample,
-                seed_number=seed_number + index2,
                 rng=rng,
                 alpha=alpha,
                 label=_episode_label(m),
@@ -299,9 +301,10 @@ def plot_unknown_redshift_grb(
     models,
     t90_marker: str,
     z_values: Sequence[float] = (1, 3, 5, 7),
-    n_grid: int = 1_000,
-    n_sample: int = 10_000,
-    seed_number: int = 0,
+    n_grid: int = N_GRID,
+    n_sample: int = N_SAMPLES,
+    *,
+    rng: np.random.Generator,
     axis=None,
 ) -> tuple[list, list, list, list]:
     """
@@ -321,22 +324,23 @@ def plot_unknown_redshift_grb(
         Matplotlib marker for the T90 episode of this GRB.
     z_values : sequence of float
         Redshift values to evaluate. Defaults to (1, 3, 5, 7).
-    n_grid, n_sample, seed_number : int
+    n_grid, n_sample : int
         Passed through to the sampler.
+    rng : np.random.Generator
+        Shared generator, threaded through every model/z-value's MC draws.
     axis : matplotlib Axes
         Target axes object. Required.
     """
     if axis is None:
         raise ValueError("An axis must be provided.")
 
-    rng = np.random.default_rng(seed_number)
     resolver = EpisodeMarkerResolver(t90_marker=t90_marker)
 
     ep_all, ei_all = [], []
     ep_name = []
     model_list = []
 
-    for ep_idx, m in enumerate(models):
+    for m in models:
         marker = resolver.resolve(m.interval)
         color = resolver.get_color(m.interval)
 
@@ -354,7 +358,6 @@ def plot_unknown_redshift_grb(
                 color=color,
                 n_grid=n_grid,
                 n_sample=n_sample,
-                seed_number=seed_number + ep_idx * len(z_values) + z_idx,
                 rng=rng,
                 alpha=0.75,
                 label=label,

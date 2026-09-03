@@ -60,6 +60,8 @@ from grb_research import (
     component_energy_fluxes,
     draw_model_samples,
     find_project_root,
+    get_rng,
+    seed_from_name,
     update_style, LEGEND_TITLE_FONT_SIZE,
 )
 from grb_research.grb_constants import (
@@ -67,7 +69,7 @@ from grb_research.grb_constants import (
     LEGEND_FONT_SIZE,
     LINE_WIDTH,
     MARKER_SIZE,
-    TICK_FONT_SIZE, CAP_SIZE,
+    TICK_FONT_SIZE, CAP_SIZE, N_SAMPLES,
 )
 from grb_research.grb_core import GRB
 from grb_research.grb_enums import GRBModelsCombinations as gmC
@@ -92,8 +94,8 @@ N_GRID = 1_000
 CHUNK_SIZE = 2_000
 
 # MC settings -- the project-wide convention (amati_relationship.py:39-41).
-N_SAMPLES = 10_000
-SEED = 12345
+SEED = seed_from_name(__file__)
+rng = get_rng(seed=SEED)
 PERCENTILES = (16.0, 50.0, 84.0)
 
 # Delta-C-stat threshold for a BASE -> BASE+BB step (Delta k = 2), the same
@@ -141,10 +143,10 @@ def split_energy_flux(model_name, values, energy):
     return fluxes[gmC.BB], total
 
 
-def compute_f_bb(model, n_samples=N_SAMPLES, seed=SEED):
+def compute_f_bb(model, n_samples=N_SAMPLES, rng=None):
     """Median and 1-sigma asymmetric interval of f_BB for a BB-augmented model."""
     energy = np.logspace(np.log10(E_MIN_KEV), np.log10(E_MAX_KEV), N_GRID)
-    samples = draw_model_samples(model, n_samples=n_samples, seed=seed)
+    samples = draw_model_samples(model, n_samples=n_samples, rng=rng)
     sample_bb, sample_total = split_energy_flux(model.name, samples, energy)
     fractions = sample_bb / sample_total
     usable = np.isfinite(fractions) & (fractions > 0) & (fractions < 1)
@@ -152,7 +154,7 @@ def compute_f_bb(model, n_samples=N_SAMPLES, seed=SEED):
     return med, med - lo, hi - med
 
 
-def paired_ratio_pct(joint_model, gbm_model, n_samples=N_SAMPLES, seed=SEED):
+def paired_ratio_pct(joint_model, gbm_model, n_samples=N_SAMPLES, rng=None):
     """Paired-MC fractional difference, (GBM-only - Joint) / Joint, in kT_BB and f_BB.
 
     Draws n_samples parameter vectors from *each* fit's own covariance matrix
@@ -164,18 +166,21 @@ def paired_ratio_pct(joint_model, gbm_model, n_samples=N_SAMPLES, seed=SEED):
     called when joint_model.name == gbm_model.name, true for all 5 episodes
     here per the #6 result).
 
-    The two draws use *different* seeds (seed and seed+1), not the same one.
+    The two draws are taken sequentially from the same shared `rng`
+    (Joint, then GBM-only), not from two independently-seeded generators.
     A same-seed (common-random-numbers) version was tried first and rejected
     after validation (see gbm_only_refit.md Sec 3): because both fits use the
     same model form with similar covariance structure, sharing a seed made
     the two draws' kt_bb nearly perfectly correlated (r = 0.9996, measured),
     collapsing the ratio's spread to an artificially tight ~0.15%-wide
-    interval -- about 20x tighter than either an independent-seed MC run or
+    interval -- about 20x tighter than either an independent-draw MC run or
     the original linearized (delta-method) estimate, both of which agree with
     each other at the few-percent level. That tightness was a seed-sharing
-    artifact, not a real reduction in uncertainty, so independent seeds are
-    used instead; the two fits are separate RMFIT optimizations with no
-    actual joint covariance available.
+    artifact, not a real reduction in uncertainty, so a single generator whose
+    state advances across the two sequential calls is used instead (rather
+    than reseeding per call): the two fits are separate RMFIT optimizations
+    with no actual joint covariance available, and this avoids reintroducing
+    a variant of the same reseed-per-call bug this pass fixes elsewhere.
 
     Returns (kt_diff_pct, kt_diff_lo, kt_diff_hi, f_diff_pct, f_diff_lo, f_diff_hi):
     the paired ratio distribution's median and its (median - p16, p84 - median)
@@ -186,8 +191,8 @@ def paired_ratio_pct(joint_model, gbm_model, n_samples=N_SAMPLES, seed=SEED):
 
     energy = np.logspace(np.log10(E_MIN_KEV), np.log10(E_MAX_KEV), N_GRID)
 
-    joint_samples = draw_model_samples(joint_model, n_samples=n_samples, seed=seed)
-    gbm_samples = draw_model_samples(gbm_model, n_samples=n_samples, seed=seed + 1)
+    joint_samples = draw_model_samples(joint_model, n_samples=n_samples, rng=rng)
+    gbm_samples = draw_model_samples(gbm_model, n_samples=n_samples, rng=rng)
 
     kt_idx_joint = [p.name for p in joint_model.parameters].index("kt_bb")
     kt_idx_gbm = [p.name for p in gbm_model.parameters].index("kt_bb")
@@ -272,7 +277,7 @@ class ComparisonRow:
     seed: int
 
 
-def build_row(ep, joint_interval, gbm_interval):
+def build_row(ep, joint_interval, gbm_interval, rng):
     joint_best = joint_interval.models.best
     gbm_best = gbm_interval.models.best
 
@@ -283,7 +288,7 @@ def build_row(ep, joint_interval, gbm_interval):
             return (np.nan, np.nan, np.nan, np.nan, np.nan)
         kt = model.get_parameter_value("kt_bb")
         kt_err = next(p.error for p in model.parameters if p.name == "kt_bb")
-        f_med, f_lo, f_hi = compute_f_bb(model)
+        f_med, f_lo, f_hi = compute_f_bb(model, rng=rng)
         return (kt, kt_err, f_med, f_lo, f_hi)
 
     kt_j, kt_j_err, f_j, f_j_lo, f_j_hi = bb_fields(joint_best)
@@ -315,7 +320,9 @@ def build_row(ep, joint_interval, gbm_interval):
     # Draws each fit's own parameter samples and takes percentiles of the ratio distribution directly, rather than
     # linearizing two marginal errors -- properly asymmetric, and reflects each fit's own posterior shape instead of a
     # Gaussian approximation.
-    kt_diff_pct, kt_diff_lo, kt_diff_hi, f_diff_pct, f_diff_lo, f_diff_hi = paired_ratio_pct(joint_best, gbm_best)
+    kt_diff_pct, kt_diff_lo, kt_diff_hi, f_diff_pct, f_diff_lo, f_diff_hi = paired_ratio_pct(
+        joint_best, gbm_best, rng=rng
+    )
 
     return ComparisonRow(
         grb_name=GRB_DISPLAY_NAME,
@@ -615,7 +622,7 @@ def main():
     for ep in EPISODE_ORDER:
         if ep not in joint_eps or ep not in gbm_eps:
             continue
-        rows.append(build_row(ep, joint_eps[ep], gbm_eps[ep]))
+        rows.append(build_row(ep, joint_eps[ep], gbm_eps[ep], rng))
 
     df = pd.DataFrame([r.__dict__ for r in rows])
     df.to_csv("gbm_only_refit_comparison.csv", index=False)
