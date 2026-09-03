@@ -1,0 +1,74 @@
+# Source-of-truth registry for every figure PNG the paper actually uses (codes-for-paper/
+# sync_paper_assets.py reads this, alongside table_registry.yaml).
+#
+# `source` is relative to GRBResearchWork/, `dest` is relative to GRBResearchPaper/ -- the
+# "chapter" (section) folder it belongs in. Only PNG is tracked: pdflatex prefers .pdf when both
+# exist, but this paper's images/ only ever kept the .png copy, so that's the one that matters.
+#
+# Same convention as seed_registry.yaml: a figure is never silently dropped from this file.
+#   active   -- copied by the runner.
+#   unused   -- has a real source in codes-for-paper/, but isn't referenced by any figure in the
+#               current draft (matches seed_registry.yaml's `unused` entries where applicable).
+#   no_known_source -- exists in GRBResearchPaper/images/ today, but no generating script was
+#               found in GRBResearchWork during a search of this repo; not auto-copyable, so not
+#               the runner's job -- listed so it's clear this was checked, not missed.
+
+active:
+  all_safe_unsafe:
+    source: codes-for-paper/all-safe-unsafe/all-safe-unsafe.png
+    dest: images/section4/all-safe-unsafe.png
+  amati_relationship:
+    source: codes-for-paper/amati_relationship/amati_relationship.png
+    dest: images/section4/amati_relationship.png
+  butterfly_all:
+    source: codes-for-paper/butterfly_plots/butterfly_all.png
+    dest: images/section4/butterfly_all.png
+  bb_flux_fraction:
+    source: codes-for-paper/bb_fraction/bb_flux_fraction.png
+    dest: images/section5/bb_flux_fraction.png
+  bb_flux_fraction_rest_vs_z:
+    source: codes-for-paper/bb_fraction/bb_flux_fraction_rest_vs_z.png
+    dest: images/section5/bb_flux_fraction_rest_vs_z.png
+  gamma_comparison:
+    source: codes-for-paper/lorentz_factor/gamma_comparison.png
+    dest: images/section5/gamma_comparison.png
+  high_index_best_all:
+    source: codes-for-paper/model_parameters/high_index_best__all.png
+    dest: images/section5/high_index_best__all.png
+  low_index_best_all:
+    source: codes-for-paper/model_parameters/low_index_best__all.png
+    dest: images/section5/low_index_best__all.png
+  peak_energy_best_all:
+    source: codes-for-paper/model_parameters/peak_energy_best__all.png
+    dest: images/section5/peak_energy_best__all.png
+  pe_er_photosphere:
+    source: codes-for-paper/photospheric_radius/pe_er_photosphere.png
+    dest: images/section5/pe_er_photosphere.png
+  gbm_only_refit_delta_cstat:
+    source: codes-for-paper/gbm_only_refit/gbm_only_refit_delta_cstat.png
+    dest: images/section6/gbm_only_refit_delta_cstat.png
+  gbm_only_refit_kt_comparison:
+    source: codes-for-paper/gbm_only_refit/gbm_only_refit_kt_comparison.png
+    dest: images/section6/gbm_only_refit_kt_comparison.png
+  lightcurve_080916C:
+    source: light_curves/GRB080916009/GRB080916C_lightcurve.png
+    dest: images/light_curves/GRB080916C_lightcurve.png
+  lightcurve_131014A:
+    source: light_curves/GRB131014215/GRB131014A_lightcurve.png
+    dest: images/light_curves/GRB131014A_lightcurve.png
+  lightcurve_140206B:
+    source: light_curves/GRB140206275/GRB140206B_lightcurve.png
+    dest: images/light_curves/GRB140206B_lightcurve.png
+  lightcurve_231129C:
+    source: light_curves/GRB231129779/GRB231129C_lightcurve.png
+    dest: images/light_curves/GRB231129C_lightcurve.png
+
+unused:
+  epeak_vs_kt:
+    source: codes-for-paper/model_parameters/epeak_vs_kt.png
+    note: "not referenced by any figure in the current draft -- matches seed_registry.yaml's kt_epeak_correlation"
+  gbm_only_refit_fractional_diff:
+    source: codes-for-paper/gbm_only_refit/gbm_only_refit_fractional_diff.png
+    note: "the one MC-derived plot this script produces; not referenced by any figure in the current draft (see SEED_PLAN-implementation.md)"
+
+no_known_source: {}
