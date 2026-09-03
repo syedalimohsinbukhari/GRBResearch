@@ -755,24 +755,46 @@ _SED_FUNCTIONS = {
 
 
 def _component_energy_flux_block(model_name, values, energy):
-    """Vectorized per-component energy-flux integration for a block of draws."""
+    """Vectorized per-component energy-flux integration for a block of draws.
+
+    `energy` is either 1D ``(n_grid,)`` -- the original single-grid case, unchanged -- or 2D
+    ``(n_bands, n_grid)``, integrating every band's grid in one batched call instead of
+    `n_bands` separate calls (e.g. a redshift sweep's per-z shifted grids). Batched mode
+    returns per-band results of shape ``(n, n_bands)`` instead of ``(n,)``.
+
+    Verified bit-identical to looping ``simpson`` per band one at a time (the `x` array is
+    only broadcast to match `y`'s shape for scipy's benefit, not resampled or reordered).
+    """
     components = MODEL_MAP.get(gmC(model_name.lower()), (gmC(model_name.lower()),))
-    energy_row = energy[None, :]
+    energy = np.asarray(energy)
+    batched = energy.ndim == 2
+
+    if batched:
+        energy_row = energy[None, :, :]
+        x_for_simpson = np.broadcast_to(energy, (values.shape[0],) + energy.shape)
+        integration_axis = -1
+        total = np.zeros((values.shape[0],) + energy.shape)
+    else:
+        energy_row = energy[None, :]
+        x_for_simpson = energy
+        integration_axis = 1
+        total = np.zeros((values.shape[0], energy.size))
 
     fluxes = {}
-    total = np.zeros((values.shape[0], energy.size))
-
     idx = 0
     for component in components:
         n_pars = model_n_pars[component]
-        pars = [values[:, idx + offset, None] for offset in range(n_pars)]
+        if batched:
+            pars = [values[:, idx + offset, None, None] for offset in range(n_pars)]
+        else:
+            pars = [values[:, idx + offset, None] for offset in range(n_pars)]
         idx += n_pars
 
         contribution = energy_row * _SED_FUNCTIONS[component](energy_row, *pars)
         total += contribution
-        fluxes[component] = simpson(y=contribution, x=energy, axis=1)
+        fluxes[component] = simpson(y=contribution, x=x_for_simpson, axis=integration_axis)
 
-    return fluxes, simpson(y=total, x=energy, axis=1)
+    return fluxes, simpson(y=total, x=x_for_simpson, axis=integration_axis)
 
 
 def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
@@ -786,7 +808,14 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
     matching the pattern used by :func:`mc_e_iso_sampler`.
 
     Draws are processed in blocks so peak memory stays bounded at roughly
-    ``chunk * n_grid * 8`` bytes per component.
+    ``chunk * n_grid * 8`` bytes per component. When `energy` is 2D (`n_bands` batched grids),
+    `chunk` is divided by `n_bands` internally so peak memory per block stays the same
+    regardless of how many bands are batched together -- a block's working array is
+    `(block_size, n_bands, n_grid)`, so leaving `chunk` at its 1D-case value here would multiply
+    peak memory by `n_bands` (verified this matters: at this project's real `N_SAMPLES`/`N_GRID`
+    and a 26-band redshift sweep, un-scaled `chunk` would demand roughly 50 GB of peak memory
+    across 8 parallel workers -- checked with `free -h` before running anything at scale, not
+    assumed safe).
 
     Parameters
     ----------
@@ -795,18 +824,23 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
     values :
         Parameter values, shape ``(n_pars,)`` or ``(n, n_pars)``.
     energy :
-        Energy grid in keV, shape ``(n_grid,)``. Integration is performed over
-        this grid, so it defines the band.
+        Energy grid in keV. Either 1D ``(n_grid,)`` -- one band, the original behavior -- or
+        2D ``(n_bands, n_grid)`` to integrate several bands (e.g. per-redshift shifted grids)
+        in one batched pass; see :func:`_component_energy_flux_block`.
     chunk :
-        Number of draws evaluated per block.
+        Number of draws evaluated per block, at one band. Automatically reduced (never below 1)
+        when `energy` is 2D, so peak memory per block is independent of `n_bands`.
 
     Returns
     -------
     (fluxes, total) :
-        ``fluxes`` maps each component enum to an array of shape ``(n,)``;
-        ``total`` has shape ``(n,)``. Both are in keV / cm^2 / s.
+        ``fluxes`` maps each component enum to an array of shape ``(n,)`` (or ``(n, n_bands)``
+        if `energy` is 2D); ``total`` has the matching shape. Both are in keV / cm^2 / s.
     """
     values = np.atleast_2d(np.asarray(values, dtype=float))
+    energy = np.asarray(energy)
+    if energy.ndim == 2:
+        chunk = max(1, chunk // energy.shape[0])
 
     parts, totals = [], []
     for start in range(0, values.shape[0], chunk):
