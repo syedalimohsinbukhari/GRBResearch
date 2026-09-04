@@ -424,9 +424,9 @@ Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z =
 the other three bursts lack a measured redshift, so $\Gamma_{\min}$ is undetermined for
 them and they are omitted from this table.}
 \label{tab:lorentz}
+\resizebox{\columnwidth}{!}{
 \begin{threeparttable}
 \renewcommand{\arraystretch}{1.25}
-\resizebox{\columnwidth}{!}{
 \begin{tabular}{lcccccc}
 \toprule
 Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
@@ -436,13 +436,13 @@ Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
         + rows
         + r"""\bottomrule
 \end{tabular}
-}
 \begin{tablenotes}
 \footnotesize
 \item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$.
 \item[$\ddagger$] \ac{LAT} detection with $\mathrm{TS} < 25$; the highest-energy photon association is not secure.
 \end{tablenotes}
 \end{threeparttable}
+}
 \end{table}
 """
     )

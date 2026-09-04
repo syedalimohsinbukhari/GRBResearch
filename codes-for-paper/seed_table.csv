@@ -6,7 +6,7 @@ lorentz_limit_a,active,lorentz_factor/lorentz_factor.py,3983203661,"Lorentz fact
 lorentz_limit_b,active,lorentz_factor/lorentz_factor_limit_b.py,4169226666,"Lorentz factor, Limit B",\cref{fig:gamma_comparison},
 photospheric_radius,active,photospheric_radius/pe_er_photosphere.py,3315768413,Photospheric radius / thermal $\Gamma$,"\cref{fig:photospheric,fig:gamma_comparison}",
 bb_flux_fraction,active,bb_fraction/bb_flux_fraction.py,668559939,Blackbody flux fraction $f_\mathrm{BB}$,"\cref{fig:bbfraction,fig:bbfraction-rest-vs-z}",
-gbm_only_refit,active,gbm_only_refit/gbm_only_refit.py,3624228654,\ac{GBM}-only refit comparison,near \cref{fig:gbmonly-kt} (not itself \ac{MC}-derived),
+gbm_only_refit,active,gbm_only_refit/gbm_only_refit.py,3624228654,\ac{GBM}-only refit comparison,near \cref{fig:gbmonly-kt} (not itself \acl{MC} derived),
 gbm_fluence_table,active,fluence/grb_fluence.py,2285298891,\ac{GBM} fluence,\cref{tab:fluence},
 kt_epeak_correlation,unused,model_parameters/epeak_vs_kt.py,2177701742,,,not referenced by any figure or table in the current draft
 norris_pulse_fit_tv,dormant,variability_analysis/norris..py,1283770305,,,no caller anywhere in codes-for-paper/

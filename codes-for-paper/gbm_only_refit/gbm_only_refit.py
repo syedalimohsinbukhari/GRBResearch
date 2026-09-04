@@ -394,6 +394,7 @@ def make_plot(df, episode_markers, path_stub="gbm_only_refit_kt_comparison"):
             mfc="none",
             mec=JOINT_COLOR,
             ecolor=JOINT_COLOR,
+            capsize=CAP_SIZE,
             markersize=MARKER_SIZE,
             markeredgewidth=MARKER_EDGE_WIDTH,
             linewidth=LINE_WIDTH,
@@ -407,6 +408,7 @@ def make_plot(df, episode_markers, path_stub="gbm_only_refit_kt_comparison"):
                 mfc="none",
                 mec=GBM_COLOR,
                 ecolor=GBM_COLOR,
+                capsize=CAP_SIZE,
                 markersize=MARKER_SIZE,
                 markeredgewidth=MARKER_EDGE_WIDTH,
                 linewidth=LINE_WIDTH,
@@ -416,7 +418,6 @@ def make_plot(df, episode_markers, path_stub="gbm_only_refit_kt_comparison"):
     _ff = lambda x: x.replace("_", "+")
     ax.set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})"
                         for _, row in plotted.iterrows()])
-    ax.set_xlabel("Episode", fontsize=LABEL_FONT_SIZE)
     ax.set_ylabel(r"$kT_\mathrm{BB}$ [keV]", fontsize=LABEL_FONT_SIZE)
     ax.tick_params(labelsize=TICK_FONT_SIZE)
 
@@ -458,15 +459,14 @@ def make_plot(df, episode_markers, path_stub="gbm_only_refit_kt_comparison"):
 
 
 def make_delta_cstat_plot(df, episode_markers, path_stub="gbm_only_refit_delta_cstat"):
-    """Delta-C-stat (BASE -> BASE+BB improvement) vs episode, joint vs GBM-only.
+    """Delta-C-stat (BASE -> BASE+BB improvement) vs. episode, joint vs. GBM-only.
 
-    This is the paper's own statistical currency for whether BB is required
-    at all (section-1-introduction.tex's Delta-C-stat >= 28.74 rule), plotted
-    directly rather than left in the CSV -- it shows not just that kT_BB
-    matches between the two fits, but that BB is strongly preferred in both,
-    by a wide margin over threshold in every episode. Log-scaled y-axis: the
-    values span about an order of magnitude (30-380), and the threshold line
-    needs to stay legible at the low end.
+    This is the paper's own statistical currency for whether BB is required at all (section-1-introduction.tex's
+    Delta-C-stat >= 28.74 rule), plotted directly rather than left in the CSV.
+    It shows not just that kT_BB matches between the two fits, but that BB is strongly preferred in both, by a wide
+    margin over a threshold in every episode.
+    Log-scaled y-axis: the values span about an order of magnitude (30-380), and the threshold line needs to stay
+    legible at the low end.
     """
     update_style()
 

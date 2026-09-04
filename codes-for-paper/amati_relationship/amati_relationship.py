@@ -107,6 +107,7 @@ for idx, m_ in enumerate(grb_best[1:]):
 ep_total = list(chain.from_iterable(ep_total))
 ei_total = list(chain.from_iterable(ei_total))
 ep_label = list(chain.from_iterable(ep_label))
+ep_label = [i.split('$')[0] for i in ep_label]
 model_list = list(chain.from_iterable(model_list))
 g_name = list(chain.from_iterable(g_name))
 ep_err_total = list(chain.from_iterable(ep_err_total))
