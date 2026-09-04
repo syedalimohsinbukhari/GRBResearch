@@ -1,0 +1,52 @@
+# Canonical list of this project's real pipeline scripts -- the ones that read results.json (or similar raw data) and
+# produce a committed CSV/plot/table.
+# codes-for-paper/runner_all.py reads this and runs each one as a real subprocess (exactly how a human would run it),
+# so a full-pipeline rebuild (e.g., after a shared constant like N_GRID changes) is one command instead of re-deriving
+# the list from memory every time.
+#
+# Order matters only for same-topic pairs: a `csv_to_latex.py` reads the CSV the script right before it just wrote,
+# so it must run after that script, not before.
+# Everything else here is independent and order-agnostic.
+scripts:
+    -   path: fluence/grb_fluence.py
+        note: GBM fluence CSV
+    -   path: fluence/csv_to_latex.py
+        note: GBM fluence table (reads grb_fluence.py's CSV)
+    -   path: lorentz_factor/lorentz_factor.py
+        note: Lorentz factor Limit A (writes its own table inline, no separate csv_to_latex.py)
+    -   path: lorentz_factor/lorentz_factor_limit_b.py
+        note: Lorentz factor Limit B (independent seed from Limit A by design; no run-order dependency on it)
+    -   path: gbm_only_refit/gbm_only_refit.py
+        note: GBM-only refit comparison
+    -   path: bb_fraction/bb_flux_fraction.py
+        note: Blackbody flux fraction CSV
+    -   path: bb_fraction/csv_to_latex.py
+        note: Blackbody flux fraction table (reads bb_flux_fraction.py's CSV)
+    -   path: photospheric_radius/pe_er_photosphere.py
+        note: Photospheric radius / Lorentz factor CSV (Pe'er 2007)
+    -   path: photospheric_radius/csv_to_latex.py
+        note: Photospheric radius table (reads pe_er_photosphere.py's CSV)
+    -   path: model_parameters/epeak_vs_kt.py
+        note: kT-Epeak correlation (not currently used in the paper, still a real pipeline script)
+    -   path: model_parameters/peak_energy.py
+        note: Peak energy distribution
+    -   path: model_parameters/low_index.py
+        note: Low-energy spectral index distribution (no MC/N_GRID; included for a complete rebuild)
+    -   path: model_parameters/high_index.py
+        note: High-energy spectral index distribution (no MC/N_GRID; included for a complete rebuild)
+    -   path: amati_relationship/amati_relationship.py
+        note: Amati relation CSV
+    -   path: amati_relationship/csv_to_latex.py
+        note: Amati relation table (reads amati_relationship.py's CSV)
+    -   path: butterfly_plots/butterfly_all.py
+        note: Butterfly SEDs
+    -   path: all-safe-unsafe/all-safe-unsafe.py
+        note: SAFE/NOK model-fit summary (no MC/N_GRID; included for a complete rebuild)
+
+# Deliberately excluded, not forgotten -- the same active / unused / dormant-style transparency as seed_registry.yaml:
+#   variability_analysis/norris..py -- dormant, no caller anywhere in codes-for-paper/.
+#   LAT_analysis/txt_to_csv.py, csv_to_latex.py -- lives outside codes-for-paper/ entirely, and builds the LAT table
+#       from already-saved gtlike/RMFIT text output, not a fresh MC pipeline (no N_GRID/seed involved at all) --
+#       out of scope for "rerun the analysis pipeline."
+#   seed_table_to_latex.py, sync_paper_assets.py -- paper-output plumbing, not analysis; run these separately, after
+#       this list, if the seed table or the paper repo's copies need refreshing too.

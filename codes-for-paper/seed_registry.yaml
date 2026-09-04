@@ -46,7 +46,7 @@ active:
     gbm_only_refit:
         script: gbm_only_refit/gbm_only_refit.py
         item: "\\ac{GBM}-only refit comparison"
-        cref: "near \\cref{fig:gbmonly-kt} (not itself \\ac{MC}-derived)"
+        cref: "near \\cref{fig:gbmonly-kt} (not itself \\acl{MC} derived)"
     gbm_fluence_table:
         script: fluence/grb_fluence.py
         item: "\\ac{GBM} fluence"

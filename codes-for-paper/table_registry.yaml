@@ -1,55 +1,70 @@
 # Source-of-truth registry for every generated LaTeX table the paper actually uses
 # (codes-for-paper/sync_paper_assets.py reads this, alongside figure_registry.yaml).
 #
-# `source` is relative to GRBResearchWork/, `dest` is always `tex_files/generated/<name>.tex` in
+# `source` is relative to GRBResearchWork/. `dest` is normally `tex_files/generated/<name>.tex` in
 # GRBResearchPaper/ -- every generated table lands there per CLAUDE.md's "Generated LaTeX tables"
-# convention, never directly in appendices/ (those hold hand-authored wrapper files that `\input`
-# the generated table -- see appendix_LAT_info.tex / appendix_seeding_table.tex for the pattern).
+# convention, with a hand-authored wrapper file that `\input`s it (see appendix_LAT_info.tex /
+# appendix_seeding_table.tex for the pattern). The four `table_*_large` entries below are a
+# documented exception: `generate_table_from_log.py`'s output already embeds its own
+# `\subsection{}`/`\begin{table*}` wrapper (there's no separate hand-authored wrapper file for
+# these), so `dest` goes straight to `appendices/` and main.tex `\input`s it directly.
 #
 # Same convention as seed_registry.yaml: a table is never silently dropped from this file.
 #   active           -- copied by the runner.
-#   no_known_source  -- exists in GRBResearchPaper/tex_files/generated/ or appendices/ today
-#                        (the 8 per-GRB `table_*_large.tex` files, `table_template.tex`,
-#                        `time-integrated-table.tex`), but no generating script was found in
-#                        GRBResearchWork during a search of this repo; not auto-copyable, so not
-#                        the runner's job -- listed so it's clear this was checked, not missed.
+#   no_known_source  -- exists in GRBResearchPaper/tex_files/generated/ or appendices/ today, but
+#                        no generating script was found in GRBResearchWork during a search of this
+#                        repo; not auto-copyable, so not the runner's job -- listed so it's clear
+#                        this was checked, not missed.
 
 active:
-  amati_relationship_table:
-    source: codes-for-paper/amati_relationship/amati_relationship_table.tex
-    dest: tex_files/generated/amati_relationship_table.tex
-  bb_fraction_table:
-    source: codes-for-paper/bb_fraction/bb_fraction_table.tex
-    dest: tex_files/generated/bb_fraction_table.tex
-  fluence_table:
-    source: codes-for-paper/fluence/fluence_table.tex
-    dest: tex_files/generated/fluence_table.tex
-  lat_info_table:
-    source: LAT_analysis/lat_info_table.tex
-    dest: tex_files/generated/lat_info_table.tex
-  lorentz_table:
-    source: codes-for-paper/lorentz_factor/lorentz_table.tex
-    dest: tex_files/generated/lorentz_table.tex
-  lorentz_table_limit_b:
-    source: codes-for-paper/lorentz_factor/lorentz_table_limit_b.tex
-    dest: tex_files/generated/lorentz_table_limit_b.tex
-  photospheric_table:
-    source: codes-for-paper/photospheric_radius/photospheric_table.tex
-    dest: tex_files/generated/photospheric_table.tex
-  seed_table:
-    source: codes-for-paper/seed_table.tex
-    dest: tex_files/generated/seed_table.tex
+    amati_relationship_table:
+        source: codes-for-paper/amati_relationship/amati_relationship_table.tex
+        dest: tex_files/generated/amati_relationship_table.tex
+    bb_fraction_table:
+        source: codes-for-paper/bb_fraction/bb_fraction_table.tex
+        dest: tex_files/generated/bb_fraction_table.tex
+    fluence_table:
+        source: codes-for-paper/fluence/fluence_table.tex
+        dest: tex_files/generated/fluence_table.tex
+    lat_info_table:
+        source: LAT_analysis/lat_info_table.tex
+        dest: tex_files/generated/lat_info_table.tex
+    lorentz_table:
+        source: codes-for-paper/lorentz_factor/lorentz_table.tex
+        dest: tex_files/generated/lorentz_table.tex
+    lorentz_table_limit_b:
+        source: codes-for-paper/lorentz_factor/lorentz_table_limit_b.tex
+        dest: tex_files/generated/lorentz_table_limit_b.tex
+    photospheric_table:
+        source: codes-for-paper/photospheric_radius/photospheric_table.tex
+        dest: tex_files/generated/photospheric_table.tex
+    seed_table:
+        source: codes-for-paper/seed_table.tex
+        dest: tex_files/generated/seed_table.tex
+    table_080916C_large:
+        source: 080916C.tex
+        dest: appendices/table_080916C_large.tex
+    table_131014A_large:
+        source: 131014A.tex
+        dest: appendices/table_131014A_large.tex
+    table_140206B_large:
+        source: 140206B.tex
+        dest: appendices/table_140206B_large.tex
+    table_231129C_large:
+        source: 231129C.tex
+        dest: appendices/table_231129C_large.tex
 
 no_known_source:
-  per_grb_large_tables:
-    dest_pattern: "appendices/table_<GRB>_large.tex"
-    note: >
-      8 files exist (080916C, 131014A, 140206B, 231129C -- used by main.tex's appendix;
-      110721A, 110731A, 150210A, 190114C -- not \input anywhere, non-paper-sample GRBs per
-      CLAUDE.md). No generating script found in GRBResearchWork via search.
-  table_template:
-    dest: appendices/table_template.tex
-    note: "no generating script found; appears hand-authored"
-  time_integrated_table:
-    dest: appendices/time-integrated-table.tex
-    note: "no generating script found; appears hand-authored"
+    per_grb_large_tables:
+        dest_pattern: "appendices/table_<GRB>_large.tex"
+        note: >
+            110721A, 110731A, 150210A, 190114C -- not \input anywhere, non-paper-sample GRBs per CLAUDE.md; 
+            not regenerated or copied by this pipeline. (080916C, 131014A, 140206B, 231129C -- this paper's actual 
+            sample -- moved to `active` above 2026-09-04, now regenerated by generate_table_from_log.py; 
+            see that script and src/grb_research/log_to_latex_parser.py.)
+    table_template:
+        dest: appendices/table_template.tex
+        note: "no generating script found; appears hand-authored"
+    time_integrated_table:
+        dest: appendices/time-integrated-table.tex
+        note: "no generating script found; appears hand-authored"
