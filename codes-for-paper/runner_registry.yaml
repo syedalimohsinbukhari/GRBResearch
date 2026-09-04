@@ -16,6 +16,11 @@ scripts:
         note: Lorentz factor Limit A (writes its own table inline, no separate csv_to_latex.py)
     -   path: lorentz_factor/lorentz_factor_limit_b.py
         note: Lorentz factor Limit B (independent seed from Limit A by design; no run-order dependency on it)
+    -   path: gamma_min_reconciliation/reconcile_tv.py
+        note: >-
+            Prints the literature-Gamma_min t_v reconciliation cited in section-6-discussion.tex (reads
+            lorentz_factor.py's CSV, so it must run after it); stdout only, no committed output file --
+            rerun to reconfirm the paper's "t_v ~= 1.7 s" claim still holds if lorentz_results.csv changes
     -   path: gbm_only_refit/gbm_only_refit.py
         note: GBM-only refit comparison
     -   path: bb_fraction/bb_flux_fraction.py

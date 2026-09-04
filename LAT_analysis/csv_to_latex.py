@@ -30,6 +30,14 @@ TEX_NAMES = {
 # footnote giving a flux upper limit. Same threshold as lorentz_factor.py.
 TS_SECURE_DETECTION = 25.0
 
+# A photon index landing on this value (within PINNED_INDEX_TOL) is pinned at gtlike's fit boundary,
+# not a genuine measurement -- three different episodes (across two bursts) land within 0.0007 of
+# -6.00 (actual fitted values -5.999986, -5.999931, -5.999390), which is only plausible as a hard
+# boundary, not three independent fits converging to the same physical value.
+# Flagged 2026-09-04 (quick-fixes-mid-priority.md item: "Table 8 mein pinned indices").
+PINNED_INDEX_VALUE = -6.00
+PINNED_INDEX_TOL = 1e-2
+
 # 95% flux upper limits [ph/cm^2/s] for the TS < 25 episodes.
 #
 # NOT DERIVABLE from LAT_analysis/: these come from a profile-likelihood upper
@@ -57,6 +65,9 @@ CAPTION_SENTENCES = [
     r"Time-integrated episodes (\tnty) represent the standard burst duration, "
     r"while time-resolved episodes (TR, and EX) enable spectral evolution studies "
     r"within individual bursts.",
+    rf"For episodes with $\mathrm{{TS}} < {TS_SECURE_DETECTION:.0f}$, the \ac{{LAT}} association is "
+    r"not statistically secure; footnotes give the corresponding 95\% photon flux upper limit from "
+    r"Fermitools' \texttt{gtlike} \texttt{UpperLimits} tool in place of a point measurement.",
 ]
 
 CAPTION = "".join(f"        {sentence}\n" for sentence in CAPTION_SENTENCES)
@@ -81,16 +92,19 @@ def episode_tex(episode: str) -> str:
     raise ValueError(f"Unhandled episode label: {episode}")
 
 
-def data_cells(row, note_letter=None) -> str:
+def data_cells(row, ts_note_letter=None, index_note_letter=None) -> str:
     """The seven data columns shared by both blocks of the table."""
     ts = f"{row.ts:.3f}"
-    if note_letter is not None:
-        ts += rf"\tnote{{{note_letter}}}"
+    if ts_note_letter is not None:
+        ts += rf"\tnote{{{ts_note_letter}}}"
+    index = f"{row.photon_index:.2f}({row.photon_index_err:.2f})"
+    if index_note_letter is not None:
+        index += rf"\tnote{{{index_note_letter}}}"
     return (
         rf"\sirangeDuration{{{row.t_start_s:.3f}}}{{{row.t_stop_s:.3f}}} & "
         f"{row.n_events} & {row.n_events_high_prob} & "
         f"{row.e_max_MeV:.2f} & {row.t_arr_s:.3f} & {ts} & "
-        f"{row.photon_index:.2f}({row.photon_index_err:.2f})"
+        f"{index}"
     )
 
 
@@ -99,12 +113,22 @@ def build_table(frame: pd.DataFrame) -> str:
     notes = {}
     for letter, key in zip("abcdefghij", sorted(FLUX_UPPER_LIMITS, key=lambda k: (GRB_ORDER.index(k[0]), k[1]))):
         notes[key] = letter
+    # One shared letter for every pinned-index row (same explanation for all of them), continuing the
+    # same a/b/c/... sequence right after the flux-limit letters above.
+    pinned_letter = "abcdefghij"[len(notes)]
+
+    def index_note(row):
+        return pinned_letter if abs(row.photon_index - PINNED_INDEX_VALUE) < PINNED_INDEX_TOL else None
 
     # --- time-integrated block: one T90 row per burst -------------------------
     integrated = ""
+    pinned_rows = []
     for grb in GRB_ORDER:
         row = next(frame[(frame.grb_name == grb) & (frame.episode == "T90")].itertuples(index=False))
-        integrated += f"                {TEX_NAMES[grb]} & {episode_tex('T90')} & {data_cells(row)} \\\\\n"
+        note = index_note(row)
+        if note:
+            pinned_rows.append((grb, "T90"))
+        integrated += f"                {TEX_NAMES[grb]} & {episode_tex('T90')} & {data_cells(row, index_note_letter=note)} \\\\\n"
 
     # --- time-resolved block: everything else, grouped by burst ---------------
     resolved = ""
@@ -114,14 +138,25 @@ def build_table(frame: pd.DataFrame) -> str:
         if position:
             resolved += "                \\cmidrule{2-9}\n"
         for offset, row in enumerate(rows.itertuples(index=False)):
-            letter = notes.get((grb, row.episode)) if row.ts < TS_SECURE_DETECTION else None
+            ts_letter = notes.get((grb, row.episode)) if row.ts < TS_SECURE_DETECTION else None
+            index_letter = index_note(row)
+            if index_letter:
+                pinned_rows.append((grb, row.episode))
             lead = rf"\multirow{{{len(rows)}}}{{*}}{{{TEX_NAMES[grb]}}} " if offset == 0 else ""
-            resolved += f"                {lead}& {episode_tex(row.episode)} & {data_cells(row, letter)} \\\\\n"
+            resolved += (
+                f"                {lead}& {episode_tex(row.episode)} & "
+                f"{data_cells(row, ts_letter, index_letter)} \\\\\n"
+            )
 
     tablenotes = "".join(
         f"                \\item[\\textit{{{letter}}}] \\pFlux{{{FLUX_UPPER_LIMITS[key]}}}\n"
         for key, letter in sorted(notes.items(), key=lambda kv: kv[1])
     )
+    if pinned_rows:
+        tablenotes += (
+            f"                \\item[\\textit{{{pinned_letter}}}] Photon index pinned at "
+            f"gtlike's fit boundary ({PINNED_INDEX_VALUE:.2f}); not a genuine measurement.\n"
+        )
 
     return (
         "% AUTO-GENERATED by LAT_analysis/csv_to_latex.py from LAT_analysis/lat_photons.csv\n"

@@ -13,7 +13,7 @@ from grb_research.grb_constants import N_SAMPLES
 
 SOURCE_ROOT = find_project_root()
 RESULT_FILE = SOURCE_ROOT / "results.json"
-GRB_LIST = ["080916C", "140206B", "131014A", "231129C"]
+GRB_LIST = ["080916C", "131014A", "140206B", "231129C"]
 RANDOM_SEED = seed_from_name(__file__)
 
 # GBM selection-criterion band, matching section-1-introduction.tex's stated

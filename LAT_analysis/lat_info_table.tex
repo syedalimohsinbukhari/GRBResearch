@@ -6,6 +6,7 @@
         Time-resolved spectral analysis episodes for four Fermi-GBM gamma-ray bursts.
         For each GRB, we show the episode type, time interval relative to trigger, total number of events and high-probability events, characteristic photon energy, arrival time, test statistic (TS), and LAT photon index.
         Time-integrated episodes (\tnty) represent the standard burst duration, while time-resolved episodes (TR, and EX) enable spectral evolution studies within individual bursts.
+        For episodes with $\mathrm{TS} < 25$, the \ac{LAT} association is not statistically secure; footnotes give the corresponding 95\% photon flux upper limit from Fermitools' \texttt{gtlike} \texttt{UpperLimits} tool in place of a point measurement.
     }
     \label{tab:burst_table}
     \resizebox{\textwidth}{!}{
@@ -48,14 +49,14 @@
                 \cmidrule{2-9}
                 \multirow{7}{*}{\grbfourteenzerotwozerosixB} & EX0 & \sirangeDuration{4.288}{11.072} & 6 & 6 & 225.30 & 7.558 & 59.882 & -4.74(1.42) \\
                 & TR 1 & \sirangeDuration{7.488}{11.072} & 6 & 6 & 225.30 & 7.558 & 67.498 & -4.72(1.41) \\
-                & TR 2 & \sirangeDuration{11.072}{20.032} & 4 & 4 & 117.70 & 17.935 & 46.921 & -6.00(0.01) \\
+                & TR 2 & \sirangeDuration{11.072}{20.032} & 4 & 4 & 117.70 & 17.935 & 46.921 & -6.00(0.01)\tnote{f} \\
                 & TR 3 & \sirangeDuration{20.032}{26.752} & 4 & 4 & 753.11 & 23.998 & 39.236 & -2.31(0.62) \\
                 & TR 4 & \sirangeDuration{26.752}{59.776} & 7 & 7 & 576.25 & 27.498 & 56.013 & -2.21(0.43) \\
                 & TR 5 & \sirangeDuration{59.776}{100.032} & 5 & 2 & 194.49 & 81.567 & 4.296\tnote{b} & -3.02(1.06) \\
                 & TR 6 & \sirangeDuration{100.032}{154.240} & 6 & 5 & 526.00 & 105.486 & 18.006\tnote{c} & -2.48(0.61) \\
                 \cmidrule{2-9}
-                \multirow{4}{*}{\grbtwentythreeeleventwentynineC} & EX0 & \sirangeDuration{-0.192}{3.136} & 3 & 2 & 122.94 & 0.683 & 8.640\tnote{d} & -6.00(0.05) \\
-                & TR 1 & \sirangeDuration{0.384}{3.136} & 3 & 2 & 122.94 & 0.683 & 9.522\tnote{e} & -6.00(0.16) \\
+                \multirow{4}{*}{\grbtwentythreeeleventwentynineC} & EX0 & \sirangeDuration{-0.192}{3.136} & 3 & 2 & 122.94 & 0.683 & 8.640\tnote{d} & -6.00(0.05)\tnote{f} \\
+                & TR 1 & \sirangeDuration{0.384}{3.136} & 3 & 2 & 122.94 & 0.683 & 9.522\tnote{e} & -6.00(0.16)\tnote{f} \\
                 & TR 2 & \sirangeDuration{3.136}{7.296} & 8 & 8 & 722.52 & 3.844 & 98.194 & -2.17(0.39) \\
                 & EX1 & \sirangeDuration{3.136}{10.048} & 10 & 10 & 722.52 & 3.844 & 119.615 & -2.17(0.35) \\
                 \bottomrule
@@ -66,6 +67,7 @@
                 \item[\textit{c}] \pFlux{3.75e-05}
                 \item[\textit{d}] \pFlux{4.73e-04}
                 \item[\textit{e}] \pFlux{5.81e-04}
+                \item[\textit{f}] Photon index pinned at gtlike's fit boundary (-6.00); not a genuine measurement.
             \end{tablenotes}
         \end{threeparttable}
     }
