@@ -14,6 +14,16 @@ from .grb_constants import LATEX_MODEL_NAMES, MODEL_ORDER, short_to_long
 
 # LaTeX model name mapping
 
+# GRB display-name macros, matching the paper's own citation macros -- copied from
+# LAT_analysis/csv_to_latex.py (cross-folder-import convention, CLAUDE.md) so the appendix's per-burst
+# large tables cite each burst the same way the rest of the paper does, rather than in plain text.
+GRB_TEX_NAMES = {
+    "GRB080916C": r"\grbzeroeightzeroninesixteenC",
+    "GRB131014A": r"\grbthirteentenfourteenA",
+    "GRB140206B": r"\grbfourteenzerotwozerosixB",
+    "GRB231129C": r"\grbtwentythreeeleventwentynineC",
+}
+
 
 class LogParser:
     """Parser for GRB spectral analysis log files."""
@@ -35,7 +45,11 @@ class LogParser:
         # Multi-GRB tracking
         self.current_grb: Optional[str] = None
         self.grb_data: Dict[str, List[Dict]] = {}
-        self.grb_pattern = re.compile(r"/GRB(\d+)/Ep\d+__")
+        self.grb_pattern = re.compile(r"/GRB(\d+[A-Z]*)/Ep\d+__")
+
+        # T90 (Ep0) time range per GRB, used to tell the leading excess (EX0) from the trailing one (EX1) by actual
+        # interval bounds rather than by directory letter suffix -- see _parse_episode_info.
+        self.grb_t90_bounds: Dict[str, Tuple[float, float]] = {}
 
     def _read_log_file(self) -> str:
         """Read the entire log file content."""
@@ -111,7 +125,9 @@ class LogParser:
             return None
 
         # Parse episode name and time range
-        episode_name, time_range = self._parse_episode_info(episode_dir)
+        episode_name, time_range = self._parse_episode_info(episode_dir, grb_name)
+        if episode_dir.startswith("Ep0__"):
+            self.grb_t90_bounds[grb_name] = time_range
 
         # Extract SAFE models list
         safe_models = self._extract_safe_models(block_content, "SAFE")
@@ -146,16 +162,21 @@ class LogParser:
             "episode_name": episode_name,
             "time_range": time_range,
             "safe_models": safe_models,
+            "best_models": best_models,
             "model_parameters": model_parameters,
         }
 
-    def _parse_episode_info(self, episode_dir: str) -> Tuple[str, Tuple[float, float]]:
+    def _parse_episode_info(self, episode_dir: str, grb_name: str) -> Tuple[str, Tuple[float, float]]:
         """Parse episode directory name to extract episode name and time range.
 
         Parameters
         ----------
         episode_dir : str
             Episode directory name (e.g., 'Ep0__0.000_21.824').
+        grb_name : str
+            The GRB this episode belongs to, used to look up its T90 bounds
+            (`self.grb_t90_bounds`, populated when that burst's Ep0 is parsed)
+            for the EX0/EX1 determination below.
 
         Returns
         -------
@@ -183,7 +204,20 @@ class LogParser:
         if ep_num == "0":
             episode_name = "Time integrated"
         elif ep_suffix in ["A", "B"]:
-            episode_name = f"Episode EX--{ep_suffix}"
+            # The directory suffix ("A" vs "B") is not a reliable EX0/EX1 signal -- both this project's excess
+            # episodes conventionally get suffix "A" in the raw directory name (e.g. "Ep1A", "Ep5A"; see CLAUDE.md,
+            # "Episode naming"), regardless of whether they lead or trail T90. Determine EX0 (leading, starts before
+            # T90) vs EX1 (trailing, ends after T90) from the actual interval bounds instead, per CLAUDE.md's "map
+            # directory names to labels by interval bounds, never by name" rule.
+            t90 = self.grb_t90_bounds.get(grb_name)
+            if t90 is not None and start_time < t90[0]:
+                episode_name = "Episode EX0"
+            elif t90 is not None and end_time > t90[1]:
+                episode_name = "Episode EX1"
+            else:
+                # T90 bounds not yet known for this GRB (e.g. Ep0 not parsed first) or neither condition holds --
+                # fall back to the old, unreliable letter-suffix label rather than guessing.
+                episode_name = f"Episode EX--{ep_suffix}"
         elif ep_suffix in ["X", "Y", "Z"]:
             # X, Y, Z are sub-episodes, treat as regular episodes
             roman = self._to_roman(int(ep_num))
@@ -267,9 +301,16 @@ class LogParser:
         Optional[Dict]
             Dictionary of parameter names to (value, error, error_percentage) tuples, or None.
         """
-        # Find the parameter details section for this model
+        # Find the parameter details section for this model. The lookahead's alternatives must include \Z (true
+        # end of string): whichever model's block happens to print last within a RUN block has nothing but
+        # "[RUN] Finished..." after it, which matches none of the named markers -- without \Z the regex fails to
+        # match at all for that model, silently dropping it from model_parameters. Confirmed as a real bug (not
+        # log-selection- or fit-dependent): two RMFIT reruns of the same episode with byte-identical cstat values
+        # and safe-model lists nonetheless printed their per-model blocks in a different order, so a different
+        # model was "last" and got dropped in each run -- e.g. GRB231129C's EX0 episode lost PL_BB in one run and
+        # BAND in the other, purely from this parsing gap, not from any difference in the fits themselves.
         model_type = r"(?:SAFE|BEST)" if is_safe else r"(?:UNSAFE|MARGINAL)"
-        pattern = rf"\[{model_type}\] {model} parameter details:\n(.*?)(?=\[SAFE\]|\[BEST\]|\[UNSAFE\]|\[MARGINAL\]|SAFE models:$)"
+        pattern = rf"\[{model_type}\] {model} parameter details:\n(.*?)(?=\[SAFE\]|\[BEST\]|\[UNSAFE\]|\[MARGINAL\]|SAFE models:$|\Z)"
         match = re.search(pattern, block_content, re.DOTALL)
 
         if not match:
@@ -359,7 +400,13 @@ class LogParser:
         output_files = []
 
         for grb_id, episodes in self.grb_data.items():
-            short_name = [k for k, v in short_to_long.items() if f"GRB{grb_id}" == v][0]
+            matching_short_names = [k for k, v in short_to_long.items() if f"GRB{grb_id}" == v]
+            if not matching_short_names:
+                # No appendix table for this key (e.g. a "...GBM"-suffixed refit directory, which the parser now
+                # keeps as its own grb_id rather than silently merging into the base burst's episode list -- it has
+                # no entry in short_to_long because it isn't one of this paper's four main appendix tables).
+                continue
+            short_name = matching_short_names[0]
             if not episodes:
                 continue
 
@@ -411,12 +458,38 @@ class LaTeXTableGenerator:
         Parameters
         ----------
         episodes : List[Dict]
-            List of parsed episode dictionaries.
+            List of parsed episode dictionaries, in the log's own print order (see
+            _reorder_trailing_excess for the one adjustment made to that order).
         grb_name : str
             GRB identifier (e.g., 'GRB110721A').
         """
-        self.episodes = episodes
+        self.episodes = self._reorder_trailing_excess(episodes)
         self.grb_name = grb_name
+
+    @staticmethod
+    def _reorder_trailing_excess(episodes: List[Dict]) -> List[Dict]:
+        """Move the trailing excess episode (EX1), if present, to immediately after the TR episode it extends.
+
+        The log's own print order lists EX1 right *before* that TR episode (mirroring how EX0, the leading
+        excess, is printed before the TR episode it extends) -- but EX0 comes before its TR because it
+        genuinely starts earlier, whereas EX1 shares its TR's start time and only extends the *end*, so
+        printing it first breaks the table's otherwise-chronological TR1, TR2, ... sequence. Moving it to
+        immediately follow that TR (identified by the matching start time, per CLAUDE.md's "map by interval
+        bounds, never by name" rule) keeps the main TR sequence unbroken and reads more naturally.
+        """
+        ex1_index = next((i for i, ep in enumerate(episodes) if ep["episode_name"] == "Episode EX1"), None)
+        if ex1_index is None:
+            return episodes
+
+        ex1 = episodes[ex1_index]
+        remaining = episodes[:ex1_index] + episodes[ex1_index + 1 :]
+        ex1_start = ex1["time_range"][0]
+        insert_after = next((i for i, ep in enumerate(remaining) if ep["time_range"][0] == ex1_start), None)
+        if insert_after is None:
+            # No matching TR start found -- leave EX1 where the log had it rather than dropping it.
+            return episodes
+
+        return remaining[: insert_after + 1] + [ex1] + remaining[insert_after + 1 :]
 
     def generate_table(self) -> str:
         """Generate complete LaTeX table.
@@ -428,14 +501,25 @@ class LaTeXTableGenerator:
         """
         lines = []
 
+        # Matches every other generated table in this project (CLAUDE.md, "Generated LaTeX tables"): the header
+        # is written by the generator itself so a plain file copy (sync_paper_assets.py) carries it along.
+        lines.append("% AUTO-GENERATED by generate_table_from_log.py -- do not hand-edit, regenerate instead.")
+
+        # Display name for the caption and table title: the paper's own citation macro for this burst if one
+        # exists (GRB_TEX_NAMES, matching how every other generated table in this paper cites a burst), otherwise
+        # the plain grb_name -- e.g. for the four other-project bursts this repo also holds data for but that
+        # aren't part of this paper's sample (CLAUDE.md, "Research scope").
+        display_name = GRB_TEX_NAMES.get(self.grb_name, self.grb_name)
+
         # Table header
         lines.append(f"\\subsection{{{self.grb_name}}}")
         lines.append("\\begin{table*}[!htpb]")
         lines.append(" \\centering")
-        # lines.append(" \\renewcommand{\\arraystretch}{1.175}")
+        # No \arraystretch override: these per-episode tables already run long (up to 10+ episodes x up to 4
+        # models each), and the default spacing keeps them shorter page-wise -- deliberate, not an oversight.
         lines.append(" \\caption{")
         lines.append(
-            f"         Fitted parameters for time-integrated and time-resolved spectral analysis of {self.grb_name}."
+            f"         Fitted parameters for time-integrated and time-resolved spectral analysis of {display_name}."
         )
         lines.append("         The values in parenthesis are the uncertainty in the measured parameter.")
         lines.append("         The BEST models are highlighted with a light gray strip.")
@@ -453,7 +537,7 @@ class LaTeXTableGenerator:
         lines.append(" \\resizebox{\\textwidth}{!}{")
         lines.append("\\begin{tabular}{lcccccccccccc}")
         lines.append("    \\toprule")
-        lines.append(f"     \\multicolumn{{13}}{{c}}{{\\textbf{{{self.grb_name}}}}} \\\\")
+        lines.append(f"     \\multicolumn{{13}}{{c}}{{\\textbf{{{display_name}}}}} \\\\")
         lines.append("\\midrule")
 
         # Column headers
@@ -514,6 +598,8 @@ class LaTeXTableGenerator:
         # Model rows in the specified order
         for model in MODEL_ORDER:
             if model in episode["model_parameters"]:
+                if model in episode["best_models"]:
+                    lines.append("            \\rowcolor{lgray}")
                 params = episode["model_parameters"][model]
                 row = self._generate_model_row(model, params)
                 lines.append(row)
@@ -706,7 +792,9 @@ def parse_log_and_generate_table(
     log_file_path : str
         Path to the input log file.
     output_file_path : str, optional
-        Path to the output LaTeX file (only used if multi_grb=False).
+        If multi_grb=True, the output *directory* for the one-table-per-GRB files (passed through to
+        generate_multiple_latex_tables; defaults to the log file's own directory if omitted). If
+        multi_grb=False, the single output *file* path instead.
     grb_name : str, optional
         GRB name for the table (only used if multi_grb=False). If None, will extract from first episode.
     multi_grb : bool, optional
@@ -723,7 +811,7 @@ def parse_log_and_generate_table(
 
     if multi_grb:
         # Generate separate tables for each GRB
-        parser.generate_multiple_latex_tables()
+        parser.generate_multiple_latex_tables(output_dir=output_file_path)
     else:
         # Legacy mode: Generate a single table
         if output_file_path is None:

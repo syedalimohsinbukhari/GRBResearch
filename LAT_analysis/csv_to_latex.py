@@ -63,17 +63,19 @@ CAPTION = "".join(f"        {sentence}\n" for sentence in CAPTION_SENTENCES)
 
 
 def episode_tex(episode: str) -> str:
-    """Render an episode label in the appendix's own convention.
+    """Render an episode label for the appendix table.
 
-    The appendix writes the excess episodes as EX--A / EX--B rather than the
-    EX0 / EX1 used in results.json; see CLAUDE.md, "Episode naming".
+    Unified with the EX0/EX1 convention used everywhere else in this project (results.json,
+    grb_time.py, log_to_latex_parser.py) -- this table previously wrote the excess episodes as
+    EX--A/EX--B, a second naming scheme that only existed here; unified 2026-09-04 at the user's
+    direction so the whole paper uses one scheme.
     """
     if episode == "T90":
         return r"\tnty"
     if episode == "EX0":
-        return "EX--A"
+        return "EX0"
     if episode == "EX1":
-        return "EX--B"
+        return "EX1"
     if episode.startswith("TR"):
         return f"TR {episode[2:]}"
     raise ValueError(f"Unhandled episode label: {episode}")
