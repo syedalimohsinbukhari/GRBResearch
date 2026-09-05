@@ -47,6 +47,10 @@ scripts:
         note: Butterfly SEDs
     -   path: all-safe-unsafe/all-safe-unsafe.py
         note: SAFE/NOK model-fit summary (no MC/N_GRID; included for a complete rebuild)
+    -   path: time_integrated_table/time_integrated_table.py
+        note: >-
+            Time-integrated/time-resolved duration appendix table (no MC/N_GRID; reads results.json
+            interval strings directly, no CSV involved -- included for a complete rebuild)
 
 # Deliberately excluded, not forgotten -- the same active / unused / dormant-style transparency as seed_registry.yaml:
 #   variability_analysis/norris..py -- dormant, no caller anywhere in codes-for-paper/.

@@ -3,11 +3,15 @@
 #
 # `source` is relative to GRBResearchWork/. `dest` is normally `tex_files/generated/<name>.tex` in
 # GRBResearchPaper/ -- every generated table lands there per CLAUDE.md's "Generated LaTeX tables"
-# convention, with a hand-authored wrapper file that `\input`s it (see appendix_LAT_info.tex /
-# appendix_seeding_table.tex for the pattern). The four `table_*_large` entries below are a
-# documented exception: `generate_table_from_log.py`'s output already embeds its own
-# `\subsection{}`/`\begin{table*}` wrapper (there's no separate hand-authored wrapper file for
-# these), so `dest` goes straight to `appendices/` and main.tex `\input`s it directly.
+# convention, and the section/appendix content that uses it `\input`s that path directly (see
+# main.tex's Appendix, or section-3/section-5's inline tables, for the pattern). Until 2026-09-06
+# this went through an extra hand-authored wrapper file per table (`appendix_LAT_info.tex`,
+# `appendix_seeding_table.tex`, `time-integrated-table.tex`, each just a comment + one `\input`
+# line) -- removed as pure indirection once every generated table's `dest` was already a stable,
+# descriptive path in its own right. The four `table_*_large` entries below are a documented
+# exception: `generate_table_from_log.py`'s output already embeds its own
+# `\subsection{}`/`\begin{table*}` wrapper, so `dest` goes straight to `appendices/` and main.tex
+# `\input`s it directly.
 #
 # Same convention as seed_registry.yaml: a table is never silently dropped from this file.
 #   active           -- copied by the runner.
@@ -53,6 +57,9 @@ active:
     table_231129C_large:
         source: 231129C.tex
         dest: appendices/table_231129C_large.tex
+    time_integrated_table:
+        source: codes-for-paper/time_integrated_table/time_integrated_table.tex
+        dest: tex_files/generated/time_integrated_table.tex
 
 no_known_source:
     per_grb_large_tables:
@@ -64,7 +71,4 @@ no_known_source:
             see that script and src/grb_research/log_to_latex_parser.py.)
     table_template:
         dest: appendices/table_template.tex
-        note: "no generating script found; appears hand-authored"
-    time_integrated_table:
-        dest: appendices/time-integrated-table.tex
         note: "no generating script found; appears hand-authored"
