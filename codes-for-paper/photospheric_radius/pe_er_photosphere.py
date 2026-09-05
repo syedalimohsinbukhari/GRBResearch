@@ -45,7 +45,7 @@ shown rather than an unmeasured value being invented.
 
 Outputs:
     pe_er_photosphere.csv   -- one row per interval per redshift
-    pe_er_photosphere.png   -- r_0(z) and Gamma(z), with the fixed-z burst marked
+    pe_er_photosphere.png   -- r_0(z), Gamma(z) and r_ph(z), with the fixed-z burst marked
     pe_er_photosphere.pdf
 """
 
@@ -69,8 +69,9 @@ from grb_research import (
     seed_from_name,
     update_style,
 )
-from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, SAVE_DPI, kev_to_erg, N_SAMPLES, N_GRID
+from grb_research.grb_constants import (LEGEND_FONT_SIZE, LINE_WIDTH, kev_to_erg, N_SAMPLES, N_GRID)
 from grb_research.grb_enums import GRBModelsCombinations as gmC
+from grb_research.grb_utils import save_fig
 
 # ─── Physical constants (CGS) ────────────────────────────────────────────────
 
@@ -378,12 +379,18 @@ def write_csv(rows, path="pe_er_photosphere.csv"):
 
 
 def make_plot(rows, path_stem="pe_er_photosphere"):
-    """r_0(z) and Gamma(z): swept bursts as curves, the fixed-z burst as points."""
+    """r_0(z), Gamma(z) and r_ph(z): swept bursts as curves, the fixed-z burst as points."""
     update_style()
 
-    figure, axes = plt.subplots(nrows=1, ncols=2, figsize=(12.5, 5.0))
+    figure, axes = plt.subplots(nrows=2, ncols=2, figsize=(9, 9))
+    axes = axes.flatten()
+    legend_axis = axes[3]
 
-    for axis, key, axis_label in ((axes[0], "r_zero", r"$r_0$ [cm]"), (axes[1], "gamma", r"$\Gamma$")):
+    for axis, key, axis_label in (
+            (axes[0], "r_zero", r"$r_0$ [cm]"),
+            (axes[1], "gamma", r"$\Gamma$"),
+            (axes[2], "r_ph", r"$r_\mathrm{ph}$ [cm]"),
+    ):
         for short_name in GRB_LIST:
             grb = f"GRB{short_name}"
             colour = GRBPlotStyle.GRB_COLORS[grb]
@@ -450,24 +457,19 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
         axis.set_xlabel(r"Redshift $z$")
         axis.set_ylabel(axis_label)
 
-    axes[0].set_title(r"Base radius $r_0$ (at $Y=1$; $r_0 \propto Y^{-3/2}$)")
-    axes[1].set_title(r"Lorentz factor $\Gamma$ (at $Y=1$; $\Gamma \propto Y^{1/4}$)")
+    axes[0].set_title(r"Base radius $r_0$" + "\n" + r"(at $Y=1$; $r_0 \propto Y^{-3/2}$)")
+    axes[1].set_title(r"Lorentz factor $\Gamma$" + "\n" + r"(at $Y=1$; $\Gamma \propto Y^{1/4}$)")
+    axes[2].set_title(r"Photospheric radius $r_\mathrm{ph}$" + "\n" + r"(at $Y=1$; $r_\mathrm{ph} \propto Y^{1/4}$)")
 
-    # One shared legend in a single column outside the panels, on the left:
-    # with 13 series an in-axes legend unavoidably covers data (it hid the
-    # GRB140206B track entirely), and a single column keeps the burst/episode
-    # grouping readable top-to-bottom.
+    # The legend lives in the fourth (otherwise unused) grid cell rather than squeezed outside the panels:
+    # with 13 series a legend crammed into a side margin was cramped at 3-panel width, and the 2x2 layout leaves
+    # a free axis that is exactly legend-shaped. Two columns fit all 13 entries without the legend running taller
+    # than the plot panels beside it.
     handles, labels = axes[0].get_legend_handles_labels()
-    figure.legend(
-        handles, labels, loc="center left", ncols=1, fontsize=LEGEND_FONT_SIZE, frameon=True, bbox_to_anchor=(0.05, 0.5)
-    )
+    legend_axis.axis("off")
+    legend_axis.legend(handles, labels, loc="center", fontsize=LEGEND_FONT_SIZE, frameon=True)
 
-    plt.tight_layout(rect=(0.235, 0, 1, 1))
-
-    for extension in ("png", "pdf"):
-        plt.savefig(f"./{path_stem}.{extension}", dpi=SAVE_DPI)
-    plt.close()
-    print(f"Saved: {path_stem}.png / .pdf")
+    save_fig(figure, path_stem)
 
 
 def main():

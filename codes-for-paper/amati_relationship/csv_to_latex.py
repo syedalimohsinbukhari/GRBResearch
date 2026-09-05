@@ -94,6 +94,7 @@ def csv_to_latex_table(csv_path="amati_relationship.csv", output_path="amati_rel
 
     ep_decimals = decimals_for(np.r_[df["E_i_peak_err_lower__1e+03_keV"], df["E_i_peak_err_upper__1e+03_keV"]])
     ei_decimals = decimals_for(np.r_[df["E_0_iso_err_lower__1e+52_erg"], df["E_0_iso_err_upper__1e+52_erg"]])
+    seed = int(df["seed"].iloc[0])
 
     # Start building LaTeX table
     latex_lines = []
@@ -105,7 +106,7 @@ def csv_to_latex_table(csv_path="amati_relationship.csv", output_path="amati_rel
         "    \\caption{Intrinsic peak energy $E_\\text{i,p}$ and isotropic equivalent energy \\eiso "
         "for the time-integrated and time-resolved episodes of GRBs with known redshifts.\n"
         "        Values are the median and asymmetric $1\\sigma$ errors from $10^4$ "
-        "Monte Carlo samples.}"
+        f"Monte Carlo samples (seed ${seed}$).}}"
     )
     latex_lines.append("    \\label{tab:eiso}")
     latex_lines.append("    \\renewcommand{\\arraystretch}{1.25}")

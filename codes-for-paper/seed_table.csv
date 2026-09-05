@@ -1,9 +1,9 @@
 slug,status,script,seed,item,cref,note
 butterfly_seds,active,butterfly_plots/butterfly_all.py,2000318690,Butterfly SEDs (all four bursts),\cref{fig:butterfly},
 peak_energy_distribution,active,model_parameters/peak_energy.py,2933599809,Peak energy distribution,\cref{fig:peakenergybestall},
-amati_relation,active,amati_relationship/amati_relationship.py,3271127181,Amati relation,\cref{fig:amati_relationship},
-lorentz_limit_a,active,lorentz_factor/lorentz_factor.py,3983203661,"Lorentz factor, Limit A",\cref{fig:gamma_comparison},
-lorentz_limit_b,active,lorentz_factor/lorentz_factor_limit_b.py,4169226666,"Lorentz factor, Limit B",\cref{fig:gamma_comparison},
+amati_relation,active,amati_relationship/amati_relationship.py,3271127181,Amati relation,"\cref{fig:amati_relationship,tab:eiso}",
+lorentz_limit_a,active,lorentz_factor/lorentz_factor.py,3983203661,"Lorentz factor, Limit A","\cref{fig:gamma_comparison,tab:lorentz}",
+lorentz_limit_b,active,lorentz_factor/lorentz_factor_limit_b.py,4169226666,"Lorentz factor, Limit B","\cref{fig:gamma_comparison,tab:lorentz_limit_b}",
 photospheric_radius,active,photospheric_radius/pe_er_photosphere.py,3315768413,Photospheric radius / thermal $\Gamma$,"\cref{fig:photospheric,fig:gamma_comparison}",
 bb_flux_fraction,active,bb_fraction/bb_flux_fraction.py,668559939,Blackbody flux fraction $f_\mathrm{BB}$,"\cref{fig:bbfraction,fig:bbfraction-rest-vs-z}",
 gbm_only_refit,active,gbm_only_refit/gbm_only_refit.py,3624228654,\ac{GBM}-only refit comparison,near \cref{fig:gbmonly-kt} (not itself \acl{MC} derived),

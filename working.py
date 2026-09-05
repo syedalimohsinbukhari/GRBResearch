@@ -12,7 +12,8 @@ timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 log_filename = f"cstat_run_{timestamp}.log"
 
 req_dir = ['GRB080916009', 'GRB131014215', 'GRB140206275', 'GRB231129779']
-req_dir.append('GRB131014215GBM')
+# req_dir.append('GRB131014215GBM')
+# req_dir.append('GRB131014215GBM40keV')
 
 orig_stdout, orig_stderr = sys.stdout, sys.stderr
 with open(log_filename, "w", buffering=1) as log_file:

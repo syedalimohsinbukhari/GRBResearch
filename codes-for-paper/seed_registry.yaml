@@ -26,15 +26,15 @@ active:
     amati_relation:
         script: amati_relationship/amati_relationship.py
         item: "Amati relation"
-        cref: "\\cref{fig:amati_relationship}"
+        cref: "\\cref{fig:amati_relationship,tab:eiso}"
     lorentz_limit_a:
         script: lorentz_factor/lorentz_factor.py
         item: "Lorentz factor, Limit A"
-        cref: "\\cref{fig:gamma_comparison}"
+        cref: "\\cref{fig:gamma_comparison,tab:lorentz}"
     lorentz_limit_b:
         script: lorentz_factor/lorentz_factor_limit_b.py
         item: "Lorentz factor, Limit B"
-        cref: "\\cref{fig:gamma_comparison}"
+        cref: "\\cref{fig:gamma_comparison,tab:lorentz_limit_b}"
     photospheric_radius:
         script: photospheric_radius/pe_er_photosphere.py
         item: "Photospheric radius / thermal $\\Gamma$"

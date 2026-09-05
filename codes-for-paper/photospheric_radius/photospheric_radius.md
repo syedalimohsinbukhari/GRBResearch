@@ -66,6 +66,12 @@ Same sample count (10 000), energy band (observer-frame 1 keV – 10 MeV) and gr
 
 `component_energy_fluxes` and `draw_model_samples` were promoted into `grb_research` (`grb_calculations.py`) so Phase 1 and Phase 2 use one implementation of the component split rather than two copies that could drift. Phase 1 was refactored onto it and verified unchanged.
 
+### 2.6 Third panel for $r_\text{ph}(z)$ — *user request, 2026-09-04*
+
+`make_plot()` originally plotted only $r_0(z)$ and $\Gamma(z)$ (two panels); $r_\text{ph}$ was in the CSV and the `PhotosphereResult` dataclass (`r_ph` field) but had no figure of its own. The gap surfaced while addressing a referee-style weakness (`quick-fixes-high-priority.md` item 4): the paper claims GRB131014A/GRB231129C's $r_\text{ph}$ offset from GRB080916C is "largely a redshift artifact," backed only by a table and prose numbers. A quick, unstyled one-off plot (`_quicklook_rph.png`, not committed, deleted after this change) made the effect immediately legible in a way the numbers alone hadn't — the user's own words were "there's no way I'd have understood the r_ph correction without this plot." That plot is now promoted into the real, styled figure: `make_plot()` takes a third `(axes[2], "r_ph", ...)` panel identical in structure to the other two, `figsize` widened from `(12.5, 5.0)` to `(18.0, 5.0)`, and the shared-legend `tight_layout` rect fraction scaled by `12.5/18.0` to keep the legend column's absolute width constant across the figure-width change. No new computation — `r_ph` was already being computed and written to the CSV every run, only the plot was missing it.
+
+Paper side: `fig:photospheric`'s caption updated from "Base radius $r_0$ (left) and bulk Lorentz factor $\Gamma$ (right)" to name all three panels; no other section needed a change since the surrounding prose already discussed $r_\text{ph}$ at length (`subsec:photospheric`, including the item-4 rewrite) without previously being able to point at a figure for it.
+
 ---
 
 ## 3. Validation
