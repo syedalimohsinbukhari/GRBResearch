@@ -1,12 +1,19 @@
 # Variability timescale (t_v) via manually-seeded joint Norris fit — GRB131014A
 
-Companion to `PHASE5_TV_PLAN.md` (project root) and `variability_timescale/variability_timescale.md`,
-which document the earlier automated (MEPSA/scipy peak-detection + per-window local fit) pipeline for
-this same Phase 5 goal. This folder is a **separate, manually-driven track** for GRB131014A specifically,
-started 2026-09-07 after that automated pipeline stalled on GRB080916C's TR2 (zero MEPSA detections even
-with padding, because TR2's true shape is one broad, smoothly-declining pulse with no local excess for a
-spike detector to find — see the MEPSA-fallback discussion in this session's history). Not yet wired into
-`lorentz_factor.py`'s `Gamma_min` pipeline — same deliverable-boundary stance as `variability_timescale/`.
+Companion to `PHASE5_TV_PLAN.md` (project root), which documented the earlier automated
+(MEPSA/scipy peak-detection + per-window local fit) pipeline for this same Phase 5 goal. That pipeline's
+source files (`variability_timescale/norris_fit.py`, `variability_timescale.py`, etc.) have since been
+deleted — see `PHASE5_TV_PLAN.md`'s 2026-09-16 status update — so this folder is now the only live track.
+This folder is a **separate, manually-driven track**, worked one GRB at a time starting with GRB131014A on
+2026-09-07 after the automated pipeline stalled on GRB080916C's TR2 (zero MEPSA detections even with
+padding, because TR2's true shape is one broad, smoothly-declining pulse with no local excess for a spike
+detector to find — see the MEPSA-fallback discussion in this session's history). GRB140206B
+(`fitter_GRB140206275.py` + a `_simple` variant) and GRB231129C (`fitter_GRB231129779.py`) were fit in
+this same manual style in a later session (2026-09-15/16) but are **not yet written up below** — the
+"What the code computes" / "Every judgement call" / "Results" sections that follow describe the GRB131014A
+fit only; see each script's own docstring/comments for the other two bursts until this note is extended.
+GRB080916C has no manual fit yet. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same
+deliverable-boundary stance as the abandoned automated pipeline.
 
 ## What the code computes
 
@@ -152,13 +159,35 @@ conclusion in the Known Limitations section below.
 
 ## Files here
 
-- `fitter.py` — the user's own working file; not touched by Claude past the two changes explicitly
-  requested (episode-boundary `axvline`s, fixing a broken `savefig` path).
+GRB131014A (documented above):
+- `fitter.py` — the user's own working file, reused/repurposed across bursts as this track progressed
+  (currently set up for GRB140206B, not GRB131014A — see below); not touched by Claude past the two
+  changes explicitly requested for the GRB131014A stage (episode-boundary `axvline`s, fixing a broken
+  `savefig` path).
 - `fitter_CLAUDE_GRB131014215.py` — Claude's copy, used for the amplitude-rescale, physical-unit plot, LAT-photon overlay,
   and photon-to-pulse assignment work documented above. Diverges from `fitter.py` from that point on.
 - `GRB131014215_lat.fits` — copied from `light_curves/GRB131014215/lat.fits`; the FITS-reading convention
   (`fits.open(...)[1].data`, per-source probability column named after the source) is copied from
   `light_curves/make_lightcurve.py`, not re-derived.
 - `norris_fit_results_GRB131014215.csv` — one row per (pulse, episode) match, produced by `fitter_CLAUDE_GRB131014215.py`.
-- `.norris_fitted_GRB131014215.png/.pdf` — the decorated plot (physical units, episode boundaries, LAT
+- `norris_fitted_GRB131014215.png/.pdf` — the decorated plot (physical units, episode boundaries, LAT
   photon overlay on twin axis).
+
+GRB140206B and GRB231129C (files exist, **not yet written up** in this note — see "not yet written up" above):
+- `fitter_GRB140206275.py`, `fitter_GRB140206275_simple.py`, `GRB140206275_lat.fits`,
+  `norris_fit_results_GRB140206275.csv`, `norris_fit_results_GRB140206275_simple.csv`,
+  `norris_fit_diagnostics_GRB140206275.csv`, `norris_fit_GRB140206275.png`,
+  `norris_fitted_GRB140206275.png/.pdf`, `norris_fitted_GRB140206275_simple.png/.pdf`.
+- `fitter_GRB231129779.py`, `GRB231129779_lat.fits`, `norris_fit_results_GRB231129779.csv`,
+  `norris_fit_GRB231129779.png` (+ `__bkp` variant), `norris_fitted_GRB231129779.png/.pdf`.
+- `norris..py` — a full, working `NorrisFitter`/`norris_pulse`/`tv_value`/`tv_mc_summary` implementation
+  already committed in this folder (pre-Phase-5, `main-minor-75`), matching the exact interface the
+  `fitter*.py` scripts need. It is almost certainly what those scripts *should* be importing locally
+  (per `CLAUDE.md`'s "copy rather than fight `sys.path`" convention) instead of the broken
+  `from variability_timescale.norris_fit import NorrisFitter` (see `PHASE5_TV_PLAN.md`'s bug note) — but
+  the filename has a stray extra dot (`norris..py`, not `norris_fit.py`) so no current script actually
+  imports from it under that name. Flagged, not fixed, in this pass: renaming it and repointing the
+  `fitter*.py` imports is a code change, out of scope for a docs-staleness pass.
+- `dry_run.png` — a dry-run diagnostic plot; which script/burst produced it is not documented here.
+- `experiments/window_sensitivity_GRB231129779/` — the window-widening pulse-count diagnostic (see
+  section above), `window_sensitivity.py` + its `window_sensitivity_results.csv`.

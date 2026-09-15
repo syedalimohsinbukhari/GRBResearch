@@ -10,8 +10,8 @@ from astropy.io import fits
 
 from grb_research import update_style, seed_from_name, MARKER_SIZE
 from grb_research.grb_utils import save_fig
-from variability_timescale.light_curves import lightcurve_data
-from variability_timescale.norris_fit import NorrisFitter, norris_pulse, t_peak, tv_mc_summary
+from light_curves import lightcurve_data
+from norris_fit import NorrisFitter, norris_pulse, t_peak, tv_mc_summary
 
 ROOT = Path(__file__).resolve()
 PROJECT_ROOT = ROOT.parent.parent.parent

@@ -1,17 +1,22 @@
-"""Experiment: does the Norris-fit *window bound* alone (holding p0, data, and pulse count
-fixed) move the fitted parameters and t_v the way the user observed comparing
-norris_fit_GRB231129779.png ([-1,10]) against norris_fit_GRB231129779__bkp.png ([-10,20])?
+r"""
+Experiment:
 
-Mechanism under test: NorrisFitter.fit_boundaries() (variability_timescale/norris_fit.py:49-53)
-sets t_s's lower bound to x_values.min() -- i.e. the fit window's own left edge is t_s's box
-constraint. Combined with the already-established near-total t_s<->tau1 degeneracy (this
-session's correlation matrices, TR4, the (tau,xi) reparam test), widening the window directly
+Does the Norris-fit *window bound* alone (holding p0, data, and pulse count fixed) move the fitted parameters and
+:math:`t_v` the way the user observed comparing
+`norris_fit_GRB231129779.png ([-1,10])` against norris_fit_GRB231129779__bkp.png ([-10,20])?
+
+Mechanism under test:
+
+NorrisFitter.fit_boundaries() (variability_timescale/norris_fit.py:49-53) sets :math:`t_s`'s lower bound to
+x_values.min() -- i.e., the fit window's own left edge is :math:`t_s`'s box constraint.
+Combined with the already-established near-total :math:`t_s \leftrightarrow \tau_1` degeneracy (this session's
+correlation matrices, TR4, the (:math:`\tau`, :math:`\xi`) reparam test), widening the window directly
 widens how far the optimizer can push t_s along that degenerate ridge.
 
 Controlled comparison: SAME p0 (the narrow-window run's own converged parameters, read off
-norris_fit_GRB231129779.png's legend) fit to the SAME light curve, with ONLY the window bound
-changed. Isolates the window-bound effect from a seed-choice effect (already characterized
-separately in variability_analysis.md's guess-sensitivity test).
+norris_fit_GRB231129779.png's legend) fit to the SAME light curve, with ONLY the window bound changed.
+Isolates the window-bound effect from a seed-choice effect (already characterized separately in
+variability_analysis.md's guess-sensitivity test).
 """
 
 from pathlib import Path
@@ -20,8 +25,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from variability_timescale.light_curves import lightcurve_data
-from variability_timescale.norris_fit import NorrisFitter, t_peak, tv_mc_summary
+from light_curves import lightcurve_data
+from norris_fit import NorrisFitter, t_peak, tv_mc_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 LC_DIR = PROJECT_ROOT / "light_curves" / "GRB231129779"
@@ -66,7 +71,7 @@ for window_name, (start, stop) in WINDOWS.items():
 
     print(f"\n=== window {window_name} ({start}, {stop}), y_max={y_max:.2f} cts/s ===")
     for i in range(N_PULSES):
-        A, ts, tau1, tau2 = nf.params[i * 4 : (i + 1) * 4]
+        A, ts, tau1, tau2 = nf.params[i * 4: (i + 1) * 4]
         tp = t_peak(ts, tau1, tau2)
         mc = tv_mc_summary(nf, pulse_index=i + 1)
         print(

@@ -127,7 +127,7 @@ A model **FAILS** if any parameter satisfies:
 3. Apply error criteria to each parameter
 4. Model is **SAFE** if all parameters pass
 
-**Function**: `list_safe_models(folder_path, **kwargs)`
+**Function**: `filter_models_by_error(c_stats, folder_path, candidates, **kwargs)` (`safe_good_best.py`) — renamed from `list_safe_models`, which no longer exists under that name.
 
 ### 2. GOOD Models
 
@@ -147,7 +147,7 @@ For each group (`BASE`, `BB`, `PL`, `PLBB`):
 - `PL`: Best among `CPL_PL`, `BAND_PL`, `SBPL_PL`
 - `PLBB`: Best among `CPL_PL_BB`, `BAND_PL_BB`, `SBPL_PL_BB`
 
-**Function**: `compute_good_models(c_stats, folder_path, **kwargs)`
+**Function**: `pick_best_model(c_stats, candidates, group_name, folder_path=None, is_separate_group=-1, **kwargs)` (`safe_good_best.py`), which internally calls `filter_models_by_error` then `pick_best_in_group` — renamed from `compute_good_models`, which no longer exists under that name.
 
 ### 3. BEST Model
 
@@ -221,6 +221,8 @@ The BASE model receives special handling:
 | 1 component (+BB or +PL) | > 25 | BASE model |
 | 2 components (+PL+BB) with 1 single ACCEPTED | > 25 | Best single extension |
 | 2 components (+PL+BB) with both singles REJECTED | > 50 | BASE model |
+
+**Fallback for models that don't decompose into a clean single/double extension** (a model name containing the BASE name but not matching either category — `analyze_model_hierarchy`'s final loop, `grb_utils.py`): uses `cstat_threshold(delta_k=2*additional_components, sigma=5.0)` instead of the flat 25/50 above — the same 5σ, χ²(Δk) threshold used elsewhere in the paper (28.74 for Δk=2, 36.86 for Δk=4), not yet reconciled with this flat-25/50 rule for the primary categorized path.
 
 ---
 

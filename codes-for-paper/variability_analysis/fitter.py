@@ -6,8 +6,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from variability_timescale.light_curves import lightcurve_data
-from variability_timescale.norris_fit import NorrisFitter
+from light_curves import lightcurve_data
+from norris_fit import NorrisFitter
 
 ROOT = Path(__file__).resolve()
 PROJECT_ROOT = ROOT.parent.parent.parent

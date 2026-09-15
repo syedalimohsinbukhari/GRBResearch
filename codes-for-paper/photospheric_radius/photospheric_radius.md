@@ -8,13 +8,13 @@ Companion to `pe_er_photosphere.py`. Phase 2 of `PLAN.md`. Produced 2026-08-21.
 
 From the observed temperature and thermal flux of the blackbody component, following Pe'er, Ryde, Wijers, Mészáros & Rees (2007), ApJ **664**, L1:
 
-| symbol | meaning |
-|---|---|
-| $\mathcal{R}$ | $(F^\text{ob}_\text{BB}/\sigma T_\text{ob}^4)^{1/2}$, their eq. (1) — dimensionless |
-| $r_0$ | size at the base of the flow |
-| $\Gamma = \eta$ | bulk Lorentz factor in the coasting phase; $\eta$ is also the dimensionless entropy (baryon loading) |
-| $r_\text{ph}$ | photospheric radius |
-| $r_s = \eta\,r_0$ | saturation radius |
+| symbol            | meaning                                                                                              |
+|-------------------|------------------------------------------------------------------------------------------------------|
+| $\mathcal{R}$     | $(F^\text{ob}_\text{BB}/\sigma T_\text{ob}^4)^{1/2}$, their eq. (1) — dimensionless                  |
+| $r_0$             | size at the base of the flow                                                                         |
+| $\Gamma = \eta$   | bulk Lorentz factor in the coasting phase; $\eta$ is also the dimensionless entropy (baryon loading) |
+| $r_\text{ph}$     | photospheric radius                                                                                  |
+| $r_s = \eta\,r_0$ | saturation radius                                                                                    |
 
 The equations, in their numbering:
 
@@ -80,14 +80,14 @@ Paper side: `fig:photospheric`'s caption updated from "Base radius $r_0$ (left) 
 
 `validate_against_peer2007()` runs at every invocation. Using only their published inputs for GRB 970828 ($z = 0.9578$, $T_\text{ob} = 78.5$ keV, $\mathcal{R} = 1.88\times10^{-19}$, $f_\text{BB} = 0.64$, $d_L = 1.94\times10^{28}$ cm):
 
-| quantity | computed | published |
-|---|---|---|
-| $\Gamma$ | 286 | $305 \pm 28$ |
-| $r_0$ | $2.94\times10^{8}$ cm | $(2.9 \pm 1.8)\times10^{8}$ cm |
-| $r_\text{ph}$ | $2.57\times10^{11}$ cm | $2.7\times10^{11}$ cm |
-| $r_s$ | $8.40\times10^{10}$ cm | $9.0\times10^{10}$ cm |
+| quantity      | computed               | published                      |
+|---------------|------------------------|--------------------------------|
+| $\Gamma$      | 286                    | $305 \pm 28$                   |
+| $r_0$         | $2.94\times10^{8}$ cm  | $(2.9 \pm 1.8)\times10^{8}$ cm |
+| $r_\text{ph}$ | $2.57\times10^{11}$ cm | $2.7\times10^{11}$ cm          |
+| $r_s$         | $8.40\times10^{10}$ cm | $9.0\times10^{10}$ cm          |
 
-$r_0$ matches to three significant figures; $r_\text{ph}$ and $r_s$ to ~5%; $\Gamma$ sits inside their quoted $1\sigma$. The residuals are consistent with their inputs being printed to 3 significant figures. **This is the primary evidence that the implementation is correct**, and it runs as part of `main()` so it cannot silently rot.
+$r_0$ matches to three significant figures; $r_\text{ph}$ and $r_s$ to ~5%; $\Gamma$ sits inside their quoted $1\sigma$. The residuals are consistent with their inputs being printed to three significant figures. **This is the primary evidence that the implementation is correct**, and it runs as part of `main()` so it cannot silently rot.
 
 ### 3.2 Comparison with the $\gamma\gamma$-opacity bound — and what it constrains
 
@@ -95,19 +95,22 @@ $r_0$ matches to three significant figures; $r_\text{ph}$ and $r_s$ to ~5%; $\Ga
 
 Our own bounds have since been recomputed **per episode**, on exactly the interval boundaries used here (see `lorentz_factor.md`). That makes the comparison internal and self-consistent:
 
+**STALE, confirmed 2026-09-16 — same pre-BUG-18 numbers flagged in `lorentz_factor.md` §3.** The current `lorentz_results.csv` gives $\Gamma_\text{min}=$ 507/350/380 for T90/EX0/TR1, not 134/78/86 below. The qualitative conclusion (floors too weak to constrain $Y$) still holds, but the quoted $Y \geq 7\times10^{-5}$ figure is stale by roughly two orders of magnitude — see `lorentz_factor.md` §3 for the current numbers before citing this again.
+
 | episode | $\Gamma_\text{min}$ (opacity) | $\Gamma$ (thermal, $Y{=}1$) | clears the floor? |
-|---|---|---|---|
-| T90 | $134 \pm 1$ | $752^{+13}_{-12}$ | yes |
-| EX0 | $78^{+5}_{-4}$ | $852^{+27}_{-25}$ | yes |
-| TR1 | $86^{+5}_{-5}$ | $861^{+34}_{-29}$ | yes |
+|---------|-------------------------------|-----------------------------|-------------------|
+| T90     | $134 \pm 1$                   | $752^{+13}_{-12}$           | yes               |
+| EX0     | $78^{+5}_{-4}$                | $852^{+27}_{-25}$           | yes               |
+| TR1     | $86^{+5}_{-5}$                | $861^{+34}_{-29}$           | yes               |
 
 The thermal values clear the opacity floor everywhere, by factors of five to ten. **But the floors are far too weak to constrain $Y$**: from EX0, $\Gamma \geq \Gamma_\text{min}$ requires only $Y \geq (78/852)^4 \approx 7\times10^{-5}$, and $Y \geq 1$ by definition. The check therefore confirms consistency and yields no information about $Y$.
 
-**An earlier version of this note claimed $Y \gtrsim 1.9$. That claim is withdrawn.** It came from comparing against \citet{Abdo2009FermiObservations080916C}'s much stricter published bound ($887 \pm 21$), which is computed on *different time bins* — their bin b spans 3.6–7.7 s, overlapping our BB-bearing episodes by only ~1.3 s, and the interval that does cover most of bin b (our TR2, 4.864–15.040 s) has no blackbody component at all. Since $\Gamma$ demonstrably varies between episodes, that comparison mixed different quantities. Recomputing our own bound on matching intervals removed the apparent tension entirely.
+**An earlier version of this note claimed $Y \gtrsim 1.9$. That claim is withdrawn.** It came from comparing against \citet{Abdo2009FermiObservations080916C}'s much stricter published bound ($887 \pm 21$), which is computed on *different time bins* — their bin b spans 3.6–7.7 s, overlapping our BB-bearing episodes by only ~1.3 s, and the interval that does cover most of bin b (our TR2, 4.864–15.040 s) has no blackbody component at all. 
+Since $\Gamma$ demonstrably varies between episodes, that comparison mixed different quantities. Recomputing our own bound on matching intervals removed the apparent tension entirely.
 
-Note also that our bounds are systematically weaker than published treatments — our TR2 gives 129 where Abdo et al. obtain 887 for an overlapping interval containing the same ~2 GeV photon. The gap is too large to be explained by the variability timescale and is methodological: Lithwick & Sari's Limit A is a simplified analytic form. Our $\Gamma_\text{min}$ should be read as a conservative limit, not as competitive with the literature.
+Note also that our bounds are systematically weaker than published treatments — our TR2 gives 129 pre-BUG-18 / **447 in the current CSV** (see staleness note above) where Abdo et al. obtain 887 for an overlapping interval containing the same ~2 GeV photon. The gap remains too large to be explained by the variability timescale even at the corrected value, and is methodological: Lithwick & Sari's Limit A is a simplified analytic form. Our $\Gamma_\text{min}$ should be read as a conservative limit, not as competitive with the literature.
 
-**The fix, and it is worth doing:** `codes-for-paper/lorentz_factor/lorentz_factor.py` currently computes $\Gamma_\text{min}$ only for T90. Extending it to every episode would put the opacity bound and the thermal estimate on *identical* interval boundaries, making the comparison internal, self-consistent, and free of Abdo et al.'s binning. That would turn this from an indicative remark into a defensible constraint on $Y$. Tracked in `BUGS.md`.
+**Done, as of Phase 2 (§2.1 of `lorentz_factor.md`) — this paragraph is stale.** `lorentz_factor.py` no longer computes $\Gamma_\text{min}$ for T90 only; it has been extended to every episode with LAT coverage, exactly as proposed here, putting the opacity bound and the thermal estimate on identical interval boundaries. See `lorentz_factor.md` §2.1 and §3 for the current per-episode comparison (with the pre/post-BUG-18 caveat noted there).
 
 ---
 
@@ -115,12 +118,12 @@ Note also that our bounds are systematically weaker than published treatments �
 
 At the measured or fiducial redshift ($Y = 1$):
 
-| GRB | $\Gamma$ | $r_0$ [cm] | $r_\text{ph}$ [cm] |
-|---|---|---|---|
-| GRB080916C ($z=4.35$) | 752 – 861 | $0.9$–$1.4\times10^{7}$ | $6.1\times10^{11}$ – $1.4\times10^{12}$ |
-| GRB131014A ($z=2^\dagger$) | 458 – 714 | $0.7$–$4.7\times10^{8}$ | $3.4$–$7.6\times10^{12}$ |
-| GRB140206B ($z=2^\dagger$) | 597 – 600 | $0.8$–$1.3\times10^{7}$ | $5.6$–$7.5\times10^{11}$ |
-| GRB231129C ($z=2^\dagger$) | 385 – 426 | $6.2$–$8.9\times10^{8}$ | $3.5$–$4.8\times10^{12}$ |
+| GRB                        | $\Gamma$  | $r_0$ [cm]              | $r_\text{ph}$ [cm]                      |
+|----------------------------|-----------|-------------------------|-----------------------------------------|
+| GRB080916C ($z=4.35$)      | 752 – 861 | $0.9$–$1.4\times10^{7}$ | $6.1\times10^{11}$ – $1.4\times10^{12}$ |
+| GRB131014A ($z=2^\dagger$) | 458 – 714 | $0.7$–$4.7\times10^{8}$ | $3.4$–$7.6\times10^{12}$                |
+| GRB140206B ($z=2^\dagger$) | 597 – 600 | $0.8$–$1.3\times10^{7}$ | $5.6$–$7.5\times10^{11}$                |
+| GRB231129C ($z=2^\dagger$) | 385 – 426 | $6.2$–$8.9\times10^{8}$ | $3.5$–$4.8\times10^{12}$                |
 
 Redshift dependence is mild and analytically understandable: $\Gamma$ rises monotonically with $z$, while $r_0 \propto d_L/(1+z)^2$ is non-monotonic and peaks near $z \sim 1.7$, because $d_L/(1+z)^2$ is the angular-diameter-like distance.
 
@@ -144,20 +147,18 @@ This CSV's `kt_bb_keV`/error columns are the median (and 16th/84th-percentile sp
 
 ---
 
----
-
-## Table formatting: normalisation and precision
+## Table formatting: normalization and precision
 
 *Decided by the user, 2026-08-21, after reading the rendered tables.*
 
 Columns are divided by a common power of ten carried in the header rather than repeating `\times 10^{n}` on every row:
 
-| table | column | norm |
-|---|---|---|
-| Table 4 | $F_\text{BB}$, $F_\text{total}$ | $10^{-6}$ erg cm$^{-2}$ s$^{-1}$ |
-| Table 4, Table 5 | $f_\text{BB}$ | $10^{-3}$ |
-| Table 5 | $r_0$ | $10^{7}$ cm |
-| Table 5 | $r_\text{ph}$ | $10^{11}$ cm |
+| table            | column                          | norm                             |
+|------------------|---------------------------------|----------------------------------|
+| Table 4          | $F_\text{BB}$, $F_\text{total}$ | $10^{-6}$ erg cm$^{-2}$ s$^{-1}$ |
+| Table 4, Table 5 | $f_\text{BB}$                   | $10^{-3}$                        |
+| Table 5          | $r_0$                           | $10^{7}$ cm                      |
+| Table 5          | $r_\text{ph}$                   | $10^{11}$ cm                     |
 
 $kT$ and $\Gamma$ are left unnormalised — both are already of order $10$–$10^{3}$, and normalising them made the numbers *less* readable ($\Gamma = 3.854 \times 10^2$ rather than $385$).
 
@@ -171,10 +172,10 @@ This was worth doing numerically: eyeballing had produced 3 decimals where 1 was
 
 ## 6. Files
 
-| file | role |
-|---|---|
-| `pe_er_photosphere.py` | computation, CSV and figure, plus the Pe'er validation |
-| `pe_er_photosphere.csv` | one row per interval per redshift (263 rows) |
-| `pe_er_photosphere.png` / `.pdf` | $r_0(z)$ and $\Gamma(z)$ |
-| `csv_to_latex.py` → `photospheric_table.tex` | paper table at measured/fiducial $z$ |
-| `photospheric_radius.md` | this file |
+| file                                         | role                                                                             |
+|----------------------------------------------|----------------------------------------------------------------------------------|
+| `pe_er_photosphere.py`                       | computation, CSV and figure, plus the Pe'er validation                           |
+| `pe_er_photosphere.csv`                      | one row per interval per redshift (263 rows)                                     |
+| `pe_er_photosphere.png` / `.pdf`             | $r_0(z)$, $\Gamma(z)$, and $r_\text{ph}(z)$ (third panel added 2026-09-04, §2.6) |
+| `csv_to_latex.py` → `photospheric_table.tex` | paper table at measured/fiducial $z$                                             |
+| `photospheric_radius.md`                     | this file                                                                        |
