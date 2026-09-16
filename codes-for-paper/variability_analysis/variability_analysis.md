@@ -104,10 +104,10 @@ documented above — recorded here since this is the method note for that fit fa
 **The check:** refit the same pulses, from the same $p_0$, over two different window widths (e.g.
 $[-1,10]$s vs $[-10,20]$s), and compare not just each pulse's $t_v$ but its `mc_kept_fraction`. This is
 possible because of a specific, verified mechanism: `NorrisFitter.fit_boundaries()`
-(`variability_timescale/norris_fit.py:49-53`) sets $t_s$'s lower bound to `x_values.min()` — the fit
-window's own left edge is $t_s$'s box constraint — so widening the window directly widens how far the
-optimizer can push $t_s$ along the already-established near-total $t_s$↔$\tau_1$ degeneracy (this session's
-correlation matrices, TR4, the $(\tau,\xi)$ reparam test above).
+(`codes-for-paper/variability_analysis/norris_fit.py:49-50`) sets $t_s$'s lower bound to `x_values.min()`
+— the fit window's own left edge is $t_s$'s box constraint — so widening the window directly widens how
+far the optimizer can push $t_s$ along the already-established near-total $t_s$↔$\tau_1$ degeneracy (this
+session's correlation matrices, TR4, the $(\tau,\xi)$ reparam test above).
 
 **What it found for GRB231129C, concretely:** a 4-pulse fit's pulse 3 kept its $t_v$ point estimate stable
 under the window change (0.505→0.490, ~3%) but its `mc_kept_fraction` collapsed (0.451→0.148) — the median
@@ -122,13 +122,93 @@ under a window change, that's real evidence the count is right. If they're not, 
 adding a pulse and checking whether the instability actually goes away — the instability alone is a red
 flag, not proof; a genuinely isolated pulse could in principle be unstable for its own unrelated reasons.
 
-**Flagged follow-up: GRB131014A's pulses 1 and 2** (this fit, above) were called "unresolved" based only on
-a seed-sensitivity test (different $\tau_1,\tau_2$ seeds landing on different answers), **not** this
-window-widening check. Given what this diagnostic just caught for GRB231129C, it's an open question whether
-pulses 1/2's instability is a genuine, irreducible degeneracy in that heavily-overlapping early structure,
-or whether it's actually a symptom of the same under-fitting problem (a 6th pulse missing from the
-$[-1,10]$s window). Not yet tested — the next thing to check before trusting the "genuinely non-unique"
-conclusion in the Known Limitations section below.
+**GRB131014A's pulses 1 and 2, checked against this diagnostic (2026-09-16) — no collapse found, and a
+third window strengthens the result.** `experiments/window_sensitivity_GRB131014215/window_sensitivity.py`
+ran the same comparison on the full 5-pulse fit across **three** window widths — narrow `[-1,10]`s (the
+fitter's own default), wide `[-10,20]`s, and widest `[-135.9,478.4]`s (the light curve's own
+`np.min(t)`/`np.max(t)`, the most extreme box `fit_boundaries()` can ever present) — using each pulse's
+own narrow-window converged parameters as $p_0$ for all three (so only the window bound changes, isolating
+it from a seed-choice effect). Result:
+
+| pulse | $t_s$: narrow → wide → widest | `mc_kept_fraction`: narrow → wide → widest |
+|---|---|---|
+| 1 | −0.680 → −0.683 → −0.682 | 0.206 → 0.342 → **0.860** |
+| 2 | −0.028 → −0.028 → −0.014 | 0.127 → 0.209 → **0.650** |
+| 3 | 1.185 → 1.185 → 1.184 | 0.998 → 1.000 → 1.000 |
+| 4 | 2.471 → 2.471 → 2.471 | 0.999 → 1.000 → 1.000 |
+| 5 | 2.659 → 2.658 → 2.658 | 0.774 → 0.908 → 1.000 |
+
+Every pulse's $t_s$ stays essentially anchored even at the widest window (≤0.014 s drift) — nothing here
+rides the box-constraint edge the way GRB140206B's SIMPLE pulse 5 does (below) — and `mc_kept_fraction`
+climbs *monotonically* for every pulse, including 1 and 2, whose values roughly triple to quadruple by the
+widest window. This is the same signature GRB231129C showed only *after* its missing 5th pulse was added,
+not the collapse signature that flagged that gap in the first place. By this diagnostic's own logic, that's
+real evidence the 5-pulse count is right here — **no hint that a 6th pulse is needed** — and the monotonic
+*improvement* specifically argues against a missing-pulse explanation: if pulses 1/2's poor constraint came
+from an absent 6th pulse, widening the window should have made things worse or unstable, not steadily
+better. The improvement itself is attributable to the extra off-burst baseline in the wider windows
+tightening the fit's overall covariance, not to any change in what the pulses themselves resolve to.
+
+This resolves the open question above: pulses 1 and 2's poor *absolute* `mc_kept_fraction` at the narrow
+window does not collapse under widening — it improves steadily and their $t_s$ stays fixed — so it reads as
+a genuine, irreducible degeneracy in that early overlapping structure (consistent with the Hakkila 2026
+"overlapping pulses are not unique" framing already invoked above) rather than an under-fitting artifact.
+The "unresolved" call in Known Limitations below now rests on two independent checks (seed-sensitivity and
+window-widening) agreeing, not on seed-sensitivity alone. Diagnostic plots (fitted light curve + individual
+pulses, one per window) are saved alongside the CSV in that same experiment folder.
+
+**GRB231129C's own fixed 5-pulse model, re-checked at the same third window (2026-09-16).** The two-window
+result above was GRB231129C's *post-fix* state; extending it to the widest `[-138.5,475.8]`s window
+confirms the same monotonic pattern holds all the way out: every pulse's `mc_kept_fraction` keeps climbing
+(e.g. pulse 3 — the one whose collapse originally flagged the missing 5th pulse — goes 0.372→0.479→0.637;
+pulse 5 goes 0.896→0.942→0.991), $t_s$ shifts stay small (≤0.24 s, largest for pulse 3), and $t_v$ drifts up
+to ~12% by the widest window for pulses 4/5 but with no reversal or instability. No evidence the fix was
+incomplete.
+
+**GRB140206B, both candidate models, checked at all three windows (2026-09-16) — the one case where a
+pulse's $t_s$ genuinely rides the box edge.** `experiments/window_sensitivity_GRB140206275/window_sensitivity.py`
+ran narrow `[-1,160]`s (the fitter's own default, covering all 7 episodes), wide `[-20,300]`s, and widest
+`[-133.2,481.2]`s (this burst's own `np.min(t)`/`np.max(t)`) on both SIMPLE (5-pulse) and COMPLEX (7-pulse)
+decompositions, using each model's own narrow-window converged parameters as $p_0$ for all three windows.
+
+Both models show the same "no collapse" pattern as the other two bursts for their compact, well-localized
+pulses — $t_v$ shifts stay under 2% and `mc_kept_fraction` holds flat or improves. But **SIMPLE's pulse
+5** (the broad ~3440 s-$\tau_1$ pedestal underlying the whole burst) is different: its $t_s$ does not
+anchor, it drifts continuously along the $t_s$↔$\tau_1$ degenerate ridge as the window opens:
+
+| window | left edge | $t_s$ | $\tau_1$ | $t_v$ | kept |
+|---|---|---|---|---|---|
+| narrow | −1.0 | −0.960 | 3441 | 17.22 | 0.613 |
+| wide | −20.0 | −19.968 | 5509 | 17.09 | 0.647 |
+| widest | −133.2 | −60.654 | 11585 | 16.88 | 0.569 |
+
+At the wide window this looked pinned to the box edge (−19.97 vs. a −20 boundary), but the widest window
+shows that was coincidental, not a true pin — given more room, $t_s$ moved to −60.65, well short of the
+−133.2 boundary, with $\tau_1$ roughly tripling again. $t_s$ and $\tau_1$ are trading off against each
+other with the data unable to pin either one; $t_v$ (which depends on both through the eq. 10 combination)
+stays comparatively steady, drifting only 2% across the whole three-window span, and `mc_kept_fraction`
+wobbles (0.61→0.65→0.57) without a clean collapsing trend, reading as MC noise around a genuinely
+poorly-constrained pulse rather than a widening-driven failure.
+
+**COMPLEX's pulse 5 is a different physical object** — one of the narrow 23–28 s-cluster pulses
+($t_s\approx23.08$, $\tau_1\approx1.1$), not the pedestal — and it is essentially rock-solid across all
+three windows ($t_s$ moves 0.008 s total; kept even improves slightly, 0.607→0.630→0.642). **COMPLEX's
+actual pedestal is pulse 7**, and it behaves very differently from SIMPLE's pulse 5 despite similar
+$\tau_1$: $t_s$ only creeps from −0.95 to −1.65 (not −60), and $\tau_1$ barely moves (3306→3523 vs.
+SIMPLE's 3441→11585). The extra narrow pulses COMPLEX carves out of the 23–28 s region (pulses 4/5/6)
+appear to anchor the pedestal in place — splitting that region leaves the optimizer less room to let the
+broad component absorb ambiguous flux, so pulse 7's own $t_s$/$\tau_1$ stay far better constrained than
+SIMPLE's equivalent pulse. This is a concrete, quantified reason to prefer COMPLEX's decomposition if the
+pedestal's $t_s$/$t_v$ ever matters downstream, beyond the photon-anchoring argument already in
+`fitter_GRB140206275.py`'s own docstring — and it directly answers that docstring's own open question:
+COMPLEX pulses 4/5/6's already-mediocre `mc_kept_fraction` (0.47–0.65) does not get worse under widening,
+so the photon-anchored 3-way split is a legitimate resolution-vs-stability tradeoff, not a symptom of a
+wrong pulse count or a window artifact.
+
+**Cross-burst comparison.** None of the other 8 pulses checked across GRB131014A and GRB231129C show
+anything like SIMPLE pulse 5's runaway drift — everywhere else $t_s$ stays anchored to within a fraction of
+a second regardless of window width. GRB140206B's SIMPLE pedestal is a genuine, burst-and-model-specific
+finding, not a general property of this fit family.
 
 ## Results (this session, 2026-09-07)
 
@@ -141,13 +221,17 @@ conclusion in the Known Limitations section below.
 ## Known limitations and open questions
 
 - **Pulses 1 and 2 are unresolved**, not merely unmeasured: two different, reasonable seedings give two
-  different answers and both stay poorly MC-constrained. No LAT photon falls in either pulse's active
-  window (first photon arrives at 1.852 s), so this doesn't block feeding TR1/TR2's $\Gamma_\text{min}$ —
-  but it does mean the earliest part of this burst's variability structure is not characterized here.
-  **Not yet re-checked against the window-widening pulse-count diagnostic** (see that section above,
-  found via GRB231129C) — this "unresolved" conclusion currently rests only on seed-sensitivity, and it's
-  an open question whether pulses 1/2 are a genuine irreducible degeneracy or a symptom of a missing 6th
-  pulse in the $[-1,10]$s window, the same way GRB231129C's pulse 3 turned out to be.
+  different answers, and at the narrow `[-1,10]`s window both stay poorly MC-constrained
+  (`mc_kept_fraction` 0.10–0.21 under seed-sensitivity, 0.13–0.21 in the window-widening baseline). No LAT
+  photon falls in either pulse's active window (first photon arrives at 1.852 s), so this doesn't block
+  feeding TR1/TR2's $\Gamma_\text{min}$ — but it does mean the earliest part of this burst's variability
+  structure is not characterized here. **Checked against the window-widening pulse-count diagnostic** (see
+  that section above), including a third, most-extreme window pushed to the light curve's own
+  `np.min(t)`/`np.max(t)` (2026-09-16): neither pulse's `mc_kept_fraction` collapses under widening — both
+  climb monotonically instead, reaching 0.860 (pulse 1) and 0.650 (pulse 2) at the widest window, while
+  $t_s$ stays fixed to within 0.014 s — so the diagnostic finds no evidence a missing 6th pulse is the
+  cause. The "unresolved" call now rests on two independent checks (seed-sensitivity and window-widening)
+  agreeing, not on seed-sensitivity alone.
 - **TR2 now has two candidate anchor pulses**, not one: pulse 4 (445 MeV photon, extremely well-constrained,
   $t_v\approx0.56$ s) and pulse 5 (the *already-published* 1021 MeV defining photon, less tightly
   constrained, $t_v\approx0.27$ s). Which one should replace TR2's current duration-based $t_v$ in
@@ -172,22 +256,97 @@ GRB131014A (documented above):
 - `norris_fit_results_GRB131014215.csv` — one row per (pulse, episode) match, produced by `fitter_CLAUDE_GRB131014215.py`.
 - `norris_fitted_GRB131014215.png/.pdf` — the decorated plot (physical units, episode boundaries, LAT
   photon overlay on twin axis).
+- `experiments/window_sensitivity_GRB131014215/` — the window-widening pulse-count diagnostic applied to
+  this burst (see that section above), added 2026-09-16: `window_sensitivity.py` (+ its own local
+  `light_curves.py`/`norris_fit.py` copies), `window_sensitivity_results.csv` (3 windows × 5 pulses), and
+  one fitted-light-curve plot per window width (`window_sensitivity_narrow_-1_10.png/.pdf`,
+  `window_sensitivity_wide_-10_20.png/.pdf`, `window_sensitivity_widest_full_range.png/.pdf`).
 
-GRB140206B and GRB231129C (files exist, **not yet written up** in this note — see "not yet written up" above):
-- `fitter_GRB140206275.py`, `fitter_GRB140206275_simple.py`, `GRB140206275_lat.fits`,
-  `norris_fit_results_GRB140206275.csv`, `norris_fit_results_GRB140206275_simple.csv`,
-  `norris_fit_diagnostics_GRB140206275.csv`, `norris_fit_GRB140206275.png`,
-  `norris_fitted_GRB140206275.png/.pdf`, `norris_fitted_GRB140206275_simple.png/.pdf`.
-- `fitter_GRB231129779.py`, `GRB231129779_lat.fits`, `norris_fit_results_GRB231129779.csv`,
-  `norris_fit_GRB231129779.png` (+ `__bkp` variant), `norris_fitted_GRB231129779.png/.pdf`.
-- `norris..py` — a full, working `NorrisFitter`/`norris_pulse`/`tv_value`/`tv_mc_summary` implementation
-  already committed in this folder (pre-Phase-5, `main-minor-75`), matching the exact interface the
-  `fitter*.py` scripts need. It is almost certainly what those scripts *should* be importing locally
-  (per `CLAUDE.md`'s "copy rather than fight `sys.path`" convention) instead of the broken
-  `from variability_timescale.norris_fit import NorrisFitter` (see `PHASE5_TV_PLAN.md`'s bug note) — but
-  the filename has a stray extra dot (`norris..py`, not `norris_fit.py`) so no current script actually
-  imports from it under that name. Flagged, not fixed, in this pass: renaming it and repointing the
-  `fitter*.py` imports is a code change, out of scope for a docs-staleness pass.
-- `dry_run.png` — a dry-run diagnostic plot; which script/burst produced it is not documented here.
+GRB140206B and GRB231129C fits themselves are still **not yet written up** as their own "What the code
+computes" / "Every judgement call" / "Results" sections — see the note at the top of this file. The file
+inventory below is complete, though, so it's clear what each artifact is and how it was produced.
+
+GRB140206B — two live candidate decompositions, kept side by side rather than one being picked as final
+(see `fitter_GRB140206275.py`'s own docstring, and the window-widening section above for the diagnostic
+that independently supports COMPLEX for the pedestal pulse specifically):
+- `fitter_GRB140206275.py` — the **COMPLEX** model: 7 pulses, splitting the $t\approx23$–$28$s region into
+  three (pulses 4/5/6) specifically to give the 753.11 MeV photon at $t=23.998$s (TR3's own $\Gamma_\text{min}$-defining
+  photon, already in `lorentz_results.csv`) its own dedicated peak (pulse 5) instead of leaving it buried in
+  a single broad pulse's tail. Fits over `[-1, 160]`s (all seven episodes, through TR6's 154.240s end).
+  Uses **dominant-flux photon assignment** (`assign_pulse` picks whichever pulse has the largest
+  model-predicted flux at the photon's arrival time), not GRB131014A's nearest-preceding-onset rule — see
+  `fitter_GRB231129779.py` for why that rule was replaced. Also fits the **SIMPLE** model inline (for the
+  diagnostic comparison below) but only writes COMPLEX's results as this file's main results CSV/plot.
+- `fitter_GRB140206275_simple.py` — the **SIMPLE** model: 5 pulses, treating that same $t\approx23$–$28$s
+  region as one broad pulse (pulse 4) instead of splitting it. More numerically stable there (`kept≈1.0` vs
+  COMPLEX's 0.54–0.67 across pulses 4/5/6) but doesn't resolve TR3's photon into its own peak — the
+  stability-vs-photon-resolution tradeoff is why both files are kept rather than one being deleted. Same
+  dominant-flux photon assignment as the COMPLEX file.
+- `GRB140206275_lat.fits` — copied from
+  `light_curves/GRB140206275/GRB140206Bfiltered_gti_gtsrcprob_7.488_154.176.fits`; `T0_MET_S = 413361375.84`
+  read from `LAT_analysis/007__GRB140206275/Ep1__7.488_11.072/*_fit_results_*.txt`'s own `T_0` line.
+- `norris_fit_results_GRB140206275.csv` — COMPLEX model's one-row-per-(pulse, episode) results, produced by
+  `fitter_GRB140206275.py`.
+- `norris_fit_results_GRB140206275_simple.csv` — SIMPLE model's equivalent, produced by
+  `fitter_GRB140206275_simple.py`.
+- `norris_fit_diagnostics_GRB140206275.csv` — SIMPLE-vs-COMPLEX comparison, one row per SIMPLE pulse matched
+  to its nearest-$t_\text{peak}$ COMPLEX counterpart (`t_peak_offset_s` column), produced by
+  `fitter_GRB140206275.py`. This is where the stability tradeoff above is quantified: SIMPLE pulse 4
+  (`kept=0.9998`) matches COMPLEX pulse 4 (`kept=0.6727`, `t_peak_offset≈0.34`s), and SIMPLE pulse 5 (the
+  broad pedestal, `kept=0.6093`) matches COMPLEX pulse 7 (`kept=0.623`, `t_peak_offset≈0.19`s) — the same
+  SIMPLE-pulse-5 / COMPLEX-pulse-7 pedestal pairing independently identified by the window-widening
+  diagnostic above.
+- `norris_fit_GRB140206275.png` — an earlier, intermediate COMPLEX-model plot (2026-09-07, ~05:42, roughly
+  18 minutes before the final `norris_fit_results_GRB140206275.csv`/`norris_fitted_GRB140206275.png` at
+  ~06:00). Not reproducible from the current script as written (it only ever saves to
+  `norris_fitted_{name}`) — an intermediate/draft output from that session, exact iteration not otherwise
+  documented, kept as-is rather than deleted.
+- `norris_fitted_GRB140206275.png/.pdf` — COMPLEX model's decorated final plot (physical units, LAT-photon
+  overlay on twin axis, same layout as GRB131014A's).
+- `norris_fitted_GRB140206275_simple.png/.pdf` — SIMPLE model's equivalent final plot.
+
+GRB231129C:
+- `fitter_GRB231129779.py` — the 5-pulse fit (this is already the *corrected* pulse count — see the
+  "What it found for GRB231129C" paragraph above; a 4-pulse version was tried first and its `mc_kept_fraction`
+  collapse under window-widening is what led to adding this 5th pulse). Fits over `[-1, 10]`s. Introduces
+  **dominant-flux photon assignment** (later reused by both GRB140206B scripts above): the earlier
+  nearest-preceding-`t_s` rule (used for GRB131014A) broke down specifically on this burst, where a fast
+  pulse turning on just before a slower, still-dominant earlier pulse peaks would steal that earlier pulse's
+  photons purely because its `t_s` was more recent, even though it barely contributed flux yet.
+- `GRB231129779_lat.fits` — copied from
+  `light_curves/GRB231129779/GRB231129C_filtered_gti_gtsrcprob_0.384_7.296.fits`; `T0_MET_S = 722977823.114`
+  read from `LAT_analysis/GRB231129C/Ep1__0.384_3.136/*_fit_results_*.txt`'s own `T_0` line, cross-checked
+  against the FITS file's own GTI the same way as GRB131014A's `T0_MET_S` was (see Validation above).
+- `norris_fit_results_GRB231129779.csv` — one row per (pulse, episode) match, produced by
+  `fitter_GRB231129779.py`.
+- `norris_fit_GRB231129779.png` (narrow window, `[-1,10]`s) and `norris_fit_GRB231129779__bkp.png` (wide
+  window, `[-10,20]`s) — **the user's own original manual before/after comparison** (2026-09-07, 03:02–03:13,
+  predating the final `norris_fit_results_GRB231129779.csv`/`norris_fitted_GRB231129779.png` at ~05:14 by
+  roughly two hours). This is the actual origin of the whole window-widening diagnostic above: the user
+  noticed the fit moved visibly between these two plots, which motivated building
+  `experiments/window_sensitivity_GRB231129779/window_sensitivity.py` as a controlled, quantified version of
+  the same comparison (per that script's own docstring). Not reproducible from the current
+  `fitter_GRB231129779.py` (which only saves to `norris_fitted_{name}`) — kept as the original artifact, not
+  regenerated.
+- `norris_fitted_GRB231129779.png/.pdf` — the decorated final plot.
+
+Shared infrastructure (both bursts above, and GRB131014A):
+- `norris_fit.py` — the local `NorrisFitter`/`norris_pulse`/`tv_value`/`tv_mc_summary` implementation every
+  `fitter*.py` script now imports (`from norris_fit import ...`). Fixed 2026-09-16 (BUG-21, `BUGS.md`):
+  this used to be the stray-dot `norris..py` (pre-Phase-5, `main-minor-75`), unimported by anything, while
+  the scripts imported the broken `from variability_timescale.norris_fit import NorrisFitter` instead — now
+  renamed and wired up, per `CLAUDE.md`'s "copy rather than fight `sys.path`" convention. `light_curves.py`
+  (copied in alongside it) resolves the matching `variability_timescale.light_curves` import the same way.
+- `dry_run.png` — a dry-run diagnostic plot (2026-09-07, ~02:57, the earliest timestamp of any file in this
+  folder); which script/burst produced it is not documented here.
 - `experiments/window_sensitivity_GRB231129779/` — the window-widening pulse-count diagnostic (see
-  section above), `window_sensitivity.py` + its `window_sensitivity_results.csv`.
+  section above), `window_sensitivity.py` + its `window_sensitivity_results.csv` (3 windows × 5 pulses); a
+  fitted-light-curve plot per window width (`window_sensitivity_narrow_-1_10.png/.pdf`,
+  `window_sensitivity_wide_-10_20.png/.pdf`, `window_sensitivity_widest_full_range.png/.pdf`) was added
+  2026-09-16, same pattern as the GRB131014A experiment above.
+- `experiments/window_sensitivity_GRB140206275/` — the window-widening pulse-count diagnostic applied to
+  both of this burst's candidate models (see section above), added 2026-09-16: `window_sensitivity.py`
+  (+ its own local `light_curves.py`/`norris_fit.py` copies), `window_sensitivity_results.csv` (2 models ×
+  3 windows × 5 or 7 pulses = 36 rows), and one fitted-light-curve plot per model per window width
+  (`window_sensitivity_{simple,complex}_{narrow_-1_160,wide_-20_300,widest_full_range}.png/.pdf`, 6 plots
+  total).

@@ -8,7 +8,7 @@ The automated pipeline this plan describes (MEPSA/`scipy.signal.find_peaks` peak
 
 Work continues instead as a **separate, manually-driven, GRB-by-GRB joint-Norris-fit track** in `codes-for-paper/variability_analysis/` (see that folder's `variability_analysis.md`), started 2026-09-07. So far this covers GRB131014A, GRB140206B, and GRB231129C; GRB080916C (where the automated approach stalled) has not yet been redone manually. The "New files" section below (§ "New files — `GRBResearchWork/variability_timescale/`") describes the abandoned automated layout and no longer reflects what's on disk — kept here for the historical methodology reasoning (energy band, eq. 10 sourcing, EX0/EX1 window-inheritance rule, etc.), which still applies to the manual track, not for the file list.
 
-**Known broken state, logged as a bug**: `codes-for-paper/variability_analysis/fitter*.py` and `experiments/window_sensitivity_GRB231129779/window_sensitivity.py` still `import` from the now-deleted `variability_timescale.norris_fit` / `variability_timescale.light_curves` modules — confirmed via `ModuleNotFoundError` in the repo's `.venv`. See `BUGS.md`.
+**Broken-import state, fixed 2026-09-16 (BUG-21, now closed).** `codes-for-paper/variability_analysis/fitter*.py` and `experiments/window_sensitivity_GRB231129779/window_sensitivity.py` used to `import` from the now-deleted `variability_timescale.norris_fit` / `variability_timescale.light_curves` modules. That folder now carries its own local `norris_fit.py` (a proper rename of the old `norris..py`) and a copied-in `light_curves.py`, and every script has been repointed to import those instead — confirmed resolving cleanly in the repo's `.venv`. See `BUGS.md` BUG-21.
 
 ## Context
 

@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 
-from grb_research import update_style, seed_from_name, LEGEND_FONT_SIZE, MARKER_SIZE
+from grb_research import update_style, seed_from_name, MARKER_SIZE
 from grb_research.grb_utils import save_fig
-from variability_timescale.light_curves import lightcurve_data
-from variability_timescale.norris_fit import NorrisFitter, t_peak, tv_mc_summary
+from light_curves import lightcurve_data
+from norris_fit import NorrisFitter, t_peak, tv_mc_summary
 
 ROOT = Path(__file__).resolve()
 PROJECT_ROOT = ROOT.parent.parent.parent
@@ -209,7 +209,7 @@ ax = plt.gca()
 ax_photon = ax.twinx()
 ax_photon.scatter(
     photon_t_arr_s, photon_energy_MeV,
-    marker="o", facecolors="none", edgecolors="red", linewidths=1.2, s=MARKER_SIZE**2,
+    marker="o", facecolors="none", edgecolors="red", linewidths=1.2, s=MARKER_SIZE ** 2,
     label="LAT photons",
 )
 ax_photon.set_ylabel("Photon energy [MeV]")

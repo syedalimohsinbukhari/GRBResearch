@@ -1,24 +1,22 @@
 r"""
-Experiment:
-
-Does the Norris-fit *window bound* alone (holding p0, data, and pulse count fixed) move the fitted parameters and
-:math:`t_v` the way the user observed comparing
-`norris_fit_GRB231129779.png ([-1,10])` against norris_fit_GRB231129779__bkp.png ([-10,20])?
+Experiment: same window-widening pulse-count diagnostic as
+experiments/window_sensitivity_GRB231129779/window_sensitivity.py, applied here to GRB131014A's
+5-pulse fit (fitter_CLAUDE_GRB131014215.py) -- flagged as not-yet-tested in variability_analysis.md's
+"Known limitations" section for pulses 1/2.
 
 Mechanism under test:
 
-NorrisFitter.fit_boundaries() (variability_timescale/norris_fit.py:49-53) sets :math:`t_s`'s lower bound to
-x_values.min() -- i.e., the fit window's own left edge is :math:`t_s`'s box constraint.
-Combined with the already-established near-total :math:`t_s \leftrightarrow \tau_1` degeneracy (this session's
-correlation matrices, TR4, the (:math:`\tau`, :math:`\xi`) reparam test), widening the window directly
-widens how far the optimizer can push t_s along that degenerate ridge.
+NorrisFitter.fit_boundaries() (codes-for-paper/variability_analysis/norris_fit.py:49-50) sets t_s's
+lower bound to x_values.min() -- i.e., the fit window's own left edge is t_s's box constraint. Widening
+the window directly widens how far the optimizer can push t_s along the t_s<->tau1 degeneracy.
 
-Controlled comparison: SAME p0 (the narrow-window run's own converged parameters, read off
-norris_fit_GRB231129779.png's legend) fit to the SAME light curve, with ONLY the window bound changed.
-Isolates the window-bound effect from a seed-choice effect (already characterized separately in
-variability_analysis.md's guess-sensitivity test).
+Controlled comparison: SAME p0 (the narrow-window run's own converged parameters, read from
+norris_fit_results_GRB131014215.csv) fit to the SAME light curve, with ONLY the window bound changed
+(narrow [-1,10] -- the fitter_CLAUDE_GRB131014215.py default -- vs wide [-10,20], matching the
+GRB231129C experiment's window choice for direct comparability).
 """
 
+import os
 from pathlib import Path
 
 import matplotlib
@@ -37,14 +35,11 @@ from grb_research.grb_utils import save_fig
 update_style()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
-LC_DIR = PROJECT_ROOT / "light_curves" / "GRB231129779"
+LC_DIR = PROJECT_ROOT / "light_curves" / "GRB131014215"
 ENERGY_LOW, ENERGY_HIGH = 10, 400
 
-import os
-
 dat_NaI = [f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f]
-nai_data = [lightcurve_data(f"{LC_DIR}/{d}.dat", ENERGY_LOW, ENERGY_HIGH) for d in dat_NaI]
-t_full, r1, b1 = nai_data[0]
+t_full, r1, b1 = lightcurve_data(f"{LC_DIR}/{dat_NaI[0]}.dat", ENERGY_LOW, ENERGY_HIGH)
 y_full = r1 - b1
 
 # Third, most extreme broadening (added 2026-09-16, per GRB140206B's own widest_full_range check):
@@ -58,19 +53,18 @@ WINDOWS = {
     "widest_full_range": (T_MIN, T_MAX),
 }
 
-# Converged parameters from the narrow-window run (norris_fit_GRB231129779.png's own legend),
-# used as p0 for *all three* windows -- same starting point, only the window bound differs.
+# Converged parameters from the narrow-window run (norris_fit_results_GRB131014215.csv), used as p0
+# for *all three* windows -- same starting point, only the window bound differs.
 P0 = [
-    (0.570, -0.449, 1.854, 0.637),
-    (0.493, 0.127, 3.912, 0.381),
-    (0.708, -0.960, 75.728, 0.154),
-    (0.472, 2.759, 1.367, 1.470),
-    (0.125, 4.609, 0.429, 2.149)
+    (0.10764203288945787, -0.6801299026283388, 4.736463927778451, 0.3111610774862506),
+    (0.2745269047316325, 0.046601440392526616, 25.344683548125637, 0.05606570780848216),
+    (0.9341178707469664, 1.1832335152138767, 1.012741437487432, 0.3358238707570263),
+    (0.45875295632710456, 2.4705042509819695, 0.04738191980389777, 1.099443921612677),
+    (0.2904758094203136, 2.658479250500718, 6.545740339696772, 0.13247748600998696),
 ]
 N_PULSES = len(P0)
 
 rows = []
-fitters = {}
 for window_name, (start, stop) in WINDOWS.items():
     mask = np.logical_and(t_full > start, t_full < stop)
     t_w, y_w = t_full[mask], y_full[mask]
@@ -79,20 +73,20 @@ for window_name, (start, stop) in WINDOWS.items():
 
     nf = NorrisFitter(t_w, y_norm)
     nf.fit(p0=P0)
+
     nf.plot_fit(
         show_individuals=True,
         x_label="Time since trigger [s]",
         y_label="Normalized count rate",
         data_label="10-400 keV NaI\nBackground Subtracted",
-        title=f"GRB231129C window-sensitivity check: {window_name} [{start}, {stop}] s",
+        title=f"GRB131014A window-sensitivity check: {window_name} [{start}, {stop}] s",
     )
     fig_path = Path(__file__).parent / f"window_sensitivity_{window_name}"
     save_fig(plt.gcf(), fig_path)
-    fitters[window_name] = nf
 
     print(f"\n=== window {window_name} ({start}, {stop}), y_max={y_max:.2f} cts/s ===")
     for i in range(N_PULSES):
-        A, ts, tau1, tau2 = nf.params[i * 4: (i + 1) * 4]
+        A, ts, tau1, tau2 = nf.params[i * 4 : (i + 1) * 4]
         tp = t_peak(ts, tau1, tau2)
         mc = tv_mc_summary(nf, pulse_index=i + 1)
         print(
