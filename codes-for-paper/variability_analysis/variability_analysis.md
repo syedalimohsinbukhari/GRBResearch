@@ -9,11 +9,22 @@ This folder is a **separate, manually-driven track**, worked one GRB at a time s
 padding, because TR2's true shape is one broad, smoothly-declining pulse with no local excess for a spike
 detector to find — see the MEPSA-fallback discussion in this session's history). GRB140206B
 (`fitter_GRB140206275.py` + a `_simple` variant) and GRB231129C (`fitter_GRB231129779.py`) were fit in
-this same manual style in a later session (2026-09-15/16) but are **not yet written up below** — the
-"What the code computes" / "Every judgement call" / "Results" sections that follow describe the GRB131014A
-fit only; see each script's own docstring/comments for the other two bursts until this note is extended.
-GRB080916C has no manual fit yet. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same
-deliverable-boundary stance as the abandoned automated pipeline.
+this same manual style in a later session (2026-09-15/16), and GRB080916C (`fitter.py`, 8-pulse) followed
+in a session on 2026-09-16/17 — **none of the three are yet written up below** — the "What the code
+computes" / "Every judgement call" / "Results" sections that follow describe the GRB131014A fit only; see
+each script's own docstring/comments and the sections further down for the other three bursts until this
+note is extended. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same deliverable-boundary
+stance as the abandoned automated pipeline.
+
+**Open cross-burst issue, flagged 2026-09-18, not yet addressed:** every fit in this folder (all four
+bursts) uses only a single NaI detector (`nai_data[0]`, whichever sorts first alphabetically — `n3` for
+GRB080916C, `na` for GRB131014A, `n3` for GRB140206B, `n7` for GRB231129C) rather than summing across the
+GRB's full NaI detector set, unlike the convention typical of published GRB analyses. This wasn't a
+deliberate choice recorded anywhere — it's just what every `fitter*.py`/`window_sensitivity.py` script has
+done since the very first one. Revisiting this (which detectors, how to combine background/rate/errors
+across them — see BUG-22 below for the right way to combine per-channel errors) is planned as follow-up
+work; every `t_v`/pulse-decomposition result in this file predates that rework and should be treated as
+single-detector until it's redone.
 
 ## What the code computes
 
@@ -210,6 +221,80 @@ anything like SIMPLE pulse 5's runaway drift — everywhere else $t_s$ stays anc
 a second regardless of window width. GRB140206B's SIMPLE pedestal is a genuine, burst-and-model-specific
 finding, not a general property of this fit family.
 
+**GRB080916C, 6-vs-7-pulse question (2026-09-16) — inconclusive via `mc_kept_fraction`, resolved via
+residuals instead.** `experiments/window_sensitivity_GRB080916009/window_sensitivity.py` checked whether a
+6-pulse model (`fitter.py`'s original decomposition) or a 7-pulse model (an extra pulse at $t_s\approx20$s,
+inside TR3's window) is better supported, across narrow `[-1,70]`s, wide `[-20,150]`s, and widest
+`[-25.9,300.6]`s. Unlike GRB231129C's original case, **neither model shows a `mc_kept_fraction` collapse**
+at any window — the candidate 7th pulse's own reliability is mediocre but stable (0.517→0.604→0.604), so
+this diagnostic alone doesn't decide it here. What did: comparing fit residuals directly. The 7-pulse
+model's total SSE only improves ~3.2% globally (the amount you'd expect just from 4 more free parameters
+soaking up noise everywhere) but ~12% specifically in the `[15,30]`s region the new pulse targets —
+disproportionate local improvement is the signature of a real feature, not an overfitting artifact. Plots:
+`window_sensitivity_{six,seven}_{narrow_-1_70,wide_-20_150,widest_full_range}.png/.pdf` in that folder.
+
+This same residual-inspection approach, applied next to a *different* region of GRB080916C (the
+$t\approx0$–$3$s span, where a single broad pulse was overshadowing two more real peaks), is what led to
+the 8-pulse decomposition now in `fitter.py` — see the dedicated section below.
+
+## GRB080916C: 8-pulse decomposition via residual-seeding, and a CERN ROOT cross-check (2026-09-16/18)
+
+Not yet written up as its own "What the code computes" / "Every judgement call" / "Results" set (see the
+note at the top of this file) — this section covers two specific, self-contained pieces of that burst's
+work: how the final 8-pulse `p0` in `fitter.py` was actually found, and a follow-up cross-check of the
+fit in CERN ROOT that surfaced a real, now-fixed bug in `light_curves.py`.
+
+**The problem.** Starting from a 6-pulse fit (`norris1`–`norris6`), `norris2` (a broad envelope/tail,
+$\tau_2\approx6.7$) visibly overshadows the pulses after it — the user's own read: "norris2 is overshadowing
+[norris3] and is even bleeding into norris3/4/5", with two more real peaks suspected near $t\approx1.5$s and
+$t\approx2.4$s that repeated attempts to fit directly (jointly, from hand-typed `p0`) could not recover:
+the optimizer kept collapsing the two new pulses to degenerate near-zero-width spikes
+($\tau_2\sim10^{-3}$, `kept_fraction=0`), because `norris2`'s tail claims the flux there first.
+
+**The fix: seed from the residual, not the raw light curve.** Subtracting the converged 6-pulse fit from
+the data (`fitter_EXPERIMENT.py`) shows two coherent, smoothed residual bumps — `+0.065`..`+0.079` near
+$t=1.41$–$1.54$s and `+0.072`..`+0.086` near $t=2.43$–$2.62$s, separated by a `-0.08`..`-0.10` dip — real
+structure, not noise (confirmed by 5-bin-moving-average smoothing, same technique used to originally spot
+GRB131014A's/GRB231129C's residual bumps). Seeding the two new pulses (`norris2-1`, `norris2-2`) at the
+*residual's own amplitude* (~0.08) instead of the raw light curve's amplitude (~0.9), while seeding every
+other pulse from the already-converged 6-pulse fit rather than fresh hand-guesses, converges cleanly —
+both land close to their target peaks with sane, non-degenerate parameters.
+
+**Neutral-seed reproducibility, the same criterion as GRB131014A's pulses 1/2 (above).** Refitting
+`norris2-1`/`norris2-2` from a different, uninformative $\tau_1,\tau_2=0.3,0.3$ seed instead of the
+residual-informed one: `norris2-1` reproduces to $t_\text{peak}=1.480$s, $t_v=0.049$s (vs. 1.466s/0.051s) —
+**reads as real**, same tight agreement standard as GRB131014A's reliable pulses. `norris2-2` reproduces to
+$t_\text{peak}=2.462$s, $t_v=0.177$s (vs. 2.309s/0.148s) — a looser match, **probably real but not yet as
+tight**; one more seed trial before trusting its exact numbers. `fitter.py`'s `P0` comment documents both
+results and the full recipe directly at the parameter list, so this reasoning isn't lost again (an earlier
+hand-edit of that same `p0` had already lost the original 6-pulse values once).
+
+**CERN ROOT cross-check.** To let the fit be reproduced/verified outside this project's Python stack, the
+GRB080916C 10–400 keV light curve (NaI `n3+n4`, background-subtracted, summed across detectors — see the
+"Open cross-burst issue" note above on why this is still single-burst-only, not yet the project-wide
+detector-summing convention) was exported to `GRB080916009_lightcurve_10-400keV.csv`, and
+`GRB080916009_norris_fit.C` reproduces the same 8-pulse `TF1` fit in ROOT/Minuit (same `norris_pulse` form,
+same `fit_boundaries()`-equivalent parameter limits, seeded from the Python fit's converged values rescaled
+to the CSV's own physical count-rate scale). Both live in
+`experiments/root_fit_GRB080916009/`, moved there 2026-09-18 (previously sat directly in this folder).
+
+Running the errors-weighted fit (`TGraphErrors`, `use_errors=true`) first came back with
+**`chi2/ndf = 33.4/1077 ≈ 0.031`** — far below the ~1 a correctly-weighted fit should give, meaning the
+error bars were too large relative to the data's real scatter. An unweighted fit (`TGraph`, ignoring
+`net_err_cts_per_s` entirely) tracked the data just as well, with an implied RMS residual of only
+`sqrt(chi2/n) ≈ 252` cts/s — much smaller than what the (inflated) `net_err_cts_per_s` column claimed
+(~830–1000 cts/s). That discrepancy traced to a real bug in `light_curves.py::lightcurve_data()`:
+combining ~89 independent per-channel errors (10–400 keV spans that many energy channels) with a plain
+linear `+=` instead of in quadrature, inflating the combined error by close to $\sqrt{89}\approx9.4\times$
+— see `BUGS.md` BUG-22 for the full writeup, confirmation, and fix. **Checked before fixing**: every
+`lightcurve_data()` call site in the repo (`make_lightcurve.py`, every `fitter*.py`, every
+`window_sensitivity.py`) uses `errors=False`, the default — `errors=True` was never actually invoked
+anywhere except this ROOT-export exercise, so the bug had zero effect on anything published. After the
+fix, the same weighted ROOT fit came back at **`chi2/ndf = 1565.5/1077 ≈ 1.454`** — a physically credible
+value, consistent with the unweighted fit's own RMS-residual estimate. `norris2-2` still shows the same
+Minuit-flagged degeneracy (`τ₁` pinned at its lower limit, `ERR MATRIX NOT POS-DEF`) in every version of
+this fit, weighted or not — expected, not a new problem from any of this.
+
 ## Results (this session, 2026-09-07)
 
 | pulse | episode(s) | $t_\text{peak}$ [s] | $t_v$ [s] | kept | anchoring photon |
@@ -330,13 +415,40 @@ GRB231129C:
   regenerated.
 - `norris_fitted_GRB231129779.png/.pdf` — the decorated final plot.
 
-Shared infrastructure (both bursts above, and GRB131014A):
+GRB080916C (see the dedicated section above for the 8-pulse decomposition and ROOT cross-check):
+- `fitter.py` — the live 8-pulse fit (`norris1`–`norris6` + `norris2-1`/`norris2-2`), the user's own
+  working file, reused/repurposed across bursts as this track progressed (was GRB140206B's working file
+  earlier, per GRB131014A's own `fitter.py` entry above). Its `P0` comment documents the full
+  residual-seeding recipe and neutral-seed reproducibility results (see section above). Produces
+  `norris_fit_results_GRB080916009.csv`.
+- `fitter_EXPERIMENT.py` — Claude's diagnostic copy, added 2026-09-17 specifically to plot the 6-pulse
+  data-minus-fit residual (raw + 5-bin-smoothed overlay) that motivated `norris2-1`/`norris2-2`; not the
+  main fit, a supporting visualization for the section above. Produces
+  `fitter_EXPERIMENT_residual_GRB080916009.png/.pdf`.
+- `norris_fit_results_GRB080916009.csv` — one row per (pulse, episode) match, produced by `fitter.py`.
+- `experiments/window_sensitivity_GRB080916009/` — the window-widening 6-vs-7-pulse diagnostic (see
+  section above), added 2026-09-16: `window_sensitivity.py` (+ its own local `light_curves.py`/
+  `norris_fit.py` copies), `window_sensitivity_results.csv`, and one fitted-light-curve plot per model per
+  window width (`window_sensitivity_{six,seven}_{narrow_-1_70,wide_-20_150,widest_full_range}.png/.pdf`,
+  6 plots total).
+- `experiments/root_fit_GRB080916009/` — the CERN ROOT cross-check (see section above), added
+  2026-09-17, moved into its own experiment folder 2026-09-18: `GRB080916009_lightcurve_10-400keV.csv`
+  (NaI `n3+n4` summed, background-subtracted, 10–400 keV, quadrature-combined errors post-BUG-22-fix),
+  `GRB080916009_norris_fit.C` (ROOT/Minuit macro, `use_errors` toggle for weighted vs. unweighted fitting),
+  and its weighted/unweighted output plots (`GRB080916009_norris_fit_ROOT_{weighted,unweighted}.png/.pdf`;
+  the no-suffix `GRB080916009_norris_fit_ROOT.png/.pdf` is a pre-`use_errors`-toggle duplicate of the
+  weighted run, superseded but not deleted).
+
+Shared infrastructure (all four bursts above):
 - `norris_fit.py` — the local `NorrisFitter`/`norris_pulse`/`tv_value`/`tv_mc_summary` implementation every
   `fitter*.py` script now imports (`from norris_fit import ...`). Fixed 2026-09-16 (BUG-21, `BUGS.md`):
   this used to be the stray-dot `norris..py` (pre-Phase-5, `main-minor-75`), unimported by anything, while
   the scripts imported the broken `from variability_timescale.norris_fit import NorrisFitter` instead — now
   renamed and wired up, per `CLAUDE.md`'s "copy rather than fight `sys.path`" convention. `light_curves.py`
   (copied in alongside it) resolves the matching `variability_timescale.light_curves` import the same way.
+  Fixed again 2026-09-18 (BUG-22, `BUGS.md`): `light_curves.py`'s `lightcurve_data()` combined per-channel
+  errors linearly instead of in quadrature; patched here and in every copy of this file across this folder
+  (the four `experiments/*/` copies plus the original `light_curves/light_curves.py`) to stay in sync.
 - `dry_run.png` — a dry-run diagnostic plot (2026-09-07, ~02:57, the earliest timestamp of any file in this
   folder); which script/burst produced it is not documented here.
 - `experiments/window_sensitivity_GRB231129779/` — the window-widening pulse-count diagnostic (see
