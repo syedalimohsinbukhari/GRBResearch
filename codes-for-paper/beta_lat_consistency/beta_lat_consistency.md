@@ -61,48 +61,48 @@ cutoff rather than a second power-law index, so it has no β to compare.
 
 ## Table
 
-| GRB | Episode | TS | N(LAT) | LAT index | β model (status) | β | β vs LAT | PL_BB (status) | index1_pl | PL_BB vs LAT | Add-PL model (status) | add_index_pl | add-PL vs LAT |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GRB080916C | T90 | 2363.3 | 254 | -2.230 ± 0.074 | SBPL_BB (BEST) | -2.25 ± 0.02 | 0.27σ | PL_BB (SAFE) | -1.87 ± 0.01 | 4.78σ | BAND_PL_BB (UNSAFE) | -2.07 ± 0.50 | 0.31σ |
-| GRB080916C | T90 | 2363.3 | 254 | -2.230 ± 0.074 | SBPL_BB (BEST) | -2.25 ± 0.02 | 0.27σ | PL_BB (SAFE) | -1.87 ± 0.01 | 4.78σ | SBPL_PL_BB (UNSAFE) | -2.07 ± 0.59 | 0.26σ |
-| GRB080916C | EX0 | 162.0 | 13 | -2.881 ± 0.479 | BAND_BB (BEST) | -2.55 ± 0.08 | 0.69σ | PL_BB (SAFE) | -1.80 ± 0.03 | 2.25σ | BAND_PL_BB (UNSAFE) | -2.00 ± 0.48 | 1.29σ |
-| GRB080916C | EX0 | 162.0 | 13 | -2.881 ± 0.479 | BAND_BB (BEST) | -2.55 ± 0.08 | 0.69σ | PL_BB (SAFE) | -1.80 ± 0.03 | 2.25σ | SBPL_PL_BB (UNSAFE) | -2.01 ± 0.48 | 1.28σ |
-| GRB080916C | TR1 | 170.6 | 13 | -2.885 ± 0.480 | BAND_BB (BEST) | -2.51 ± 0.08 | 0.78σ | PL_BB (SAFE) | -1.78 ± 0.03 | 2.30σ | BAND_PL_BB (UNSAFE) | -2.08 ± 1.02 | 0.72σ |
-| GRB080916C | TR1 | 170.6 | 13 | -2.885 ± 0.480 | BAND_BB (BEST) | -2.51 ± 0.08 | 0.78σ | PL_BB (SAFE) | -1.78 ± 0.03 | 2.30σ | SBPL_PL_BB (UNSAFE) | -2.02 ± 0.56 | 1.17σ |
-| GRB080916C | TR2 | 1172.9 | 115 | -2.381 ± 0.121 | BAND (BEST) | -2.12 ± 0.02 | 2.10σ | PL_BB (SAFE) | -1.80 ± 0.01 | 4.75σ | BAND_PL_BB (UNSAFE) | -3.82 ± 5.86 | 0.25σ (unconstrained) |
-| GRB080916C | TR2 | 1172.9 | 115 | -2.381 ± 0.121 | BAND (BEST) | -2.12 ± 0.02 | 2.10σ | PL_BB (SAFE) | -1.80 ± 0.01 | 4.75σ | SBPL_PL_BB (UNSAFE) | -4.46 ± 9.19 | 0.23σ (unconstrained) |
-| GRB080916C | TR3 | 1025.2 | 118 | -2.063 ± 0.098 | SBPL (BEST) | -2.22 ± 0.02 | 1.53σ | PL_BB (SAFE) | -1.90 ± 0.01 | 1.68σ | BAND_PL_BB (MARGINAL) | -1.94 ± 0.05 | 1.13σ |
-| GRB080916C | TR3 | 1025.2 | 118 | -2.063 ± 0.098 | SBPL (BEST) | -2.22 ± 0.02 | 1.53σ | PL_BB (SAFE) | -1.90 ± 0.01 | 1.68σ | SBPL_PL_BB (SAFE) | -1.93 ± 0.04 | 1.24σ |
-| GRB080916C | TR4 | 44.2 | 4 | -2.024 ± 0.494 | SBPL (BEST) | -2.21 ± 0.08 | 0.37σ | PL_BB (SAFE) | -1.89 ± 0.05 | 0.26σ | BAND_PL_BB (UNSAFE) | 1.03 ± 25.60 | 0.12σ (unconstrained) |
-| GRB080916C | TR4 | 44.2 | 4 | -2.024 ± 0.494 | SBPL (BEST) | -2.21 ± 0.08 | 0.37σ | PL_BB (SAFE) | -1.89 ± 0.05 | 0.26σ | SBPL_PL_BB (UNSAFE) | 1.02 ± 20.92 | 0.15σ (unconstrained) |
-| GRB080916C | EX1 | 114.6 | 12 | -2.424 ± 0.384 | SBPL (BEST) | -2.12 ± 0.05 | 0.80σ | PL_BB (SAFE) | -1.91 ± 0.03 | 1.34σ | BAND_PL_BB (UNSAFE) | -1.91 ± 2.97 | 0.17σ (unconstrained) |
-| GRB080916C | TR5 | 17.1 | 4 | -2.411 ± 0.669 | SBPL (BEST) | -2.21 ± 0.08 | 0.30σ | PL_BB (SAFE) | -1.93 ± 0.05 | 0.71σ | BAND_PL_BB (UNSAFE) | -0.08 ± 1.35 | 1.55σ |
-| GRB131014A | T90 | 137.5 | 10 | -1.988 ± 0.309 | BAND_BB (BEST) | -2.90 ± 0.03 | 2.95σ | PL_BB (SAFE) | -1.60 ± 0.01 | 1.26σ | BAND_PL_BB (UNSAFE) | -1.10 ± 0.54 | 1.42σ |
-| GRB131014A | T90 | 137.5 | 10 | -1.988 ± 0.309 | BAND_BB (BEST) | -2.90 ± 0.03 | 2.95σ | PL_BB (SAFE) | -1.60 ± 0.01 | 1.26σ | SBPL_PL_BB (UNSAFE) | -1.17 ± 0.51 | 1.37σ |
-| GRB131014A | EX0 | 88.6 | 7 | -2.207 ± 0.432 | BAND_BB (BEST) | -2.94 ± 0.05 | 1.69σ | PL_BB (SAFE) | -1.59 ± 0.01 | 1.42σ | BAND_PL_BB (UNSAFE) | -1.54 ± 0.38 | 1.16σ |
-| GRB131014A | TR1 | 96.5 | 7 | -2.207 ± 0.429 | BAND_BB (BEST) | -2.95 ± 0.04 | 1.73σ | PL_BB (SAFE) | -1.58 ± 0.01 | 1.46σ | BAND_PL_BB (UNSAFE) | -1.63 ± 0.16 | 1.26σ |
-| GRB131014A | TR1 | 96.5 | 7 | -2.207 ± 0.429 | BAND_BB (BEST) | -2.95 ± 0.04 | 1.73σ | PL_BB (SAFE) | -1.58 ± 0.01 | 1.46σ | SBPL_PL_BB (UNSAFE) | -1.54 ± 0.38 | 1.18σ |
-| GRB131014A | EX1 | 55.9 | 5 | -1.677 ± 0.354 | BAND_BB (BEST) | -2.80 ± 0.05 | 3.14σ | PL_BB (SAFE) | -1.68 ± 0.01 | 0.00σ | BAND_PL_BB (UNSAFE) | -0.17 ± 0.84 | 1.65σ |
-| GRB131014A | EX1 | 55.9 | 5 | -1.677 ± 0.354 | BAND_BB (BEST) | -2.80 ± 0.05 | 3.14σ | PL_BB (SAFE) | -1.68 ± 0.01 | 0.00σ | SBPL_PL_BB (UNSAFE) | 0.81 ± 2.76 | 0.89σ (unconstrained) |
-| GRB131014A | TR2 | 39.5 | 3 | -1.637 ± 0.444 | SBPL_BB (BEST) | -3.11 ± 0.08 | 3.27σ | PL_BB (SAFE) | -1.64 ± 0.01 | 0.01σ | BAND_PL_BB (UNSAFE) | 0.13 ± 1.63 | 1.04σ |
-| GRB131014A | TR2 | 39.5 | 3 | -1.637 ± 0.444 | SBPL_BB (BEST) | -3.11 ± 0.08 | 3.27σ | PL_BB (SAFE) | -1.64 ± 0.01 | 0.01σ | SBPL_PL_BB (UNSAFE) | 0.12 ± 1.63 | 1.04σ |
-| GRB140206B | T90 | 218.5 | 32 | -2.834 ± 0.310 | BAND (BEST) | -2.60 ± 0.04 | 0.74σ | PL_BB (SAFE) | -1.97 ± 0.01 | 2.77σ | — | — | — |
-| GRB140206B | EX0 | 59.9 | 6 | -4.741 ± 1.422 | BAND_BB (BEST) | -2.89 ± 0.13 | 1.30σ | PL_BB (SAFE) | -1.76 ± 0.03 | 2.09σ | — | — | — |
-| GRB140206B | TR1 | 67.5 | 6 | -4.723 ± 1.406 | BAND_BB (BEST) | -2.77 ± 0.12 | 1.38σ | PL_BB (SAFE) | -1.73 ± 0.03 | 2.13σ | — | — | — |
-| GRB140206B | TR2 | 46.9 | 4 | -6.000 ± 0.007 [pinned] | BAND (BEST) | -2.35 ± 0.04 | n/a (LAT index pinned) | PL_BB (SAFE) | -1.62 ± 0.01 | n/a (LAT index pinned) | — | — | n/a (LAT index pinned) |
-| GRB140206B | TR3 | 39.2 | 4 | -2.314 ± 0.617 | BAND (BEST) | -2.28 ± 0.06 | 0.06σ | PL_BB (SAFE) | -1.92 ± 0.02 | 0.63σ | BAND_PL_BB (UNSAFE) | 1.09 ± 161.25 | 0.02σ (unconstrained) |
-| GRB140206B | TR3 | 39.2 | 4 | -2.314 ± 0.617 | BAND (BEST) | -2.28 ± 0.06 | 0.06σ | PL_BB (SAFE) | -1.92 ± 0.02 | 0.63σ | SBPL_PL_BB (UNSAFE) | 0.89 ± 514.02 | 0.01σ (unconstrained) |
-| GRB140206B | TR4 | 56.0 | 7 | -2.207 ± 0.434 | BAND (BEST) | -2.42 ± 0.05 | 0.48σ | PL_BB (SAFE) | -2.00 ± 0.02 | 0.49σ | — | — | — |
-| GRB140206B | TR5 | 4.3 | 5 | -3.023 ± 1.055 | — | — | — | PL_BB (UNSAFE) | -2.04 ± 0.04 | 0.93σ | — | — | — |
-| GRB140206B | TR6 | 18.0 | 6 | -2.481 ± 0.609 | — | — | — | PL_BB (SAFE) | -2.06 ± 0.03 | 0.69σ | — | — | — |
-| GRB231129C | T90 | 118.1 | 11 | -2.459 ± 0.411 | SBPL_BB (BEST) | -4.44 ± 0.27 | 4.00σ | PL_BB (SAFE) | -1.80 ± 0.01 | 1.60σ | BAND_PL_BB (UNSAFE) | -1.61 ± 0.51 | 1.29σ |
-| GRB231129C | T90 | 118.1 | 11 | -2.459 ± 0.411 | SBPL_BB (BEST) | -4.44 ± 0.27 | 4.00σ | PL_BB (SAFE) | -1.80 ± 0.01 | 1.60σ | SBPL_PL_BB (UNSAFE) | -1.59 ± 0.53 | 1.30σ |
-| GRB231129C | EX0 | 8.6 | 3 | -6.000 ± 0.048 [pinned] | SBPL_BB (BEST) | -3.48 ± 0.14 | n/a (LAT index pinned) | PL_BB (SAFE) | -1.65 ± 0.01 | n/a (LAT index pinned) | — | — | n/a (LAT index pinned) |
-| GRB231129C | TR1 | 9.5 | 3 | -5.999 ± 0.163 [pinned] | SBPL_BB (BEST) | -4.20 ± 0.25 | n/a (LAT index pinned) | PL_BB (SAFE) | -1.68 ± 0.01 | n/a (LAT index pinned) | — | — | n/a (LAT index pinned) |
-| GRB231129C | EX1 | 119.6 | 10 | -2.168 ± 0.350 | SBPL (BEST) | -2.82 ± 0.04 | 1.84σ | PL_BB (SAFE) | -1.87 ± 0.02 | 0.86σ | BAND_PL_BB (UNSAFE) | -1.52 ± 0.60 | 0.93σ |
-| GRB231129C | EX1 | 119.6 | 10 | -2.168 ± 0.350 | SBPL (BEST) | -2.82 ± 0.04 | 1.84σ | PL_BB (SAFE) | -1.87 ± 0.02 | 0.86σ | SBPL_PL_BB (UNSAFE) | -1.49 ± 0.60 | 0.98σ |
-| GRB231129C | TR2 | 98.2 | 8 | -2.166 ± 0.391 | SBPL (BEST) | -2.86 ± 0.04 | 1.77σ | PL_BB (SAFE) | -1.84 ± 0.02 | 0.83σ | BAND_PL_BB (UNSAFE) | -1.54 ± 0.64 | 0.83σ |
-| GRB231129C | TR2 | 98.2 | 8 | -2.166 ± 0.391 | SBPL (BEST) | -2.86 ± 0.04 | 1.77σ | PL_BB (SAFE) | -1.84 ± 0.02 | 0.83σ | SBPL_PL_BB (UNSAFE) | -1.53 ± 0.64 | 0.85σ |
+| GRB        | Episode | TS     | N(LAT) | LAT index               | β model (status) | β            | β vs LAT               | PL_BB (status) | index1_pl    | PL_BB vs LAT           | Add-PL model (status) | add_index_pl  | add-PL vs LAT          |
+|------------|---------|--------|--------|-------------------------|------------------|--------------|------------------------|----------------|--------------|------------------------|-----------------------|---------------|------------------------|
+| GRB080916C | T90     | 2363.3 | 254    | -2.230 ± 0.074          | SBPL_BB (BEST)   | -2.25 ± 0.02 | 0.27σ                  | PL_BB (SAFE)   | -1.87 ± 0.01 | 4.78σ                  | BAND_PL_BB (UNSAFE)   | -2.07 ± 0.50  | 0.31σ                  |
+| GRB080916C | T90     | 2363.3 | 254    | -2.230 ± 0.074          | SBPL_BB (BEST)   | -2.25 ± 0.02 | 0.27σ                  | PL_BB (SAFE)   | -1.87 ± 0.01 | 4.78σ                  | SBPL_PL_BB (UNSAFE)   | -2.07 ± 0.59  | 0.26σ                  |
+| GRB080916C | EX0     | 162.0  | 13     | -2.881 ± 0.479          | BAND_BB (BEST)   | -2.55 ± 0.08 | 0.69σ                  | PL_BB (SAFE)   | -1.80 ± 0.03 | 2.25σ                  | BAND_PL_BB (UNSAFE)   | -2.00 ± 0.48  | 1.29σ                  |
+| GRB080916C | EX0     | 162.0  | 13     | -2.881 ± 0.479          | BAND_BB (BEST)   | -2.55 ± 0.08 | 0.69σ                  | PL_BB (SAFE)   | -1.80 ± 0.03 | 2.25σ                  | SBPL_PL_BB (UNSAFE)   | -2.01 ± 0.48  | 1.28σ                  |
+| GRB080916C | TR1     | 170.6  | 13     | -2.885 ± 0.480          | BAND_BB (BEST)   | -2.51 ± 0.08 | 0.78σ                  | PL_BB (SAFE)   | -1.78 ± 0.03 | 2.30σ                  | BAND_PL_BB (UNSAFE)   | -2.08 ± 1.02  | 0.72σ                  |
+| GRB080916C | TR1     | 170.6  | 13     | -2.885 ± 0.480          | BAND_BB (BEST)   | -2.51 ± 0.08 | 0.78σ                  | PL_BB (SAFE)   | -1.78 ± 0.03 | 2.30σ                  | SBPL_PL_BB (UNSAFE)   | -2.02 ± 0.56  | 1.17σ                  |
+| GRB080916C | TR2     | 1172.9 | 115    | -2.381 ± 0.121          | BAND (BEST)      | -2.12 ± 0.02 | 2.10σ                  | PL_BB (SAFE)   | -1.80 ± 0.01 | 4.75σ                  | BAND_PL_BB (UNSAFE)   | -3.82 ± 5.86  | 0.25σ (unconstrained)  |
+| GRB080916C | TR2     | 1172.9 | 115    | -2.381 ± 0.121          | BAND (BEST)      | -2.12 ± 0.02 | 2.10σ                  | PL_BB (SAFE)   | -1.80 ± 0.01 | 4.75σ                  | SBPL_PL_BB (UNSAFE)   | -4.46 ± 9.19  | 0.23σ (unconstrained)  |
+| GRB080916C | TR3     | 1025.2 | 118    | -2.063 ± 0.098          | SBPL (BEST)      | -2.22 ± 0.02 | 1.53σ                  | PL_BB (SAFE)   | -1.90 ± 0.01 | 1.68σ                  | BAND_PL_BB (MARGINAL) | -1.94 ± 0.05  | 1.13σ                  |
+| GRB080916C | TR3     | 1025.2 | 118    | -2.063 ± 0.098          | SBPL (BEST)      | -2.22 ± 0.02 | 1.53σ                  | PL_BB (SAFE)   | -1.90 ± 0.01 | 1.68σ                  | SBPL_PL_BB (SAFE)     | -1.93 ± 0.04  | 1.24σ                  |
+| GRB080916C | TR4     | 44.2   | 4      | -2.024 ± 0.494          | SBPL (BEST)      | -2.21 ± 0.08 | 0.37σ                  | PL_BB (SAFE)   | -1.89 ± 0.05 | 0.26σ                  | BAND_PL_BB (UNSAFE)   | 1.03 ± 25.60  | 0.12σ (unconstrained)  |
+| GRB080916C | TR4     | 44.2   | 4      | -2.024 ± 0.494          | SBPL (BEST)      | -2.21 ± 0.08 | 0.37σ                  | PL_BB (SAFE)   | -1.89 ± 0.05 | 0.26σ                  | SBPL_PL_BB (UNSAFE)   | 1.02 ± 20.92  | 0.15σ (unconstrained)  |
+| GRB080916C | EX1     | 114.6  | 12     | -2.424 ± 0.384          | SBPL (BEST)      | -2.12 ± 0.05 | 0.80σ                  | PL_BB (SAFE)   | -1.91 ± 0.03 | 1.34σ                  | BAND_PL_BB (UNSAFE)   | -1.91 ± 2.97  | 0.17σ (unconstrained)  |
+| GRB080916C | TR5     | 17.1   | 4      | -2.411 ± 0.669          | SBPL (BEST)      | -2.21 ± 0.08 | 0.30σ                  | PL_BB (SAFE)   | -1.93 ± 0.05 | 0.71σ                  | BAND_PL_BB (UNSAFE)   | -0.08 ± 1.35  | 1.55σ                  |
+| GRB131014A | T90     | 137.5  | 10     | -1.988 ± 0.309          | BAND_BB (BEST)   | -2.90 ± 0.03 | 2.95σ                  | PL_BB (SAFE)   | -1.60 ± 0.01 | 1.26σ                  | BAND_PL_BB (UNSAFE)   | -1.10 ± 0.54  | 1.42σ                  |
+| GRB131014A | T90     | 137.5  | 10     | -1.988 ± 0.309          | BAND_BB (BEST)   | -2.90 ± 0.03 | 2.95σ                  | PL_BB (SAFE)   | -1.60 ± 0.01 | 1.26σ                  | SBPL_PL_BB (UNSAFE)   | -1.17 ± 0.51  | 1.37σ                  |
+| GRB131014A | EX0     | 88.6   | 7      | -2.207 ± 0.432          | BAND_BB (BEST)   | -2.94 ± 0.05 | 1.69σ                  | PL_BB (SAFE)   | -1.59 ± 0.01 | 1.42σ                  | BAND_PL_BB (UNSAFE)   | -1.54 ± 0.38  | 1.16σ                  |
+| GRB131014A | TR1     | 96.5   | 7      | -2.207 ± 0.429          | BAND_BB (BEST)   | -2.95 ± 0.04 | 1.73σ                  | PL_BB (SAFE)   | -1.58 ± 0.01 | 1.46σ                  | BAND_PL_BB (UNSAFE)   | -1.63 ± 0.16  | 1.26σ                  |
+| GRB131014A | TR1     | 96.5   | 7      | -2.207 ± 0.429          | BAND_BB (BEST)   | -2.95 ± 0.04 | 1.73σ                  | PL_BB (SAFE)   | -1.58 ± 0.01 | 1.46σ                  | SBPL_PL_BB (UNSAFE)   | -1.54 ± 0.38  | 1.18σ                  |
+| GRB131014A | EX1     | 55.9   | 5      | -1.677 ± 0.354          | BAND_BB (BEST)   | -2.80 ± 0.05 | 3.14σ                  | PL_BB (SAFE)   | -1.68 ± 0.01 | 0.00σ                  | BAND_PL_BB (UNSAFE)   | -0.17 ± 0.84  | 1.65σ                  |
+| GRB131014A | EX1     | 55.9   | 5      | -1.677 ± 0.354          | BAND_BB (BEST)   | -2.80 ± 0.05 | 3.14σ                  | PL_BB (SAFE)   | -1.68 ± 0.01 | 0.00σ                  | SBPL_PL_BB (UNSAFE)   | 0.81 ± 2.76   | 0.89σ (unconstrained)  |
+| GRB131014A | TR2     | 39.5   | 3      | -1.637 ± 0.444          | SBPL_BB (BEST)   | -3.11 ± 0.08 | 3.27σ                  | PL_BB (SAFE)   | -1.64 ± 0.01 | 0.01σ                  | BAND_PL_BB (UNSAFE)   | 0.13 ± 1.63   | 1.04σ                  |
+| GRB131014A | TR2     | 39.5   | 3      | -1.637 ± 0.444          | SBPL_BB (BEST)   | -3.11 ± 0.08 | 3.27σ                  | PL_BB (SAFE)   | -1.64 ± 0.01 | 0.01σ                  | SBPL_PL_BB (UNSAFE)   | 0.12 ± 1.63   | 1.04σ                  |
+| GRB140206B | T90     | 218.5  | 32     | -2.834 ± 0.310          | BAND (BEST)      | -2.60 ± 0.04 | 0.74σ                  | PL_BB (SAFE)   | -1.97 ± 0.01 | 2.77σ                  | —                     | —             | —                      |
+| GRB140206B | EX0     | 59.9   | 6      | -4.741 ± 1.422          | BAND_BB (BEST)   | -2.89 ± 0.13 | 1.30σ                  | PL_BB (SAFE)   | -1.76 ± 0.03 | 2.09σ                  | —                     | —             | —                      |
+| GRB140206B | TR1     | 67.5   | 6      | -4.723 ± 1.406          | BAND_BB (BEST)   | -2.77 ± 0.12 | 1.38σ                  | PL_BB (SAFE)   | -1.73 ± 0.03 | 2.13σ                  | —                     | —             | —                      |
+| GRB140206B | TR2     | 46.9   | 4      | -6.000 ± 0.007 [pinned] | BAND (BEST)      | -2.35 ± 0.04 | n/a (LAT index pinned) | PL_BB (SAFE)   | -1.62 ± 0.01 | n/a (LAT index pinned) | —                     | —             | n/a (LAT index pinned) |
+| GRB140206B | TR3     | 39.2   | 4      | -2.314 ± 0.617          | BAND (BEST)      | -2.28 ± 0.06 | 0.06σ                  | PL_BB (SAFE)   | -1.92 ± 0.02 | 0.63σ                  | BAND_PL_BB (UNSAFE)   | 1.09 ± 161.25 | 0.02σ (unconstrained)  |
+| GRB140206B | TR3     | 39.2   | 4      | -2.314 ± 0.617          | BAND (BEST)      | -2.28 ± 0.06 | 0.06σ                  | PL_BB (SAFE)   | -1.92 ± 0.02 | 0.63σ                  | SBPL_PL_BB (UNSAFE)   | 0.89 ± 514.02 | 0.01σ (unconstrained)  |
+| GRB140206B | TR4     | 56.0   | 7      | -2.207 ± 0.434          | BAND (BEST)      | -2.42 ± 0.05 | 0.48σ                  | PL_BB (SAFE)   | -2.00 ± 0.02 | 0.49σ                  | —                     | —             | —                      |
+| GRB140206B | TR5     | 4.3    | 5      | -3.023 ± 1.055          | —                | —            | —                      | PL_BB (UNSAFE) | -2.04 ± 0.04 | 0.93σ                  | —                     | —             | —                      |
+| GRB140206B | TR6     | 18.0   | 6      | -2.481 ± 0.609          | —                | —            | —                      | PL_BB (SAFE)   | -2.06 ± 0.03 | 0.69σ                  | —                     | —             | —                      |
+| GRB231129C | T90     | 118.1  | 11     | -2.459 ± 0.411          | SBPL_BB (BEST)   | -4.44 ± 0.27 | 4.00σ                  | PL_BB (SAFE)   | -1.80 ± 0.01 | 1.60σ                  | BAND_PL_BB (UNSAFE)   | -1.61 ± 0.51  | 1.29σ                  |
+| GRB231129C | T90     | 118.1  | 11     | -2.459 ± 0.411          | SBPL_BB (BEST)   | -4.44 ± 0.27 | 4.00σ                  | PL_BB (SAFE)   | -1.80 ± 0.01 | 1.60σ                  | SBPL_PL_BB (UNSAFE)   | -1.59 ± 0.53  | 1.30σ                  |
+| GRB231129C | EX0     | 8.6    | 3      | -6.000 ± 0.048 [pinned] | SBPL_BB (BEST)   | -3.48 ± 0.14 | n/a (LAT index pinned) | PL_BB (SAFE)   | -1.65 ± 0.01 | n/a (LAT index pinned) | —                     | —             | n/a (LAT index pinned) |
+| GRB231129C | TR1     | 9.5    | 3      | -5.999 ± 0.163 [pinned] | SBPL_BB (BEST)   | -4.20 ± 0.25 | n/a (LAT index pinned) | PL_BB (SAFE)   | -1.68 ± 0.01 | n/a (LAT index pinned) | —                     | —             | n/a (LAT index pinned) |
+| GRB231129C | EX1     | 119.6  | 10     | -2.168 ± 0.350          | SBPL (BEST)      | -2.82 ± 0.04 | 1.84σ                  | PL_BB (SAFE)   | -1.87 ± 0.02 | 0.86σ                  | BAND_PL_BB (UNSAFE)   | -1.52 ± 0.60  | 0.93σ                  |
+| GRB231129C | EX1     | 119.6  | 10     | -2.168 ± 0.350          | SBPL (BEST)      | -2.82 ± 0.04 | 1.84σ                  | PL_BB (SAFE)   | -1.87 ± 0.02 | 0.86σ                  | SBPL_PL_BB (UNSAFE)   | -1.49 ± 0.60  | 0.98σ                  |
+| GRB231129C | TR2     | 98.2   | 8      | -2.166 ± 0.391          | SBPL (BEST)      | -2.86 ± 0.04 | 1.77σ                  | PL_BB (SAFE)   | -1.84 ± 0.02 | 0.83σ                  | BAND_PL_BB (UNSAFE)   | -1.54 ± 0.64  | 0.83σ                  |
+| GRB231129C | TR2     | 98.2   | 8      | -2.166 ± 0.391          | SBPL (BEST)      | -2.86 ± 0.04 | 1.77σ                  | PL_BB (SAFE)   | -1.84 ± 0.02 | 0.83σ                  | SBPL_PL_BB (UNSAFE)   | -1.53 ± 0.64  | 0.85σ                  |
 
 
 ## Reading this table
