@@ -1,6 +1,6 @@
 # Variability timescale (t_v) via manually-seeded joint Norris fit — GRB131014A
 
-Companion to `PHASE5_TV_PLAN.md` (project root), which documented the earlier automated
+Companion to `GRBResearchWork/PHASE5_TV_PLAN.md`, which documented the earlier automated
 (MEPSA/scipy peak-detection + per-window local fit) pipeline for this same Phase 5 goal. That pipeline's
 source files (`variability_timescale/norris_fit.py`, `variability_timescale.py`, etc.) have since been
 deleted — see `PHASE5_TV_PLAN.md`'s 2026-09-16 status update — so this folder is now the only live track.
