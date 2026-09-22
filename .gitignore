@@ -208,14 +208,4 @@ __marimo__/
 
 .idea/
 
-/**/*.dat
-/**/lat.fits
-/GRBResearch/
-
-copy_images_to_folders.py
 rough*
-/LAT_analysis/LAT_analysis.md
-/codes-for-paper/lorentz_factor/lorentz_factor.md
-/codes-for-paper/bb_fraction/bb_fraction.md
-/codes-for-paper/fluence/fluence.md
-/codes-for-paper/gbm_only_refit/gbm_only_refit.md
