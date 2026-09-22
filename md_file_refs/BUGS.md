@@ -11,7 +11,7 @@ Entries that were fixed later carry the resolution first, then **Original diagno
 <!-- INDEX:BEGIN — generated from the ### headings below; regenerate rather than hand-edit. -->
 ## Index
 
-34 entries: 22 bugs, 11 observations, 1 plan note. **All entries closed or resolved except OBS-11 (DEFERRED, user's call).**
+35 entries: 23 bugs, 11 observations, 1 plan note. **All entries closed or resolved except OBS-11 (DEFERRED, user's call) and BUG-23 (FIXED for GRB080916C only; confirmed present and unfixed for GRB131014A/GRB140206B).**
 
 **Everything else, in discovery order** (the order below is the order found, not ID order):
 
@@ -51,6 +51,7 @@ Entries that were fixed later carry the resolution first, then **Original diagno
 | `BUG-21` | `codes-for-paper/variability_analysis/fitter*.py` import a `variability_timescale` module that no longer exists | FIXED |
 | `BUG-22` | `light_curves.py`'s `lightcurve_data()` combined per-channel errors linearly instead of in quadrature | FIXED |
 | `OBS-11` | GRB231129C's zenith-cut boundary (~100.2–100.3°) exceeds the stated 100° cut, exposure-loss correction unverified | DEFERRED, user's call |
+| `BUG-23` | GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync; same bug confirmed live and unfixed for GRB131014A/GRB140206B | FIXED (GRB080916C only) |
 
 <!-- INDEX:END -->
 
@@ -640,3 +641,27 @@ Found 2026-09-17 while cross-checking GRB080916C's 8-pulse Norris fit in CERN RO
 **Decision (user's, 2026-09-22).** Leave the paper text and data as-is. Properly addressing it means re-running the LAT data reduction with a tightened zenith cut — a data-regeneration task, not a text fix, out of proportion to a quick-fixes pass. Revisit if/when LAT data regeneration is otherwise in scope.
 
 **Originally logged:** `quick-fixes-mid-priority.md`, 2026-09-04 (moved here 2026-09-22 once that file's other items were confirmed resolved and the file removed from `GRBResearchWork/md_file_refs/`).
+
+---
+
+### BUG-23 — GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync — **FIXED for GRB080916C; confirmed present, unfixed, for GRB131014A and GRB140206B**
+
+Found 2026-09-22, mid-session, while rerunning `codes-for-paper/variability_analysis/experiments/window_sensitivity_GRB080916009/window_sensitivity.py` to re-verify the already-committed 6-vs-7-pulse window-sensitivity check (`window_sensitivity_results.csv`, committed at `8e98c98`) after `light_curves/GRB080916009/`'s NaI `.dat` files were freshly synced onto this machine. The rerun's converged pulse parameters didn't match the committed CSV (e.g. pulse 1 `t_s` off by ~0.3s, well outside MC/optimizer noise) despite `n3.dat`/`n4.dat`/`window_sensitivity.py` all being byte-identical to `HEAD`.
+
+**Root cause.** Both `fitter.py` and `window_sensitivity.py` build the single-detector NaI file list via `os.listdir(LC_DIR)` and then unconditionally take element `[0]` — `variability_analysis.md`'s own "Open cross-burst issue" note already assumed this always lands on the alphabetically-first detector ("`n3` for GRB080916C"), but `os.listdir()` order is filesystem directory-entry order, not alphabetical, and isn't guaranteed stable across a resync. Confirmed directly: `os.listdir('light_curves/GRB080916009')` returned `['n4.dat', 'n3.dat', ...]` post-resync, so `dat_NaI[0]` silently became `n4` — a genuinely different detector (peak count rate 1614.97 vs `n3`'s 1879.66 cts/s, `np.array_equal` confirms the two light curves are not the same data).
+
+**Impact.** Every `fitter.py`/`window_sensitivity.py` output generated on this machine between the resync and this fix used `n4`, not `n3` — this includes a `norris_fit_results_GRB080916009.csv` regeneration and a `.norris_fitted_GRB080916009.png/.pdf` regeneration (with a new LAT-photon overlay) done earlier in the same session, both silently on the wrong detector. Caught before being reported as final, not after.
+
+**Fix for GRB080916C.** `dat_NaI = sorted(...)` in both `fitter.py` and this experiment's `window_sensitivity.py`, pinning detector selection to alphabetical order regardless of filesystem listing order. Re-running both after the fix reproduces the committed `window_sensitivity_results.csv` to ~4 significant figures (small residual differences consistent with ordinary optimizer floating-point noise, not a data difference) and gives `y_max_cts_per_s = 1879.6628` in the regenerated `norris_fit_results_GRB080916009.csv`, matching `n3`'s own peak rate exactly.
+
+**Extended to the other three bursts, 2026-09-22 — verified, not yet fixed.** Checked whether GRB131014A/GRB140206B/GRB231129C's `fitter*.py`/`window_sensitivity.py` scripts share the same unsorted `os.listdir()[0]` pattern (they do, confirmed by inspection of all 6 remaining scripts) and whether it's currently live-broken, by comparing each burst's *current* `os.listdir()[0]`-picked detector against the detector implied by its *committed* CSV's `y_max_cts_per_s` (cross-checked against each candidate `.dat` file's own computed peak count rate):
+
+| GRB | documented/committed detector | current `os.listdir()[0]` | live-broken now? |
+|---|---|---|---|
+| GRB131014A | `na` (peak 44084.39) | `nb` (peak 43019.09) | **yes** |
+| GRB140206B | `n3` (peak 4271.27) | `n0` (peak 4672.74) | **yes** |
+| GRB231129C | `n7` (peak 10487.75) | `n7` (peak 10487.75) | no, currently correct |
+
+**The `sorted()` fix used for GRB080916C does not generalize.** It happened to work there only because `n3 < n4` alphabetically among that burst's 2-detector set. GRB131014A has 3 detectors and the documented one (`na`) is not alphabetically first (`sorted(['n9','na','nb'])[0] == 'n9'`); GRB140206B likewise (`sorted(['n0','n1','n3'])[0] == 'n0'`, not `n3`); applying `sorted()` to GRB231129C would actively break it (`sorted(['n3','n6','n7'])[0] == 'n3'`, not the correct `n7`). The right fix is an explicit hardcoded detector name per burst, not an alphabetical sort — GRB080916C's own `sorted()` fix should be revisited to an explicit pin too, since it is currently right by coincidence, not by design.
+
+**Not yet fixed — 6 files affected:** `fitter_GRB140206275.py`, `fitter_GRB140206275_simple.py`, `fitter_GRB231129779.py`, and the three matching `experiments/window_sensitivity_GRB*/window_sensitivity.py` copies. (`fitter_CLAUDE_GRB131014215.py` and GRB131014A's own experiment-folder copy have the same pattern too, covered by the GRB131014A row above.) User asked to document this in the `.md` files first, before any fix is applied.

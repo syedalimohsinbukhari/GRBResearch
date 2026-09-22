@@ -9,22 +9,54 @@ This folder is a **separate, manually-driven track**, worked one GRB at a time s
 padding, because TR2's true shape is one broad, smoothly-declining pulse with no local excess for a spike
 detector to find — see the MEPSA-fallback discussion in this session's history). GRB140206B
 (`fitter_GRB140206275.py` + a `_simple` variant) and GRB231129C (`fitter_GRB231129779.py`) were fit in
-this same manual style in a later session (2026-09-15/16), and GRB080916C (`fitter.py`, 8-pulse) followed
-in a session on 2026-09-16/17 — **none of the three are yet written up below** — the "What the code
+this same manual style in a later session (2026-09-15/16), and GRB080916C (`fitter.py`) followed
+in a session on 2026-09-16/17, originally as an 8-pulse fit (`norris1`-`norris6` plus a `norris2-1`/
+`norris2-2` split of `norris2`'s tail) — **reverted 2026-09-22, user decision**, back to the standard
+7-pulse model (`norris1`-`norris6` plus one extra pulse at $t_s\approx20$s inside TR3) already
+independently validated via the window-widening/residual-SSE diagnostic in
+`experiments/window_sensitivity_GRB080916009/`; see the "Reversion" note atop the dedicated section below
+for the (now-superseded) 8-pulse work — **none of the three are yet written up below** — the "What the code
 computes" / "Every judgement call" / "Results" sections that follow describe the GRB131014A fit only; see
 each script's own docstring/comments and the sections further down for the other three bursts until this
 note is extended. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same deliverable-boundary
 stance as the abandoned automated pipeline.
 
 **Open cross-burst issue, flagged 2026-09-18, not yet addressed:** every fit in this folder (all four
-bursts) uses only a single NaI detector (`nai_data[0]`, whichever sorts first alphabetically — `n3` for
-GRB080916C, `na` for GRB131014A, `n3` for GRB140206B, `n7` for GRB231129C) rather than summing across the
-GRB's full NaI detector set, unlike the convention typical of published GRB analyses. This wasn't a
-deliberate choice recorded anywhere — it's just what every `fitter*.py`/`window_sensitivity.py` script has
-done since the very first one. Revisiting this (which detectors, how to combine background/rate/errors
-across them — see BUG-22 below for the right way to combine per-channel errors) is planned as follow-up
-work; every `t_v`/pulse-decomposition result in this file predates that rework and should be treated as
-single-detector until it's redone.
+bursts) uses only a single NaI detector (`nai_data[0]`) — documented at the time as `n3` for GRB080916C,
+`na` for GRB131014A, `n3` for GRB140206B, `n7` for GRB231129C — rather than summing across the GRB's full
+NaI detector set, unlike the convention typical of published GRB analyses. This wasn't a deliberate choice
+recorded anywhere — it's just what every `fitter*.py`/`window_sensitivity.py` script has done since the
+very first one. Revisiting this (which detectors, how to combine background/rate/errors across them — see
+BUG-22 below for the right way to combine per-channel errors) is planned as follow-up work; every
+`t_v`/pulse-decomposition result in this file predates that rework and should be treated as single-detector
+until it's redone. **The "whichever sorts first alphabetically" part of that original note was itself
+wrong — see BUG-23's cross-burst extension below**, found while verifying whether the other three bursts
+share GRB080916C's detector-selection bug.
+
+**BUG-23 extended to all four bursts, 2026-09-22 (verification, no fix applied yet — see `BUGS.md`).**
+Checked every burst's *current* `os.listdir()[0]`-picked detector against its *committed* CSV's
+`y_max_cts_per_s` (which pins the detector actually used when those results were generated, cross-checked
+against each candidate `.dat` file's own peak count rate):
+
+| GRB | documented/committed detector | current `os.listdir()[0]` | live-broken right now? | would `sorted()` fix it? |
+|---|---|---|---|---|
+| GRB080916C | `n3` | `n4` (pre-fix) | was, now fixed | yes — but only because `n3 < n4`, a coincidence, not a principled fix |
+| GRB131014A | `na` | `nb` | **yes, unfixed** | no — `sorted(['n9','na','nb'])[0] = 'n9'`, still wrong |
+| GRB140206B | `n3` | `n0` | **yes, unfixed** | no — `sorted(['n0','n1','n3'])[0] = 'n0'`, still wrong |
+| GRB231129C | `n7` | `n7` | no, currently correct | **no — would break it**: `sorted(['n3','n6','n7'])[0] = 'n3'` |
+
+Same root cause as GRB080916C's original BUG-23 (`os.listdir()` order is filesystem-dependent, not
+alphabetical), but the `sorted()` fix applied to GRB080916C does **not** generalize: for GRB131014A and
+GRB140206B, the documented/correct detector is not the alphabetically-first one among that burst's actual
+detector set, so `sorted()` would keep them broken (131014A) or leave them broken (140206B) without
+actually fixing anything, and applying it to GRB231129C would break a burst that is currently fine. The
+correct fix is to hardcode each burst's documented detector name explicitly, not to sort. **Affects 6
+files, not yet touched:** `fitter_GRB140206275.py`, `fitter_GRB140206275_simple.py`,
+`fitter_GRB231129779.py`, and the three matching `experiments/window_sensitivity_GRB*/window_sensitivity.py`
+copies (`fitter_CLAUDE_GRB131014215.py` and GRB131014A's own `experiments/window_sensitivity_GRB131014215/`
+copy have the same unsorted pattern too, confirmed by inspection, though GRB131014A's case is already
+covered by the table above). GRB080916C's own `sorted()` fix should also be revisited to an explicit pin,
+since it is currently correct by coincidence rather than by design.
 
 ## What the code computes
 
@@ -235,9 +267,108 @@ disproportionate local improvement is the signature of a real feature, not an ov
 
 This same residual-inspection approach, applied next to a *different* region of GRB080916C (the
 $t\approx0$–$3$s span, where a single broad pulse was overshadowing two more real peaks), is what led to
-the 8-pulse decomposition now in `fitter.py` — see the dedicated section below.
+the 8-pulse decomposition (later reverted — see the dedicated section below).
+
+**Re-verified 2026-09-22** after the BUG-23 detector fix (see the dedicated section below): rerunning
+`window_sensitivity.py` reproduces this section's numbers essentially exactly (SEVEN pulse 5's
+`mc_kept_fraction` 0.5172→0.6037→0.6039 vs. the 0.517→0.604→0.604 documented above) — the findings in
+this section stand, this was purely a detector mix-up introduced by an unrelated data resync, not a
+change to the underlying result.
 
 ## GRB080916C: 8-pulse decomposition via residual-seeding, and a CERN ROOT cross-check (2026-09-16/18)
+
+**Reversion, 2026-09-22 (user decision): `fitter.py` no longer uses this 8-pulse decomposition.** The user
+judged the `norris2-1`/`norris2-2` split (below) not sound, and `fitter.py` now runs the standard 7-pulse
+model instead — identical to the 6-pulse fit below plus one extra pulse at $t_s\approx20$s inside TR3's
+window, the same model already independently validated (not via this residual-seeding argument, but via the
+window-widening/residual-SSE diagnostic) in `experiments/window_sensitivity_GRB080916009/` (see the
+"6-vs-7-pulse question" section above). `light_curves/GRB080916009/`'s NaI `.dat` files were missing on this
+machine (`iqra-siddique`) earlier in this same session — see the note above — but were synced in
+mid-session; `fitter.py` has now been rerun and `norris_fit_results_GRB080916009.csv` (7 rows, one per
+pulse) reflects the 7-pulse fit as of 2026-09-22. Also added in the same session: a LAT-photon overlay
+(twin y-axis, red hollow circles, only $E>1$ GeV) on `fitter.py`'s final plot, per user request, matching
+`fitter_GRB231129779.py`'s convention; the LAT FITS file was copied locally
+(`GRB080916009_lat.fits`, from `light_curves/GRB080916009/lat.fits`) rather than referenced live, same
+"copy rather than fight `sys.path`" convention as that file. `T0_MET_S = 243216766.62`, read from
+`LAT_analysis/018__GRB080916009/Ep1A__m0.128_4.864/GRB080916C_fit_results_-0.128_4.864.txt`'s own `T_0`
+line and cross-checked against the FITS file's own GTI (1.280–64.257s matches the T90 window exactly),
+same validation pattern as the other three bursts.
+
+**BUG-23 (see `BUGS.md`), found and fixed 2026-09-22 while re-running the window-sensitivity check below
+at the user's request:** the same NaI `.dat` resync that unblocked the above silently made `fitter.py`'s
+and `window_sensitivity.py`'s `dat_NaI[0]` pick `n4` instead of the documented `n3` — `os.listdir()`
+order is filesystem-dependent, not alphabetical, and the resync happened to change it. This affected the
+CSV/plot regeneration described in the paragraph above (both had to be rerun a second time after the
+fix); `y_max_cts_per_s` in the current `norris_fit_results_GRB080916009.csv` (1879.6628) confirms `n3` is
+now the detector in use. Fixed via `sorted()` in both scripts. **Not yet checked for the other three
+bursts** — same scope boundary as the cross-burst single-detector issue above.
+
+**Photon-to-pulse assignment: nearest-preceding-onset (temporal-proximity), not dominant-flux — user
+decision, 2026-09-22.** `fitter.py` now assigns each $E>1$ GeV photon to whichever pulse has the largest
+$t_s \le$ the photon's arrival time, same rule and same `assign_pulse()` implementation as
+`fitter_CLAUDE_GRB131014215.py` (GRB131014A), not the dominant-flux rule used for GRB231129C/GRB140206B.
+**Why, for this burst specifically:** the two nearest $E>1$ GeV photons to norris3's peak (5.869s) arrive
+at 6.072s and 6.857s — only 0.20s/0.99s after it, and inside TR2 (norris3's own episode). The same two
+photons sit 3.43s/4.21s after norris2's peak (2.646s, in TR1), yet dominant-flux would still assign them
+to norris2, because norris2's broad tail ($\tau_2\approx6.17$) out-predicts norris3's small, narrow pulse
+at that time — the same overshadowing behavior already documented for norris2 against the (now-reverted)
+8-pulse split's `norris2-1`/`norris2-2`. Temporal proximity assigns both photons to norris3 instead,
+matching the episode boundary and the physical expectation that a high-energy photon arrives during or
+shortly after the pulse that produced it.
+
+**Found and fixed the same session, user decision:** applied burst-wide with pure onset-recency, the rule
+above assigned *every* photon from 6.072s up to pulse 5's onset (19.729s) to pulse 3 — six photons total,
+including three (10.215s, 16.538s, 16.798s) that sit well past norris3's own decay and deep inside pulse
+4's broad TR3 pedestal, because pulse 4's earlier onset ($t_s=1.010$s) can never "supersede" pulse 3's
+later one under pure onset-recency. User caught this by inspection ("6 photons kaise; pulse 3 k kareeb to
+sirf 3 photons hain") and asked for a refinement.
+
+**Fix: `ACTIVE_THRESHOLD_FRAC` restricts candidacy to pulses that are still "active."** A pulse is only a
+temporal-proximity candidate at time $t$ if its own predicted value is $\ge1\%$ of its own peak value at
+that instant; among the pulses that pass this filter, the same largest-preceding-$t_s$ tie-break as before
+picks the winner. 1% was picked for margin, not tuned: norris3's own value falls from 11.4% of its own
+peak at 7.445s to 0.076% at 10.215s — a $>2$-orders-of-magnitude drop — so any threshold roughly between
+0.1% and 10% gives the identical result. Verified directly against each pulse's own predicted flux at
+every candidate photon time (not asserted from the formula alone) before adopting it.
+
+**Result: pulse 3 now gets exactly the 3 genuinely-nearby photons** (6.072s, 6.857s, 7.445s — 0.2–1.6s
+after its own peak), and its "defining" (max-energy) photon is now 2110.10 MeV @ 6.857s, one of the two
+photons that actually motivated the temporal-proximity argument in the first place — resolving the
+mismatch the unrestricted rule had introduced. The three displaced photons (10.215s, 16.538s, 16.798s) now
+go to pulse 4 (physically sensible — pulse 4's broad pedestal is what's actually producing flux there),
+along with the two latest photons (40.502s, 43.992s) that the unrestricted rule had also misassigned to
+pulse 5 well after pulse 5's own decay. Pulse 5 keeps the 5 photons genuinely inside its own active window
+(22.209–28.203s).
+
+New CSV columns (`norris_fit_results_GRB080916009.csv`): `n_lat_photons_assigned`, `photon_e_max_MeV`,
+`photon_t_arr_at_e_max_s`, one row per pulse — pulse 3: 3 photons, max 2110.10 MeV @ 6.857s; pulse 4: 6
+photons, max 27428.80 MeV @ 40.502s; pulse 5: 5 photons, max 6721.31 MeV @ 28.203s; every other pulse: 0.
+
+**TR2's candidate for downstream analysis: pulse 3 (norris3), decided 2026-09-22 — user decision.** TR2
+has only one pulse matching its boundary (4.864–15.040s) in the first place — pulse 3, $t_\text{peak}=5.869$s
+— so there was no TR2-internal ambiguity to resolve (unlike TR3, below, which has two). The decision
+recorded here is to use it, on the strength of its now-corrected photon assignment: its defining photon
+(2110.10 MeV @ 6.857s) arrives only 0.99s after its own emission peak, the closest peak-to-photon gap of
+any pulse/episode pairing worked out in this file so far. **Not yet acted on**: TR2's $t_v$ in
+`lorentz_factor.py` is still duration-sourced (see below) — this only fixes *which* pulse TR2 will draw
+from once that wiring happens.
+
+**TR3's candidate is still an open decision, not resolved by the above.** TR3 (15.040–55.296s) has two
+matching pulses — pulse 4 (broad pedestal, $t_\text{peak}=26.273$s, `kept=0.982`, $t_v=16.08$s) and pulse 5
+($t_\text{peak}=22.991$s, `kept=0.517`, $t_v=1.31$s) — and which one (if either) should feed `Gamma_min` for
+TR3 has not been decided.
+
+**Known naming bug, pre-existing, not introduced by this revert:** `fitter.py`'s `fig_path`
+(`fig_path = Path(__file__).parent / f".norris_fitted_{GRB_080916C.name}"`) has a stray leading dot, so
+the plot actually saves as the hidden files `.norris_fitted_GRB080916009.png/.pdf`, not
+`norris_fitted_GRB080916009.png/.pdf` as named throughout this document and in every other burst's
+equivalent line — not fixed here since it wasn't part of what was asked; flagging so it isn't mistaken for
+a missing file.
+
+The CERN ROOT cross-check below was also run against the now-superseded 8-pulse fit — the BUG-22
+error-combining fix it surfaced is independent of pulse count and remains valid, but the ROOT macro's own
+fitted values are not representative of the current (7-pulse) model. The rest of this section is kept
+as-is, unedited, as the historical record of how the 8-pulse decomposition was reached.
 
 Not yet written up as its own "What the code computes" / "Every judgement call" / "Results" set (see the
 note at the top of this file) — this section covers two specific, self-contained pieces of that burst's
@@ -415,12 +546,15 @@ GRB231129C:
   regenerated.
 - `norris_fitted_GRB231129779.png/.pdf` — the decorated final plot.
 
-GRB080916C (see the dedicated section above for the 8-pulse decomposition and ROOT cross-check):
-- `fitter.py` — the live 8-pulse fit (`norris1`–`norris6` + `norris2-1`/`norris2-2`), the user's own
-  working file, reused/repurposed across bursts as this track progressed (was GRB140206B's working file
-  earlier, per GRB131014A's own `fitter.py` entry above). Its `P0` comment documents the full
-  residual-seeding recipe and neutral-seed reproducibility results (see section above). Produces
-  `norris_fit_results_GRB080916009.csv`.
+GRB080916C (see the dedicated section above for the 8-pulse decomposition and ROOT cross-check, and its
+"Reversion" note for the 2026-09-22 change described here):
+- `fitter.py` — **as of 2026-09-22, the live 7-pulse fit** (`norris1`–`norris6` plus one extra pulse at
+  $t_s\approx20$s inside TR3), reverted from the 8-pulse `norris2-1`/`norris2-2` split per user decision.
+  The user's own working file, reused/repurposed across bursts as this track progressed (was GRB140206B's
+  working file earlier, per GRB131014A's own `fitter.py` entry above). Produces
+  `norris_fit_results_GRB080916009.csv`, regenerated at the 7-pulse model 2026-09-22. Its plot output
+  actually lands at the hidden filenames `.norris_fitted_GRB080916009.png/.pdf` — see the naming-bug note in
+  the dedicated section above.
 - `fitter_EXPERIMENT.py` — Claude's diagnostic copy, added 2026-09-17 specifically to plot the 6-pulse
   data-minus-fit residual (raw + 5-bin-smoothed overlay) that motivated `norris2-1`/`norris2-2`; not the
   main fit, a supporting visualization for the section above. Produces

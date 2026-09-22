@@ -6,11 +6,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from astropy.io import fits
 
-from grb_research import update_style
+from grb_research import update_style, MARKER_SIZE
 from grb_research.grb_utils import save_fig
 from light_curves import lightcurve_data
-from norris_fit import NorrisFitter, t_peak, tv_mc_summary
+from norris_fit import NorrisFitter, norris_pulse, t_peak, tv_mc_summary
 
 ROOT = Path(__file__).resolve()
 PROJECT_ROOT = ROOT.parent.parent.parent
@@ -37,11 +38,26 @@ EPISODE_BOUNDS = {
 BOUNDARY_COLORS = {"TR1": "tab:red", "TR2": "tab:green", "TR3": "tab:purple", "TX4": "tab:orange",
                    "TR5": "tab:brown"}
 
+# LAT photon overlay -- only photons with E > 1 GeV, per user request; same FITS-reading convention as
+# fitter_GRB231129779.py (lat[1].data with ENERGY/TIME columns, per-source probability column named after
+# the source). T0_MET_S is read directly from
+# LAT_analysis/018__GRB080916009/Ep1A__m0.128_4.864/GRB080916C_fit_results_-0.128_4.864.txt's own "T_0"
+# line -- not re-derived -- and cross-checked: the FITS file's own GTI (243216767.9-243216830.877) equals
+# T0_MET_S+1.280 to T0_MET_S+64.257, i.e. exactly the T90 window (1.280-64.256s per results.json/EPISODE_BOUNDS
+# above), confirming this is the right T_0 for this file.
+LAT_FITS = Path(__file__).parent / "GRB080916009_lat.fits"  # copied from light_curves/GRB080916009/lat.fits, per CLAUDE.md's "copy rather than fight sys.path" convention
+T0_MET_S = 243216766.62
+PHOTON_E_MIN_MEV = 1000  # > 1 GeV
+
 update_style()
 
 dat = [f for f in os.listdir(f"{GRB_080916C}") if f.endswith(".dat")]
 dat = [i.split(".")[0] for i in dat]
-dat_NaI = [i.split(".")[0] for i in dat if "n" in i]
+# sorted() -- os.listdir() order is filesystem-dependent, not alphabetical; without sorting, dat_NaI[0]
+# (the single detector used below) silently flips between n3/n4 depending on directory entry order (found
+# 2026-09-22 after a fresh data sync changed that order and made this pick n4 instead of the documented n3
+# -- see variability_analysis.md/BUGS.md). sorted() pins it to n3, matching the documented convention.
+dat_NaI = sorted(i for i in dat if "n" in i)
 
 nai_data = [lightcurve_data(f"{GRB_080916C}/{i}.dat", ENERGY_LOW, ENERGY_HIGH) for i in dat_NaI]
 
@@ -58,44 +74,23 @@ nf = NorrisFitter(t1[mask_], y)
 
 f, ax = plt.subplots(figsize=(12, 8))
 
-# 8-pulse decomposition, recovered 2026-09-16 (the earlier hand-typed p0 above lost norris3/norris4 and
-# duplicated norris2 while editing). norris2-1/norris2-2 split off norris2's overshadowing broad tail
-# (tau2~6.7) into two sharper pulses that the data's own residual (6-pulse fit minus data) shows real,
-# coherent structure at: +0.065..0.079 near t=1.41-1.54s and +0.072..0.086 near t=2.43-2.62s (separated by
-# a -0.08..-0.10 dip near t=1.92-2.05s), confirmed not noise. These two were NOT reachable by fitting all
-# 8 pulses jointly from raw hand-guesses -- norris2's tail absorbs the flux first and the optimizer
-# collapses the new pulses to degenerate near-zero-width spikes (tau2~1e-3, kept_fraction=0). The fix:
-# seed norris2-1/norris2-2 at the RESIDUAL's own amplitude (~0.08), not the raw light curve's amplitude
-# (~0.9), and seed every other pulse from the already-converged 6-pulse fit (norris1/norris2/norris3/
-# norris4/norris5/norris6 below), not fresh hand-guesses -- this converges cleanly.
-# Neutral-seed reproducibility check (tau1/tau2 = 0.3/0.3 for both new pulses instead of the values below):
-# norris2-1 reproduces to t_peak=1.480s, t_v=0.049s (vs. 1.466s/0.051s here) -- reads as real, same
-# criterion used for GRB131014A's pulses 3/4/5. norris2-2 reproduces to t_peak=2.462s, t_v=0.177s (vs
-# 2.309s/0.148s here) -- a looser match, "probably real, not yet as tight as norris2-1" -- one more seed
-# trial before trusting its exact numbers, per that same GRB131014A precedent.
+# 7-pulse decomposition -- reverted 2026-09-22 from the 8-pulse norris2-1/norris2-2 split (user call: that
+# split is not being used). This is the "standard" 7-pulse model, identical to the 6-pulse fit below plus
+# one extra pulse (A=0.1, t_s=20, tau1=9, tau2=1) sitting inside TR3's window (15.040-55.296s), the same
+# model independently validated in experiments/window_sensitivity_GRB080916009/ (window_sensitivity.py's
+# P0_7): the 7-pulse model's total SSE improved only ~3.2% globally but ~12% specifically in the [15,30]s
+# region the new pulse targets -- disproportionate local improvement, the signature of a real feature
+# rather than overfitting (see variability_analysis.md, "6-vs-7-pulse question" section).
 P0 = [
-    (0.4304, -0.6943, 2.1212, 0.4932),   # norris1: precursor
-    (0.7757, 0.3243, 0.8285, 6.7078),    # norris2: broad envelope/tail (the one overshadowing 3/4/5)
-    (0.08, 1.35, 0.15, 0.15),            # norris2-1: NEW, residual-seeded, t_peak lands ~1.47s
-    (0.08, 2.15, 0.20, 0.30),            # norris2-2: NEW, residual-seeded, t_peak lands ~2.31s
-    (0.2565, 5.3055, 0.6752, 0.4701),    # norris3: the ~5.7-5.9s peak
-    (0.3556, 4.7780, 30.6423, 14.3745),  # norris4: broad TR3 pedestal
-    (0.1511, 54.1091, 13.0910, 0.8433),  # norris5
-    (0.1539, 61.5605, 0.3919, 2.9220),   # norris6
+    (0.4, -0.7, 2.34, 0.471),
+    (0.7, 0.3, 0.88, 6),
+    (0.2, 5.3, 0.6, 6),
+    (0.3, 1.3, 43, 14),
+    (0.1, 20, 9, 1),
+    (0.3, 52, 18, 0.7),
+    (0.3, 61, 0.3, 3),
 ]
 nf.fit(p0=P0)
-
-# nf.fit(
-#     p0=[
-#         (0.4, -0.7, 2.34, 0.471),
-#         (0.7, 0.3, 0.88, 6),
-#         (0.2, 5.3, 0.6, 6),
-#         (0.3, 1.3, 43, 14),
-#         (0.1, 20, 9, 1),
-#         (0.3, 52, 18, 0.7),
-#         (0.3, 61, 0.3, 3),
-#     ]
-# )
 
 nf.plot_fit(show_individuals=True, axis=ax)
 plt.show()
@@ -103,6 +98,76 @@ plt.show()
 parameters = nf.params
 covariance = nf.covariance
 n_pulses = len(P0)
+
+# --- LAT photon list: only E > 1 GeV, per user request -- not every photon (unlike
+# fitter_GRB231129779.py's overlay, which plots the full list). Same FITS-reading convention as that file.
+lat = fits.open(LAT_FITS)[1].data
+photon_energy_MeV = np.asarray(lat["ENERGY"])
+photon_t_arr_s = np.asarray(lat["TIME"]) - T0_MET_S
+_e_mask = photon_energy_MeV > PHOTON_E_MIN_MEV
+photon_energy_MeV, photon_t_arr_s = photon_energy_MeV[_e_mask], photon_t_arr_s[_e_mask]
+_order = np.argsort(photon_t_arr_s)
+photon_energy_MeV, photon_t_arr_s = photon_energy_MeV[_order], photon_t_arr_s[_order]
+
+# Assign each photon to the pulse whose onset (t_s) it most recently follows, among pulses that are still
+# "active" at the photon's arrival time -- nearest-preceding-onset (temporal-proximity), same rule as
+# fitter_CLAUDE_GRB131014215.py, chosen over the dominant-flux rule (fitter_GRB231129779.py/
+# fitter_GRB140206275.py) per user decision 2026-09-22: the two nearest E>1GeV photons here (6.072s,
+# 6.857s) sit only 0.20s/0.99s after norris3's peak (5.869s) but 3.43s/4.21s after norris2's peak (2.646s),
+# and fall inside TR2 (norris3's own episode) not TR1 (norris2's) -- dominant-flux picks norris2 anyway,
+# since norris2's broad tail (tau2~6.17) still out-predicts norris3's small, narrow pulse at that time, the
+# same "overshadowing" behavior already documented for norris2 against the (now-reverted) 8-pulse split.
+# Temporal proximity favors norris3 for these two photons, and that's what was asked for here.
+#
+# ACTIVE_THRESHOLD_FRAC refinement, user decision 2026-09-22: the unrestricted rule (any t_s <= t_arr,
+# ignoring whether that pulse still has anything to say) assigned every photon from 6.072s up to pulse 5's
+# onset (19.729s) to pulse 3 -- including three (10.215s, 16.538s, 16.798s) that had already decayed to
+# ~0% of norris3's own peak while sitting deep inside pulse 4's broad TR3 pedestal, because pulse 4's
+# earlier onset (t_s=1.010s) can never "supersede" pulse 3's later one under pure onset-recency. A pulse
+# is now only a candidate if its own predicted value is >= ACTIVE_THRESHOLD_FRAC of its own peak value at
+# that instant -- among remaining (still-active) candidates, the nearest-preceding-onset tie-break is
+# unchanged. 1% was picked for a wide margin, not fine-tuned: norris3's own value falls from 11.4% of its
+# own peak at 7.445s to 0.076% at 10.215s, a >2-orders-of-magnitude drop, so the exact threshold value
+# doesn't matter anywhere between roughly 0.1% and 10% -- the three far photons move to pulse 4 either way.
+ACTIVE_THRESHOLD_FRAC = 0.01
+pulse_params = [tuple(parameters[i * 4: (i + 1) * 4]) for i in range(n_pulses)]
+pulse_peak_values = [
+    norris_pulse(np.array([t_peak(ts, tau1, tau2)]), p)[0] for p, (A, ts, tau1, tau2) in zip(pulse_params, pulse_params)
+]
+
+
+def assign_pulse(t_arr: float):
+    candidates = []
+    for i, p in enumerate(pulse_params):
+        ts = p[1]
+        if ts > t_arr:
+            continue
+        val = norris_pulse(np.array([t_arr]), p)[0]
+        if pulse_peak_values[i] > 0 and (val / pulse_peak_values[i]) >= ACTIVE_THRESHOLD_FRAC:
+            candidates.append(i)
+    return (max(candidates, key=lambda i: pulse_params[i][1]) + 1) if candidates else None  # 1-indexed
+
+
+photon_pulse = [assign_pulse(t) for t in photon_t_arr_s]
+
+print(f"\n{'t_arr_s':>10}  {'E_MeV':>10}  {'pulse':>6}")
+for t, e, pulse_i in zip(photon_t_arr_s, photon_energy_MeV, photon_pulse):
+    print(f"{t:10.5f}  {e:10.2f}  {pulse_i!s:>6}")
+
+# Per-pulse photon summary: count + the highest-energy assigned photon (mirrors the existing per-episode
+# "defining photon" convention -- max-E is what feeds Gamma_min).
+photon_summary = {}
+for i in range(1, n_pulses + 1):
+    idx = [k for k, pi in enumerate(photon_pulse) if pi == i]
+    if not idx:
+        photon_summary[i] = {"n_photons": 0, "photon_e_max_MeV": None, "photon_t_arr_at_e_max_s": None}
+        continue
+    best = max(idx, key=lambda k: photon_energy_MeV[k])
+    photon_summary[i] = {
+        "n_photons": len(idx),
+        "photon_e_max_MeV": photon_energy_MeV[best],
+        "photon_t_arr_at_e_max_s": photon_t_arr_s[best],
+    }
 
 # --- Results CSV: one row per (pulse, episode) match.
 # A pulse can legitimately belong to more than one episode -- EX0 fully contains TR1's window and EX1 fully contains
@@ -143,6 +208,9 @@ for i in range(n_pulses):
                 "mc_kept_fraction": mc["kept_fraction"],
                 "n_samples": mc["n_samples"],
                 "seed": mc["seed"],
+                "n_lat_photons_assigned": photon_summary[i + 1]["n_photons"],
+                "photon_e_max_MeV": photon_summary[i + 1]["photon_e_max_MeV"],
+                "photon_t_arr_at_e_max_s": photon_summary[i + 1]["photon_t_arr_at_e_max_s"],
             }
         )
 
@@ -161,6 +229,30 @@ nf.plot_fit(
 )
 fig = plt.gcf()
 ax = plt.gca()
+
+# LAT photons on a twin y-axis: arrival time (shared x-axis) vs energy, red hollow circles --
+# matches make_lightcurve.py's own red-hollow-circle convention for LAT photons, same as
+# fitter_GRB231129779.py's overlay.
+ax_photon = ax.twinx()
+ax_photon.scatter(
+    photon_t_arr_s, photon_energy_MeV,
+    marker="o", facecolors="none", edgecolors="red", linewidths=1.2, s=MARKER_SIZE**2,
+    label="LAT photons (E > 1 GeV)",
+)
+ax_photon.set_ylabel("Photon energy [MeV]")
+
+# Align both y-axes' zero and top and every gridline in between -- same approach as
+# fitter_GRB231129779.py: force identical fractional tick positions so gridlines coincide
+# regardless of each axis's own (different) scale.
+N_YTICKS = 6
+Y_BUFFER_FRAC = 0.05  # of each axis's own data max, both top and bottom -- keeps points off the plot edges
+y_top = y.max()
+photon_top = photon_energy_MeV.max()
+
+ax.set_ylim(-Y_BUFFER_FRAC * y_top, y_top * (1 + Y_BUFFER_FRAC))
+ax_photon.set_ylim(-Y_BUFFER_FRAC * photon_top, photon_top * (1 + Y_BUFFER_FRAC))
+ax.set_yticks(np.linspace(0, y_top, N_YTICKS))
+ax_photon.set_yticks(np.linspace(0, photon_top, N_YTICKS))
 
 fig_path = Path(__file__).parent / f".norris_fitted_{GRB_080916C.name}"
 save_fig(fig, fig_path)

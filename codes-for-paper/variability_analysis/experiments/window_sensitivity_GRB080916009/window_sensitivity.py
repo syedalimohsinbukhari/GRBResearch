@@ -44,7 +44,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 LC_DIR = PROJECT_ROOT / "light_curves" / "GRB080916009"
 ENERGY_LOW, ENERGY_HIGH = 10, 400
 
-dat_NaI = [f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f]
+# sorted() -- os.listdir() order is filesystem-dependent, not alphabetical; without it, dat_NaI[0] (the
+# single detector used below) silently flips between n3/n4 depending on directory entry order (found
+# 2026-09-22 -- see fitter.py's own fix and variability_analysis.md/BUGS.md). sorted() pins it to n3,
+# matching the documented convention and the committed window_sensitivity_results.csv's original detector.
+dat_NaI = sorted(f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f)
 t_full, r1, b1 = lightcurve_data(f"{LC_DIR}/{dat_NaI[0]}.dat", ENERGY_LOW, ENERGY_HIGH)
 y_full = r1 - b1
 
