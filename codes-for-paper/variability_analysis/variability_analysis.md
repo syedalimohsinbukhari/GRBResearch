@@ -107,6 +107,13 @@ changes the fit result. Full writeup, method, and results in that folder's `comp
   GRB140206B — not yet applied to `fitter_GRB140206275.py`/`_simple.py`**, both of which still use their
   original `(-1, 160)` window and converge cleanly there. Pulse 5 remains a known, pre-existing (not newly
   introduced) weak point at the full-range window, unresolved.
+- **Paper-facing follow-up, PENDING:** `full_range_all_bursts_check.py` (same folder) tests whether all
+  four bursts' production `P0` are stable (≤5% `t_peak`/`t_v` change, the user's explicit condition) when
+  fit at their own full `x.min()`/`x.max()` range instead of their production window — if so, full range
+  becomes the recommended window for `lorentz_factor.py`'s `Gamma_min` input. Written and compiles; **run
+  twice in the background and killed both times before completing all four bursts** (user-stopped, not a
+  crash) — **no numeric result from either attempted run is reported here or anywhere else**, since an
+  interrupted run proves nothing about the 5% condition. Still to do.
 
 **BUG-23 extended to all four bursts, 2026-09-22 (verification, no fix applied yet — see `BUGS.md`).**
 Checked every burst's *current* `os.listdir()[0]`-picked detector against its *committed* CSV's

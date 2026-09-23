@@ -11,7 +11,7 @@ Entries that were fixed later carry the resolution first, then **Original diagno
 <!-- INDEX:BEGIN — generated from the ### headings below; regenerate rather than hand-edit. -->
 ## Index
 
-35 entries: 23 bugs, 11 observations, 1 plan note. **All entries closed or resolved except OBS-11 (DEFERRED, user's call) and BUG-23 (FIXED for GRB080916C only; confirmed present and unfixed for GRB131014A/GRB140206B).**
+35 entries: 23 bugs, 11 observations, 1 plan note. **All entries closed or resolved except OBS-11 (DEFERRED, user's call).** BUG-23 closed 2026-09-23 (superseded by a structural fix — sum all NaI detectors instead of picking one — applied to all four bursts, not just GRB080916C; see the entry for the full writeup, including the GRB131014A iteration-budget fix and the GRB080916C pulse-drop that came out of re-running all four fits with it).
 
 **Everything else, in discovery order** (the order below is the order found, not ID order):
 
@@ -51,7 +51,7 @@ Entries that were fixed later carry the resolution first, then **Original diagno
 | `BUG-21` | `codes-for-paper/variability_analysis/fitter*.py` import a `variability_timescale` module that no longer exists | FIXED |
 | `BUG-22` | `light_curves.py`'s `lightcurve_data()` combined per-channel errors linearly instead of in quadrature | FIXED |
 | `OBS-11` | GRB231129C's zenith-cut boundary (~100.2–100.3°) exceeds the stated 100° cut, exposure-loss correction unverified | DEFERRED, user's call |
-| `BUG-23` | GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync; same bug confirmed live and unfixed for GRB131014A/GRB140206B | FIXED (GRB080916C only) |
+| `BUG-23` | GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync; same bug confirmed live and unfixed for GRB131014A/GRB140206B | FIXED (all four bursts, 2026-09-23 — superseded the original per-burst-hardcode plan with a structural fix summing all NaI detectors) |
 
 <!-- INDEX:END -->
 
@@ -644,7 +644,7 @@ Found 2026-09-17 while cross-checking GRB080916C's 8-pulse Norris fit in CERN RO
 
 ---
 
-### BUG-23 — GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync — **FIXED for GRB080916C; confirmed present, unfixed, for GRB131014A and GRB140206B**
+### BUG-23 — GRB080916C's `fitter.py`/`window_sensitivity.py` silently picked `n4` instead of the documented `n3` NaI detector after a data resync — **FIXED, all four bursts (2026-09-23), via a structural fix — see "Superseding fix" below**
 
 Found 2026-09-22, mid-session, while rerunning `codes-for-paper/variability_analysis/experiments/window_sensitivity_GRB080916009/window_sensitivity.py` to re-verify the already-committed 6-vs-7-pulse window-sensitivity check (`window_sensitivity_results.csv`, committed at `8e98c98`) after `light_curves/GRB080916009/`'s NaI `.dat` files were freshly synced onto this machine. The rerun's converged pulse parameters didn't match the committed CSV (e.g. pulse 1 `t_s` off by ~0.3s, well outside MC/optimizer noise) despite `n3.dat`/`n4.dat`/`window_sensitivity.py` all being byte-identical to `HEAD`.
 
@@ -677,3 +677,5 @@ Applied to all 9 affected files: `fitter.py`, `fitter_CLAUDE_GRB131014215.py`, `
 See `variability_analysis.md`'s "Open cross-burst issue" note for the full writeup, including the raw-data check that ruled out a real feature at t≈20.5s.
 
 **Related, standalone: `codes-for-paper/variability_analysis/experiments/normalized_vs_unnormalized_fit/`** (2026-09-23) independently confirmed the GRB080916C pulse-5 drop above via a from-scratch unnormalized-fitting comparison, tested peak-normalization's effect on all four bursts' fits (none — SSE agrees to <0.15% either way), and diagnosed (but did not apply) a recommended full-range configuration for GRB140206B's two similarly weak pulses. `why_not_unnormalized_fitting.md` in that folder is a standalone answer, kept as a backup, for "why wasn't the raw light curve fit directly" if a reviewer asks.
+
+**Paper-facing, PENDING:** the same folder's `full_range_all_bursts_check.py` — checking whether all four bursts' production fits are parameter-stable (≤5%) at the full `x.min()`/`x.max()` range, the precondition for using full range as `lorentz_factor.py`'s `Gamma_min` input — was run twice in the background and killed both times by the user before finishing all four bursts. No numeric result from either run is recorded anywhere; this remains outstanding.

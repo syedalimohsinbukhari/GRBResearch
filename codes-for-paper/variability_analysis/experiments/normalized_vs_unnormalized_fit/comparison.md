@@ -193,6 +193,29 @@ judgement call requiring the same kind of scrutiny this project gives every puls
 (per `../../variability_analysis.md`'s existing conventions) — recorded here as the best configuration
 found, available to promote to production if/when that decision is made, not applied unasked.
 
+## Paper-facing full-range check for all four bursts — PENDING, not yet run to completion
+
+`full_range_all_bursts_check.py` (this folder) is written and compiles, for the actual paper-facing
+question raised after the GRB140206B work above: for **all four** bursts, using each burst's current
+production `P0` (GRB080916C's already-dropped-pulse-5 6-pulse model; GRB140206B's `COMPLEX` model, per
+user instruction — `SIMPLE` not checked), does fitting the normalized (production-method) light curve at
+its own full `x.min()`/`x.max()` range change `t_peak`/`t_v` by more than 5% relative to the current
+production fit? The user's three explicit conditions: (1) all available NaI detectors (already satisfied
+project-wide by the BUG-23 fix above), (2) fit on the full `x.min()`/`x.max()` range, read from the data,
+not hardcoded, (3) parameters stable (≤5%) against the original production fits. If all three hold, the
+full range becomes the recommended window for feeding `lorentz_factor.py`'s `Gamma_min` pipeline; GRB140206B
+uses the pulse-6-reseeded `P0` above at full range, since the plain production `P0` is already known to
+collapse pulse 6 there. Plots are meant to be bounded to `T05-25s, T95+25s` for legibility (the fit itself
+still runs on the full range regardless) — implemented in the script via each burst's `T90` dict.
+
+**Status: run twice, killed both times before completing all four bursts** (background execution,
+stopped by the user before finishing — not a crash or a convergence failure). **No results, numbers, or
+conclusions from either attempted run are reported anywhere in this document or in `variability_analysis.md`
+/ `BUGS.md`** — per the project's "verify, don't assume" convention, an interrupted run proves nothing
+about whether the 5% condition actually holds, for any burst. The script itself is the record of the
+methodology; re-run it to completion (likely several minutes given GRB131014A's and GRB231129C's full
+ranges are each ~50-60x wider than their production windows) before drawing any conclusion from it.
+
 ## Conclusion
 
 **Peak-normalization is not load-bearing for the physics — it's a solver convenience, and a correct
