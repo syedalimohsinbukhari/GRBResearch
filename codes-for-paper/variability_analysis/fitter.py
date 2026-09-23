@@ -53,16 +53,23 @@ update_style()
 
 dat = [f for f in os.listdir(f"{GRB_080916C}") if f.endswith(".dat")]
 dat = [i.split(".")[0] for i in dat]
-# sorted() -- os.listdir() order is filesystem-dependent, not alphabetical; without sorting, dat_NaI[0]
-# (the single detector used below) silently flips between n3/n4 depending on directory entry order (found
-# 2026-09-22 after a fresh data sync changed that order and made this pick n4 instead of the documented n3
-# -- see variability_analysis.md/BUGS.md). sorted() pins it to n3, matching the documented convention.
-dat_NaI = sorted(i for i in dat if "n" in i)
+dat_NaI = sorted(i for i in dat if "n" in i)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 
 nai_data = [lightcurve_data(f"{GRB_080916C}/{i}.dat", ENERGY_LOW, ENERGY_HIGH) for i in dat_NaI]
 
-t1, r1, b1 = nai_data[0]
-# t2, r2, b2 = nai_data[1]
+# BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
+# count rates raw, with no per-detector normalization -- each detector's own effective area/viewing angle
+# is trusted to weight its own contribution, matching the one existing precedent in this project (the
+# GRB080916C ROOT cross-check's "n3+n4 summed" light curve, variability_analysis.md). This also
+# structurally closes BUG-23: os.listdir()[0]/sorted()[0] previously had to guess *which* single detector
+# was "the" documented one (a guess that silently broke after a resync for three of the four bursts);
+# summing every NaI detector in dat_NaI removes that pick entirely, so ordering can no longer matter.
+# Detector time grids are confirmed identical before summing, not assumed.
+t1 = nai_data[0][0]
+for _det, (_t, _, _) in zip(dat_NaI[1:], nai_data[1:]):
+    assert np.array_equal(t1, _t), f"{_det}'s time grid differs from {dat_NaI[0]}'s -- cannot sum"
+r1 = np.sum([r for _, r, _ in nai_data], axis=0)
+b1 = np.sum([b for _, _, b in nai_data], axis=0)
 
 mask_ = np.logical_and(t1 > START1, t1 < END1)
 
@@ -70,23 +77,35 @@ y = (r1 - b1)[mask_]
 Y_MAX_CTS_PER_S = np.max(y)  # kept for rescaling A back to physical units after the fit -- see below
 y /= Y_MAX_CTS_PER_S
 
-nf = NorrisFitter(t1[mask_], y)
+
+# max_iterations=20000 (was the NorrisFitter default of 5000) -- same reason as the GRB131014A fix: the
+# summed 2-detector curve (peak ~3242 cts/s vs the single-detector ~1880) needs more iterations than the
+# default budget under the same seed.
+nf = NorrisFitter(t1[mask_], y, max_iterations=20000)
 
 f, ax = plt.subplots(figsize=(12, 8))
 
-# 7-pulse decomposition -- reverted 2026-09-22 from the 8-pulse norris2-1/norris2-2 split (user call: that
-# split is not being used). This is the "standard" 7-pulse model, identical to the 6-pulse fit below plus
-# one extra pulse (A=0.1, t_s=20, tau1=9, tau2=1) sitting inside TR3's window (15.040-55.296s), the same
-# model independently validated in experiments/window_sensitivity_GRB080916009/ (window_sensitivity.py's
-# P0_7): the 7-pulse model's total SSE improved only ~3.2% globally but ~12% specifically in the [15,30]s
-# region the new pulse targets -- disproportionate local improvement, the signature of a real feature
-# rather than overfitting (see variability_analysis.md, "6-vs-7-pulse question" section).
+# Reverted to a 6-pulse decomposition, 2026-09-23 (user call), dropping the 7th pulse (was A=0.1, t_s=20,
+# tau1=9, tau2=1, sitting inside TR3's window) that the BUG-23 detector-summing fix above exposed as
+# degenerate on the summed curve: it converged to tau2=0.0087 (a near-delta-function spike, not the broad
+# feature it used to fit), with mc_kept_fraction collapsing from 0.52 to 0.05. Confirmed this wasn't a seed
+# or iteration-budget artifact (both this file's original seed and one reconverged from the old
+# single-detector fit landed on the same degenerate optimum, at any iteration budget tried up to 50000),
+# and confirmed against the raw summed light curve that t~20.5s has no real standout feature -- the region
+# sits at ~1650-1700 cts/s against a ~1000-1800 cts/s noisy floor throughout, i.e. the pulse was fitting
+# two noisy bins, not resolving a genuine sub-feature. Dropping it was verified not to disturb the other
+# six pulses: every other pulse's t_peak/t_v/A matches the 7-pulse fit's corresponding pulse to within
+# ordinary t_s<->tau1-degeneracy noise (largest t_peak shift 0.03s, largest t_v shift 0.02s), and total SSE
+# rises only ~0.4% (7.202e7 vs 7.173e7 physical-units counts/s^2) -- the signature of removing a pulse that
+# was fitting noise, not a real feature. This is the same P0_6 already independently used as the baseline
+# in experiments/window_sensitivity_GRB080916009/window_sensitivity.py (see "6-vs-7-pulse question" in
+# variability_analysis.md for the original, pre-BUG-23, single-detector-curve history of that question --
+# this reopens it on different grounds, not a re-litigation of the same finding).
 P0 = [
     (0.4, -0.7, 2.34, 0.471),
     (0.7, 0.3, 0.88, 6),
     (0.2, 5.3, 0.6, 6),
     (0.3, 1.3, 43, 14),
-    (0.1, 20, 9, 1),
     (0.3, 52, 18, 0.7),
     (0.3, 61, 0.3, 3),
 ]
@@ -220,7 +239,7 @@ results_df.to_csv(csv_path, index=False)
 print(f"wrote {csv_path} ({len(results_df)} rows)")
 
 # --- Plot
-data_label = f"10-400 keV NaI\nBackground Subtracted"
+data_label = f"10-400 keV NaI ({'+'.join(dat_NaI)}, summed)\nBackground Subtracted"
 nf.plot_fit(
     show_individuals=True,
     x_label="Time since trigger [s]",

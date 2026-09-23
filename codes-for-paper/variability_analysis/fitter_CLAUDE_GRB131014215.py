@@ -42,12 +42,23 @@ update_style()
 
 dat = [f for f in os.listdir(f"{GRB_131014}") if f.endswith(".dat")]
 dat = [i.split(".")[0] for i in dat]
-dat_NaI = [i.split(".")[0] for i in dat if "n" in i]
+dat_NaI = sorted(i for i in dat if "n" in i)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 
 nai_data = [lightcurve_data(f"{GRB_131014}/{i}.dat", ENERGY_LOW, ENERGY_HIGH) for i in dat_NaI]
 
-t1, r1, b1 = nai_data[0]
-# t2, r2, b2 = nai_data[1]
+# BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
+# count rates raw, with no per-detector normalization -- each detector's own effective area/viewing angle
+# is trusted to weight its own contribution, matching the one existing precedent in this project (the
+# GRB080916C ROOT cross-check's "n3+n4 summed" light curve, variability_analysis.md). This also
+# structurally closes BUG-23: os.listdir()[0]/sorted()[0] previously had to guess *which* single detector
+# was "the" documented one (a guess that silently broke after a resync for this burst -- see BUGS.md);
+# summing every NaI detector in dat_NaI removes that pick entirely, so ordering can no longer matter.
+# Detector time grids are confirmed identical before summing, not assumed.
+t1 = nai_data[0][0]
+for _det, (_t, _, _) in zip(dat_NaI[1:], nai_data[1:]):
+    assert np.array_equal(t1, _t), f"{_det}'s time grid differs from {dat_NaI[0]}'s -- cannot sum"
+r1 = np.sum([r for _, r, _ in nai_data], axis=0)
+b1 = np.sum([b for _, _, b in nai_data], axis=0)
 
 mask_ = np.logical_and(t1 > START1, t1 < END1)
 
@@ -55,8 +66,15 @@ y = (r1 - b1)[mask_]
 Y_MAX_CTS_PER_S = np.max(y)  # kept for rescaling A back to physical units after the fit -- see below
 y /= Y_MAX_CTS_PER_S
 
-nf = NorrisFitter(t1[mask_], y)
-# nf = NorrisFitter(t1, (r1 - b1), max_iterations=10000)
+
+# max_iterations=20000 (was the NorrisFitter default of 5000) -- 2026-09-23, found while testing the
+# BUG-23 detector-summing fix above: the default budget was tuned against the single-detector curve
+# (peak ~44,084 cts/s) and started raising "Optimal parameters not found: maximum function evaluations
+# exceeded" on the summed 3-detector curve (peak ~130,030 cts/s) with both this file's original seed and
+# a seed reconverged from the old single-detector fit -- confirmed by direct test that both seeds land on
+# the same solution once given enough iterations, so this is an iteration-budget issue, not a bad seed or
+# a genuinely different optimum.
+nf = NorrisFitter(t1[mask_], y, max_iterations=20000)
 # nf.dry_run()
 # plt.show()
 nf.fit(
@@ -194,7 +212,7 @@ results_df.to_csv(csv_path, index=False)
 print(f"wrote {csv_path} ({len(results_df)} rows)")
 
 # --- Plot
-data_label = f"10-400 keV NaI\nBackground Subtracted"
+data_label = f"10-400 keV NaI ({'+'.join(dat_NaI)}, summed)\nBackground Subtracted"
 nf.plot_fit(
     show_individuals=True,
     x_label="Time since trigger [s]",

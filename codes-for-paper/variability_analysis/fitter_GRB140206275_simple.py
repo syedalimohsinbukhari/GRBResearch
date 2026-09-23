@@ -42,11 +42,23 @@ update_style()
 
 dat = [f for f in os.listdir(f"{GRB_140206}") if f.endswith(".dat")]
 dat = [i.split(".")[0] for i in dat]
-dat_NaI = [i.split(".")[0] for i in dat if "n" in i]
+dat_NaI = sorted(i for i in dat if "n" in i)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 
 nai_data = [lightcurve_data(f"{GRB_140206}/{i}.dat", ENERGY_LOW, ENERGY_HIGH) for i in dat_NaI]
 
-t1, r1, b1 = nai_data[0]
+# BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
+# count rates raw, with no per-detector normalization -- each detector's own effective area/viewing angle
+# is trusted to weight its own contribution, matching the one existing precedent in this project (the
+# GRB080916C ROOT cross-check's "n3+n4 summed" light curve, variability_analysis.md). This also
+# structurally closes BUG-23: os.listdir()[0]/sorted()[0] previously had to guess *which* single detector
+# was "the" documented one (a guess that silently broke after a resync for this burst -- see BUGS.md);
+# summing every NaI detector in dat_NaI removes that pick entirely, so ordering can no longer matter.
+# Detector time grids are confirmed identical before summing, not assumed.
+t1 = nai_data[0][0]
+for _det, (_t, _, _) in zip(dat_NaI[1:], nai_data[1:]):
+    assert np.array_equal(t1, _t), f"{_det}'s time grid differs from {dat_NaI[0]}'s -- cannot sum"
+r1 = np.sum([r for _, r, _ in nai_data], axis=0)
+b1 = np.sum([b for _, _, b in nai_data], axis=0)
 
 mask_ = np.logical_and(t1 > START1, t1 < END1)
 
@@ -179,7 +191,7 @@ results_df.to_csv(csv_path, index=False)
 print(f"\nwrote {csv_path} ({len(results_df)} rows)")
 
 # --- Plot
-data_label = f"10-400 keV NaI\nBackground Subtracted"
+data_label = f"10-400 keV NaI ({'+'.join(dat_NaI)}, summed)\nBackground Subtracted"
 nf.plot_fit(
     show_individuals=True,
     x_label="Time since trigger [s]",

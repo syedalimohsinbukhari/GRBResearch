@@ -21,17 +21,92 @@ each script's own docstring/comments and the sections further down for the other
 note is extended. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same deliverable-boundary
 stance as the abandoned automated pipeline.
 
-**Open cross-burst issue, flagged 2026-09-18, not yet addressed:** every fit in this folder (all four
-bursts) uses only a single NaI detector (`nai_data[0]`) — documented at the time as `n3` for GRB080916C,
+**Open cross-burst issue, flagged 2026-09-18 — resolved 2026-09-23.** Every fit in this folder (all four
+bursts) used to use only a single NaI detector (`nai_data[0]`) — documented at the time as `n3` for GRB080916C,
 `na` for GRB131014A, `n3` for GRB140206B, `n7` for GRB231129C — rather than summing across the GRB's full
 NaI detector set, unlike the convention typical of published GRB analyses. This wasn't a deliberate choice
-recorded anywhere — it's just what every `fitter*.py`/`window_sensitivity.py` script has done since the
-very first one. Revisiting this (which detectors, how to combine background/rate/errors across them — see
-BUG-22 below for the right way to combine per-channel errors) is planned as follow-up work; every
-`t_v`/pulse-decomposition result in this file predates that rework and should be treated as single-detector
-until it's redone. **The "whichever sorts first alphabetically" part of that original note was itself
+recorded anywhere — it's just what every `fitter*.py`/`window_sensitivity.py` script had done since the
+very first one. **The "whichever sorts first alphabetically" part of that original note was itself
 wrong — see BUG-23's cross-burst extension below**, found while verifying whether the other three bursts
 share GRB080916C's detector-selection bug.
+
+**Fix (2026-09-23, user decision): sum every NaI detector, raw, no per-detector normalization.** Rather than
+patch the single-detector pick (which would have meant hardcoding a per-burst detector name, per BUG-23's
+original writeup below), every `fitter*.py`/`window_sensitivity.py` script now sums all of a burst's NaI
+detectors' background-subtracted count rates directly — each detector's own effective area/viewing angle is
+trusted to weight its own contribution, rather than peak- or integral-normalizing each detector to equal
+weight first, or applying an angle/effective-area-weighted combination. This was an explicit choice among
+those alternatives, not a default — the user picked raw summing specifically because it matches the one
+existing precedent already in this file (the GRB080916C ROOT cross-check's "n3+n4 summed" light curve,
+described further down). It also closes BUG-23 structurally rather than patching it: there is no longer a
+single detector to mis-pick, so `os.listdir()` order can never matter for any burst, present or future.
+Each script asserts every detector's time grid matches the first before summing (confirmed identical for
+all four bursts' full detector sets by direct check, not assumed, across all 4 files' data). Applied to all
+9 affected scripts (5 `fitter*.py` + 4 `window_sensitivity.py`); all compile.
+
+**All four bursts re-run, 2026-09-23 — all converge; every `norris_fit_results_*.csv`/plot in this folder
+now reflects the summed-detector fit, not the pre-fix single-detector one.**
+
+- **GRB231129C**: converged cleanly, existing 5-pulse seed unchanged. `mc_kept_fraction` improved for every
+  pulse (e.g. 0.35→0.72, 0.94→0.99) — a genuine S/N gain from combining detectors here, not dilution.
+- **GRB140206B**: both the SIMPLE/COMPLEX pair (`fitter_GRB140206275.py`) and the `_simple.py` variant
+  converged cleanly, existing seeds unchanged.
+- **GRB131014A**: initially failed (`RuntimeError: Optimal parameters not found`) with both the original
+  seed and one reconverged from the old single-detector fit. Diagnosed as a pure iteration-budget issue —
+  both seeds land on the identical solution once `NorrisFitter`'s default `max_iterations=5000` is raised to
+  20000 (the summed 3-detector curve peaks at ~130,030 cts/s vs. the single-detector curve's ~44,084, needing
+  more optimizer steps to settle). Fixed with `max_iterations=20000` in `fitter_CLAUDE_GRB131014215.py`
+  (also applied to `fitter.py` as a precaution). Converged parameters match the old single-detector fit
+  closely (`t_peak`s agree to <0.01s), confirming this was purely a budget issue, not a different optimum.
+- **GRB080916C**: converged, but pulse 7 (`t_s≈20`, inside TR3, the pulse added in the 2026-09-22 7-pulse
+  reversion) landed on a genuinely different, degenerate optimum on the summed curve: `tau2` collapsed from
+  1.02 to 0.0087 and `mc_kept_fraction` from 0.52 to 0.05 — a visible near-delta-function spike in the plot
+  at t≈20.5s. Checked against the raw summed data directly: that region sits at ~1650-1700 cts/s against a
+  ~1000-1800 cts/s noisy floor throughout the whole t=17-23s window, i.e. no real standout feature — the fit
+  was overfitting two noisy bins. Confirmed this wasn't a seed or iteration-budget artifact: the original
+  seed and one reconverged from the old single-detector fit land on the same degenerate solution, at every
+  iteration budget tried up to 50000. **User decision (2026-09-23): drop this pulse**, reverting to the
+  6-pulse model (`P0_6`, already an independent baseline in
+  `experiments/window_sensitivity_GRB080916009/window_sensitivity.py`'s own 6-vs-7-pulse check) rather than
+  bound `tau2` or reseed via the residual-subtraction technique used elsewhere in this file. Verified before
+  applying: dropping the pulse leaves the other six essentially undisturbed — every other pulse's
+  `t_peak`/`t_v`/`A` matches the (still-degenerate) 7-pulse fit's corresponding pulse within ordinary
+  `t_s`<->`tau1`-degeneracy noise (largest `t_peak` shift 0.03s), and total SSE rises only ~0.4% (7.202e7 vs
+  7.173e7, physical-units counts/s²) — the expected signature of removing a pulse that was fitting noise
+  rather than signal. Applied to `fitter.py`; the regenerated plot confirms the spike is gone and the other
+  six pulses track the data the same way as before.
+
+**Checked, not assumed: GRB080916C's LAT-photon-to-pulse assignment is unaffected by dropping pulse 7.**
+Compared the printed photon-arrival/pulse table between the 7-pulse and 6-pulse runs directly — identical,
+all 14 photons assigned to pulse 3 or pulse 4 in both. The removed pulse never had any photons assigned to
+it to begin with (its `t_s≈20` onset always lost the nearest-preceding-onset/active-threshold competition to
+pulse 4's broad, already-active TR3 pedestal), so dropping it changes nothing about the photon table.
+
+**Not yet done:** none of these four re-fits have been fed into `lorentz_factor.py`'s `Gamma_min` pipeline —
+same deliverable-boundary stance as always (§ above).
+
+**Standalone follow-up, 2026-09-23: `experiments/normalized_vs_unnormalized_fit/`.** Prompted by the
+question of whether this folder's `y /= Y_MAX_CTS_PER_S` normalization step (used by every `fitter*.py`)
+changes the fit result. Full writeup, method, and results in that folder's `comparison.md`; short version:
+
+- Tested a from-scratch unnormalized alternative (raw counts/s, `scipy.optimize.least_squares` with an
+  explicit `x_scale` array, bypassing `pymultifit` entirely) against the production normalized method, for
+  all four bursts. **Normalization changes nothing about the physics** — SSE agrees to within 0.15% for
+  every burst, most pulse parameters agree to <1%. `comparison.md`'s companion file,
+  `why_not_unnormalized_fitting.md`, is a standalone reviewer-facing answer to "why wasn't the raw light
+  curve fit directly", kept as a backup in case this is ever asked about the paper's methodology.
+- The comparison also independently corroborated the GRB080916C pulse-5 drop above (that pulse diverged
+  sharply between methods before it was known to be degenerate in production) and led to a GRB140206B
+  follow-up: widening the fit window to the light curve's own `t.min()`/`t.max()` resolves pulse 7's
+  window-edge pinning but destabilizes pulse 6 instead (same `tau2`-collapse pathology as GRB080916C's
+  dropped pulse); re-seeding pulse 6's `(tau1, tau2)` from `(83, 1.1)` to a neutral `(1, 1)` at amplitude
+  `A=0.2` (found by trial — `A=0.23` converges too, but lets the pulse drift out of its intended
+  $t\approx23$s region and destabilizes two other pulses instead) fixes both pulses 6 and 7 simultaneously,
+  with SSE matching the original-seed fit (not an artificially lower one bought with a worse
+  decomposition). This is recorded in `comparison.md` as a **diagnosed, recommended configuration for
+  GRB140206B — not yet applied to `fitter_GRB140206275.py`/`_simple.py`**, both of which still use their
+  original `(-1, 160)` window and converge cleanly there. Pulse 5 remains a known, pre-existing (not newly
+  introduced) weak point at the full-range window, unresolved.
 
 **BUG-23 extended to all four bursts, 2026-09-22 (verification, no fix applied yet — see `BUGS.md`).**
 Checked every burst's *current* `os.listdir()[0]`-picked detector against its *committed* CSV's

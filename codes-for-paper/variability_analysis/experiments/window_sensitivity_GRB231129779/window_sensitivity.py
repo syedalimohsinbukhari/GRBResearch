@@ -42,9 +42,20 @@ ENERGY_LOW, ENERGY_HIGH = 10, 400
 
 import os
 
-dat_NaI = [f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f]
+dat_NaI = sorted(f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 nai_data = [lightcurve_data(f"{LC_DIR}/{d}.dat", ENERGY_LOW, ENERGY_HIGH) for d in dat_NaI]
-t_full, r1, b1 = nai_data[0]
+
+# BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
+# count rates raw, with no per-detector normalization -- matching fitter_GRB231129779.py's own fix and the
+# existing "n3+n4 summed" ROOT cross-check precedent (variability_analysis.md). This structurally closes
+# BUG-23: there's no longer a single detector to mis-pick via os.listdir()[0]. Detector time grids are
+# confirmed identical before summing, not assumed. (GRB231129C's own os.listdir()[0] pick happened to be
+# correct already, per BUGS.md, but this removes the coincidence, not just the bug.)
+t_full = nai_data[0][0]
+for _det, (_t, _, _) in zip(dat_NaI[1:], nai_data[1:]):
+    assert np.array_equal(t_full, _t), f"{_det}'s time grid differs from {dat_NaI[0]}'s -- cannot sum"
+r1 = np.sum([r for _, r, _ in nai_data], axis=0)
+b1 = np.sum([b for _, _, b in nai_data], axis=0)
 y_full = r1 - b1
 
 # Third, most extreme broadening (added 2026-09-16, per GRB140206B's own widest_full_range check):
