@@ -1,0 +1,2 @@
+label,shape,r0_at_min,chi2_min_3param,flat_zone_lo,flat_zone_hi,flat_zone_span,r0_chosen,r0_choice_reason,chi2_4param_best,delta_chi2,delta_chi2_verdict,fit4_amplitude,fit4_t_peak_s,fit4_t_v_s,fit4_r
+synthetic_sharp,sharp,215.44346900318845,1084.2502360408153,215.44346900318845,215.44346900318845,1.0,215.44346900318845,"sharp minimum at r0=215.44346900318845 (flat zone (215.44346900318845, 215.44346900318845), span only x1.0)",1084.2494683832138,0.0007676576015001046,4th parameter is dead weight,20.059594488368347,15.00221553086091,1.1911765967307613,214.65789784413815
