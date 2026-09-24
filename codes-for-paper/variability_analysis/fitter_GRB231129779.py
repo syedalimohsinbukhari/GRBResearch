@@ -25,8 +25,8 @@ PAD_MIN_S = 0.5
 NULL_REL_ERR_THRESHOLD = 1.0  # >100% relative error on tau1 or tau2 => no_reliable_fit
 T_ARR_MATCH_TOLERANCE_S = 1.0
 
-START1 = -1
-END1 = 10
+START1 = -np.inf
+END1 = np.inf
 
 # Episode boundaries for GRB231129779, read directly from results.json (not eyeballed):
 # "EX0 -0.192_3.136", "TR1 0.384_3.136", "TR2 3.136_7.296", "EX1 3.136_10.048".
@@ -70,11 +70,11 @@ nf = NorrisFitter(t1[mask_], y)
 # 4-pulse fit and this 5-pulse one were both tried; this one is used here).
 nf.fit(
     p0=[
-        (0.6, -0.2, 1, 1),
-        (0.3, 0.08, 1, 1),
-        (0.6, 2, 0.5, 0.5),
-        (0.6, 4, 0.5, 0.5),
-        (0.3, 4.2, 2, 1),
+        (0.570, -0.449, 1.854, 0.637),
+        (0.493, 0.127, 3.912, 0.381),
+        (0.708, -0.960, 75.728, 0.154),
+        (0.472, 2.759, 1.367, 1.470),
+        (0.125, 4.609, 0.429, 2.149)
     ]
 )
 

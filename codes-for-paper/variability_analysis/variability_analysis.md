@@ -107,13 +107,127 @@ changes the fit result. Full writeup, method, and results in that folder's `comp
   GRB140206B — not yet applied to `fitter_GRB140206275.py`/`_simple.py`**, both of which still use their
   original `(-1, 160)` window and converge cleanly there. Pulse 5 remains a known, pre-existing (not newly
   introduced) weak point at the full-range window, unresolved.
-- **Paper-facing follow-up, PENDING:** `full_range_all_bursts_check.py` (same folder) tests whether all
-  four bursts' production `P0` are stable (≤5% `t_peak`/`t_v` change, the user's explicit condition) when
-  fit at their own full `x.min()`/`x.max()` range instead of their production window — if so, full range
-  becomes the recommended window for `lorentz_factor.py`'s `Gamma_min` input. Written and compiles; **run
-  twice in the background and killed both times before completing all four bursts** (user-stopped, not a
-  crash) — **no numeric result from either attempted run is reported here or anywhere else**, since an
-  interrupted run proves nothing about the 5% condition. Still to do.
+- **Paper-facing follow-up, superseded 2026-09-24 — see the new section below.** `full_range_all_bursts_check.py`
+  (same folder) was split into `full_range_single_burst.py` (shared logic) + one driver per burst
+  (`full_range_check_GRB*.py`), specifically so each burst could run as its own process instead of one
+  script blocking on all four — the combined script had been killed twice before finishing. Two of the
+  four (GRB080916C, GRB140206B) ran to completion this way and **failed** the user's ≤5% `t_peak`/`t_v`
+  tolerance (see below); GRB131014A/GRB231129C were killed mid-run once the session's focus moved to the
+  per-burst `GRB*/` folders described next. Full detail in the new section below.
+
+## Session update, 2026-09-24: per-burst normalized-vs-unnormalized full-range treatment
+
+Builds on the two threads above (the `≤5%` full-range tolerance check and
+`experiments/normalized_vs_unnormalized_fit/`), but promotes the comparison out of the `experiments/`
+sandbox into a proper per-burst treatment with the full production machinery — episode matching,
+LAT-photon-to-pulse assignment using each burst's own already-established rule, MC-propagated `t_v`, and
+CSV+PNG+PDF outputs — rather than `fit_comparison.py`'s lighter point-estimate-only comparison. **The
+user is planning to continue this work on a heavier machine** — this section is written so a fresh
+session (here or there) can pick it up without re-deriving anything. **All of this — the split scripts,
+the four new `GRB*/` folders, the standalone `fitter_GRB080916C.py`, the `window_sensitivity_GRB140206275`
+split, and `t_peak_tv_reparametrization_idea.md` — is exploratory/testing work, and the user intends to
+stage it for a git commit**, an explicit exception to this project's usual working-tree-only rule (same
+kind of exception already made for §13's RNG/seeding overhaul and the 2026-09-23 Phase 5/BUG-23 commit —
+see those sections for precedent). None of it has fed `lorentz_factor.py`'s `Gamma_min` pipeline yet, and
+two of four bursts already failed the ≤5% full-range tolerance check below, so "staged for commit" here
+means "this testing work is being checkpointed," not "these results are settled or paper-ready."
+
+**`full_range_check_GRB*.py` (split from `full_range_all_bursts_check.py`), run to completion for two of
+four bursts:**
+
+- **GRB080916C**: `t_peak` stable across all 6 pulses (≤0.3%), but `t_v` exceeded the 5% tolerance on 4
+  of 6 pulses (up to ~17%). **Fails** the ≤5% gate.
+- **GRB140206B**: pulses 1/2/3/7 fine; pulses 4/5/6 (the already-fragile 23–28s cluster) blow far past
+  tolerance — pulse 6's `t_peak` shifts 37%, `t_v` shifts 86%, even with the pulse-6 reseed from
+  `experiments/normalized_vs_unnormalized_fit/comparison.md`. **Fails** the ≤5% gate.
+- **GRB131014A, GRB231129C**: killed mid-run (`TaskStop`) once the session's focus moved to the per-burst
+  `GRB*/` folders below — no result recorded, per this project's own "an interrupted run proves nothing"
+  convention.
+- **Net effect**: two of four bursts have now failed the full-range tolerance check outright, so a
+  blanket switch of `lorentz_factor.py`'s `Gamma_min` input to the full range is **not** viable as a
+  single decision — this looks like it will need to be a burst-by-burst (or even pulse-by-pulse) call,
+  not a project-wide toggle.
+
+**New per-burst folders, `GRB080916C/`, `GRB131014215/`, `GRB140206275/`, `GRB231129C/`** (siblings of
+this file, each with `_common.py` + `fitter_normalized.py` + `fitter_unnormalized.py`). Each `_common.py`
+loads the burst's full-range summed light curve once, reuses that burst's own established P0 and
+photon-assignment rule (nearest-preceding-active-onset for GRB080916C, plain nearest-preceding-onset for
+GRB131014A, dominant-flux for GRB140206B/GRB231129C — copied from each burst's own production
+`fitter*.py`, not standardized across bursts), and exposes a `FitResult` duck-type class so
+`norris_fit.tv_mc_summary()` works identically whether the fit came from a real `NorrisFitter` (normalized
+method) or a bare `scipy.optimize.least_squares` result (unnormalized method — covariance derived from the
+Jacobian the same way `scipy.optimize.curve_fit` does internally, `absolute_sigma=False` convention, so
+both methods' `t_v` uncertainties come from the same kind of estimator). `AutoMinorLocator` is set
+explicitly (same `n` on both twinned y-axes) so the count-rate/photon-energy axes' minor gridlines
+actually align — `update_style()`'s default minor-tick behavior picks a different subdivision count per
+axis depending on each axis's own major-tick step, so without this fix the two axes' minor ticks drift
+out of alignment even when the (explicitly-set) major ticks match.
+
+- **GRB080916C**: both methods run and agree closely — all pulses within ~2% on `t_peak`/`t_v` except the
+  already-known-fragile pulse 5/TR4, whose raw `tau1` differs by 52% between two different P0 seeds tried
+  in the standalone `fitter_GRB080916C.py` (see below) while `t_peak` moved only 0.05% and `t_v` only
+  ~1–1.7% — a clean illustration of the `t_s`/`tau1`/`tau2` sloppy-parameter behavior discussed in
+  `t_peak_tv_reparametrization_idea.md`.
+  - Also promoted to a **standalone, self-contained top-level script**, `../fitter_GRB080916C.py` (no
+    `_common.py` import, matching every other `fitter_*.py`'s pattern per `CLAUDE.md`'s "copy rather than
+    fight sys.path") — same 6-pulse `P0`, full range, outputs suffixed `_fullrange` so they never collide
+    with `fitter.py`'s own `(-1, 70)`-window results. The user has been iterating `P0` directly in this
+    file since; treat its current on-disk `P0` as a live, possibly-mid-edit value, not a settled one.
+- **GRB131014A**: both methods run (slow — the largest dataset of the four, ~21 min/~13 min CPU time for
+  normalized/unnormalized). Pulses 3/4/5 (TR1/EX1/EX1) agree well; **pulses 1 and 2 disagree
+  substantially between methods** (`t_peak` off by 128%/10%, `t_v` off by 4%/76%) — but this reproduces,
+  not contradicts, this file's own already-documented finding above that pulses 1/2 are genuinely
+  **unresolved** for this burst (two different seedings already gave two different answers within the
+  single-method, single-window production fit; see the GRB131014A "Known limitations" section further
+  down). Two different *methods* landing on two different answers here is the same underlying degeneracy
+  showing up again, not a new discrepancy introduced by the normalized/unnormalized split.
+- **GRB140206B**: COMPLEX (7-pulse) model only — the decomposition `fitter_GRB140206275.py` itself uses
+  for its main per-episode results. Fit at the **true** full `x.min()/x.max()` range, deliberately, not
+  the `(-20, 300)` partial widening `experiments/normalized_vs_unnormalized_fit/fit_comparison.py` used
+  for this burst specifically (that partial widening existed only to avoid pulse 7's window-edge pinning
+  at `(-1, 160)` — this folder's `_common.py` flags the true full range as a known risk for exactly that
+  reason before it was run).
+  - **Pulses 2 and 7 initially looked catastrophically discrepant (821%/89% on `t_peak`) — this is a
+    pulse-index label swap between the two fits, not a real disagreement.** Confirmed by matching
+    physical identity instead of raw index: normalized-pulse-2 (`t_peak=13.19, t_v=7.10`) matches
+    unnormalized-**pulse-7** (`t_peak=13.25, t_v=7.09`) to <0.5%; normalized-pulse-7 (`t_peak=121.68,
+    t_v=22.62`) matches unnormalized-**pulse-2** (`t_peak=121.50, t_v=22.80`) to <1%. The unnormalized
+    optimizer converged with the ~13s pulse and the broad pedestal swapped in array position relative to
+    `COMPLEX_P0`'s original order — worth remembering before trusting any raw index-to-index diff on a
+    joint multi-pulse fit across two independently-converged methods.
+  - Once corrected for the swap, pulses 2/3/4/6/7 all agree well (`t_peak`/`t_v` within a few percent).
+    **Pulse 5 (TR3) has a real, non-swap 21% `t_v` disagreement** (1.089s normalized vs. 0.864s
+    unnormalized) despite similar `mc_kept_fraction` (~0.78) in both methods — genuinely open, not yet
+    diagnosed. Worth checking first on the heavier machine.
+  - Pulse 1 shows a 101% `t_peak` difference but is trivial in absolute terms (0.045s vs 0.091s, both
+    essentially at the trigger) — checked against every other pulse and ruled out as a swap.
+- **GRB231129C**: folder built (`_common.py` + both drivers), **not run to completion in this track**.
+  Superseded mid-session: the user found GRB231129C's light curve/detector set had changed significantly
+  (more NaI detectors than previously accounted for) and is handling that burst's refit manually, directly
+  in production `fitter_GRB231129779.py` (working-tree edits as of this writeup: `START1/END1` widened to
+  `(-inf, inf)`; `P0` replaced with converged parameters read off the `window_sensitivity_GRB231129779`
+  widest-window run) rather than through the `GRB231129C/` folder. **As of this writeup that file is
+  mid-interactive-edit** (`nf.dry_run(); plt.show()`, no `nf.fit()` call active) — not a finished result.
+  The `GRB231129C/fitter_normalized.py` driver in the new folder was independently left mid-edit too
+  (debug prints, a temporary 4-pulse `P0`, `plt.show()`) by the same exploration — neither should be
+  trusted as settled until re-run cleanly.
+
+**`experiments/window_sensitivity_GRB140206275/window_sensitivity.py` also split** the same session, into
+`window_sensitivity_common.py` (shared light-curve loading + a `run_model(model_name, p0, also_track=...)`
+function) plus `window_sensitivity_simple.py`/`window_sensitivity_complex.py` — same reasoning as the
+`full_range_check_GRB*.py` split (independent, individually re-runnable). The original combined script and
+its pre-split outputs are preserved verbatim in `_backup_2026-09-24_pre_split/` before removal. Re-running
+COMPLEX reproduced the pre-split findings essentially exactly (pulse 6 the fragile one, `mc_kept_fraction`
+0.41→0.37→0.58 non-monotonically across narrow/wide/widest; pulse 7 the actual pedestal, healthy monotonic
+improvement 0.90→0.97→0.98) — confirms the split didn't change anything, as intended.
+
+**Speculative, not scheduled:** `t_peak_tv_reparametrization_idea.md` (this folder) sketches refitting the
+Norris pulse directly in `(t_peak, t_v, r=tau1/tau2)` instead of `(t_s, tau1, tau2)`, with a full
+closed-form derivation of the change of variables, and explains why it targets a different (more central)
+degeneracy than this project's earlier `(tau, xi)` reparametrization attempt (which left `t_s` as a direct
+fit parameter and never actually decoupled the dominant `t_s`<->`tau1` degeneracy — see that section
+further down). Written to solicit outside review before deciding whether it's worth a real trial; not
+implemented, not on any to-do list.
 
 **BUG-23 extended to all four bursts, 2026-09-22 (verification, no fix applied yet — see `BUGS.md`).**
 Checked every burst's *current* `os.listdir()[0]`-picked detector against its *committed* CSV's

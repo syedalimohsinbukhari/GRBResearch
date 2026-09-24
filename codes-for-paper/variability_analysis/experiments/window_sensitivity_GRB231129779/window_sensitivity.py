@@ -64,8 +64,8 @@ y_full = r1 - b1
 T_MIN, T_MAX = float(np.min(t_full)), float(np.max(t_full))
 
 WINDOWS = {
-    "narrow_-1_10": (-1, 10),
-    "wide_-10_20": (-10, 20),
+    # "narrow_-1_10": (-1, 10),
+    # "wide_-10_20": (-10, 20),
     "widest_full_range": (T_MIN, T_MAX),
 }
 

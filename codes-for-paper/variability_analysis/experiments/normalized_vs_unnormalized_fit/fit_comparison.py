@@ -47,10 +47,10 @@ from grb_research.grb_utils import save_fig  # noqa: E402
 LC_DIR = PROJECT_ROOT / "light_curves"
 ENERGY_LOW, ENERGY_HIGH = 10, 400
 
-# Amplitude left free (scaled by each burst's own Y_MAX at run time); t_s/tau1 given a slightly wider
-# scale than tau2 since onset times and rise timescales tend to range wider than decay timescales in
-# these fits -- the exact split doesn't need to be precise, x_scale only needs to be the right *order
-# of magnitude*, unlike a seed value which needs to be close to the true optimum.
+# Amplitude left free (scaled by each burst's own Y_MAX at run time); t_s/tau1 given a slightly wider scale than tau2
+# since onset times and rise timescales tend to range wider than decay timescales in these fits -- the exact split
+# doesn't need to be precise, x_scale only needs to be the right *order of magnitude*, unlike a seed value which needs
+# to be close to the true optimum.
 X_SCALE_TS_TAU1 = 5.0
 X_SCALE_TAU2 = 1.0
 
@@ -59,7 +59,10 @@ X_SCALE_TAU2 = 1.0
 BURSTS = {
     "GRB080916009": dict(
         paper_name="GRB080916C",
-        window=(-1, 70),
+        # Widened to the light curve's own full x.min()/x.max() range, for now (2026-09-24) --
+        # summed_nai_curve()'s mask (t > window[0]) & (t < window[1]) with (-inf, inf) bounds keeps every
+        # point without needing to look up t.min()/t.max() first. Was (-1, 70), the production window.
+        window=(-np.inf, np.inf),
         # 6-pulse P0 (was 7) -- updated 2026-09-23 to match the production fix in ../../fitter.py: the
         # dropped pulse (was A=0.1, t_s=20, tau1=9, tau2=1) converged to a degenerate near-delta-function
         # spike (tau2~0.009) on this burst's summed-detector curve in BOTH methods tested here (see the
@@ -76,56 +79,56 @@ BURSTS = {
         ],
         max_nfev=20000,
     ),
-    "GRB131014215": dict(
-        paper_name="GRB131014A",
-        window=(-1, 10),
-        p0=[
-            (0.115, -0.9, 1, 1),
-            (0.2, -0.8, 1, 1),
-            (0.9, 1.19, 1, 1),
-            (0.4, 2.4, 1, 1),
-            (0.3, 2.71, 1, 1),
-        ],
-        # Known issue (see ../../variability_analysis.md, BUG-23 follow-up): this burst's
-        # summed-3-detector curve needs a larger iteration budget than the NorrisFitter/pymultifit
-        # default (5000) to converge at all -- confirmed independently in the parent session. Applied
-        # here to both methods so a convergence failure isn't mistaken for a real method difference.
-        max_nfev=20000,
-    ),
-    "GRB140206275": dict(
-        paper_name="GRB140206B",
-        # Widened from (-1, 160) to (-20, 300), 2026-09-23 (user call): pulse 7 (the broad, low-amplitude
-        # "pedestal" pulse, tau1~2000) was landing with t_s pinned against the narrow window's own lower
-        # bound (t_min=-1) in the unnormalized fit -- NorrisFitter.fit_boundaries() sets t_s's lower bound
-        # to the fit window's own left edge, so a pinned t_s means the box constraint, not the data, was
-        # deciding that parameter. Matches the "wide_-20_300" window already used as this burst's own
-        # robustness check in ../window_sensitivity_GRB140206275/window_sensitivity.py.
-        window=(-20, 300),
-        # COMPLEX_P0 from fitter_GRB140206275.py -- the user-preferred, finer-grained decomposition
-        # used for that burst's main per-episode results (see that file's own comments).
-        p0=[
-            (0.13, -0.3, 0.12, 1.68),
-            (0.35, 4.0, 6, 14),
-            (0.5, 11, 5, 1.4),
-            (0.5, 28, 2, 1),
-            (0.23, 24, 0.3, 1.434),
-            (0.23, 23, 83, 1.1),
-            (0.05, -0.9, 3400, 4.4),
-        ],
-        max_nfev=20000,
-    ),
-    "GRB231129779": dict(
-        paper_name="GRB231129C",
-        window=(-1, 10),
-        p0=[
-            (0.6, -0.2, 1, 1),
-            (0.3, 0.08, 1, 1),
-            (0.6, 2, 0.5, 0.5),
-            (0.6, 4, 0.5, 0.5),
-            (0.3, 4.2, 2, 1),
-        ],
-        max_nfev=20000,
-    ),
+    # "GRB131014215": dict(
+    #     paper_name="GRB131014A",
+    #     window=(-1, 10),
+    #     p0=[
+    #         (0.115, -0.9, 1, 1),
+    #         (0.2, -0.8, 1, 1),
+    #         (0.9, 1.19, 1, 1),
+    #         (0.4, 2.4, 1, 1),
+    #         (0.3, 2.71, 1, 1),
+    #     ],
+    #     # Known issue (see ../../variability_analysis.md, BUG-23 follow-up): this burst's
+    #     # summed-3-detector curve needs a larger iteration budget than the NorrisFitter/pymultifit
+    #     # default (5000) to converge at all -- confirmed independently in the parent session. Applied
+    #     # here to both methods so a convergence failure isn't mistaken for a real method difference.
+    #     max_nfev=20000,
+    # ),
+    # "GRB140206275": dict(
+    #     paper_name="GRB140206B",
+    #     # Widened from (-1, 160) to (-20, 300), 2026-09-23 (user call): pulse 7 (the broad, low-amplitude
+    #     # "pedestal" pulse, tau1~2000) was landing with t_s pinned against the narrow window's own lower
+    #     # bound (t_min=-1) in the unnormalized fit -- NorrisFitter.fit_boundaries() sets t_s's lower bound
+    #     # to the fit window's own left edge, so a pinned t_s means the box constraint, not the data, was
+    #     # deciding that parameter. Matches the "wide_-20_300" window already used as this burst's own
+    #     # robustness check in ../window_sensitivity_GRB140206275/window_sensitivity.py.
+    #     window=(-20, 300),
+    #     # COMPLEX_P0 from fitter_GRB140206275.py -- the user-preferred, finer-grained decomposition
+    #     # used for that burst's main per-episode results (see that file's own comments).
+    #     p0=[
+    #         (0.13, -0.3, 0.12, 1.68),
+    #         (0.35, 4.0, 6, 14),
+    #         (0.5, 11, 5, 1.4),
+    #         (0.5, 28, 2, 1),
+    #         (0.23, 24, 0.3, 1.434),
+    #         (0.23, 23, 83, 1.1),
+    #         (0.05, -0.9, 3400, 4.4),
+    #     ],
+    #     max_nfev=20000,
+    # ),
+    # "GRB231129779": dict(
+    #     paper_name="GRB231129C",
+    #     window=(-1, 10),
+    #     p0=[
+    #         (0.6, -0.2, 1, 1),
+    #         (0.3, 0.08, 1, 1),
+    #         (0.6, 2, 0.5, 0.5),
+    #         (0.6, 4, 0.5, 0.5),
+    #         (0.3, 4.2, 2, 1),
+    #     ],
+    #     max_nfev=20000,
+    # ),
 }
 
 
@@ -227,18 +230,46 @@ def run_burst(grb_dir_name: str, cfg: dict):
 
     # --- Plot: data + both fits overlaid, whichever converged ---
     update_style()
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(t, y_raw, color="0.6", lw=LINE_WIDTH * 0.6, label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted")
+    fig, ax = plt.subplots(figsize=(13, 6.5))
+    ax.plot(t, y_raw, color="0.6", lw=LINE_WIDTH * 0.6,
+            label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted")
     if model_norm_raw is not None:
         ax.plot(t, model_norm_raw, color="tab:blue", lw=LINE_WIDTH, label="Normalized-fit total (rescaled)")
     if model_raw is not None:
         ax.plot(t, model_raw, color="tab:red", ls="--", lw=LINE_WIDTH, label="Unnormalized fit (explicit x_scale)")
+
+    # --- Individual pulses, both methods -- same show_individuals=True convention every production
+    # fitter_*.py gets from NorrisFitter.plot_fit() (pymultifit's _plot_individual_fitter: dashed line,
+    # one shade per pulse, parameters in the label), reproduced by hand here since this script fits one
+    # method (fit_normalized) through NorrisFitter and the other (fit_unnormalized_xscale) through a bare
+    # scipy.optimize.least_squares call, neither of which hands back a fitter object with its own
+    # plot_fit(). Normalized-method pulses shaded blue, unnormalized-method pulses shaded red/orange --
+    # same two-color convention as the two total-fit lines above -- so a method is identifiable at a
+    # glance even with both sets of individuals overlaid.
+    if params_norm is not None:
+        norm_shades = plt.cm.Purples(np.linspace(0.4, 0.85, n_pulses))
+        for i in range(n_pulses):
+            par = params_norm[i * 4:(i + 1) * 4]
+            A, ts, tau1, tau2 = par
+            y_i = norris_pulse(t, par) * y_max
+            ax.plot(t, y_i, ls=":", lw=LINE_WIDTH * 0.7, color=norm_shades[i],
+                    label=f"N pulse {i + 1} (A={A:.3f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})")
+    if params_raw is not None:
+        raw_shades = plt.cm.Oranges(np.linspace(0.4, 0.85, n_pulses))
+        for i in range(n_pulses):
+            par = params_raw[i * 4:(i + 1) * 4]
+            A, ts, tau1, tau2 = par
+            y_i = norris_pulse(t, par)
+            ax.plot(t, y_i, ls="-.", lw=LINE_WIDTH * 0.7, color=raw_shades[i],
+                    label=f"U pulse {i + 1} (A={A:.1f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})")
+
     ax.set_xlabel("Time since trigger [s]")
     ax.set_ylabel("Count rate [counts/s]")
     ax.set_title(f"{paper_name}: normalized vs. unnormalized (x_scale) Norris fit")
-    ax.legend(fontsize="small")
+    legend = ax.legend(fontsize="x-small", loc="upper left", bbox_to_anchor=(1.02, 1.0))
     fig_path = HERE / f"fit_comparison_{grb_dir_name}"
-    save_fig(fig, fig_path)
+    # plt.show()
+    save_fig(fig, fig_path, bbox_extra_artists=(legend,))
 
     return pd.DataFrame(rows), convergence
 

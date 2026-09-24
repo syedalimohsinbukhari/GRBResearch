@@ -57,7 +57,7 @@ dat_NaI = sorted(i for i in dat if "n" in i)  # order no longer load-bearing -- 
 
 nai_data = [lightcurve_data(f"{GRB_080916C}/{i}.dat", ENERGY_LOW, ENERGY_HIGH) for i in dat_NaI]
 
-# BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
+# BUG-23 fix (2026-09-23, user decision): sum all the burst's NaI detectors' background-subtracted
 # count rates raw, with no per-detector normalization -- each detector's own effective area/viewing angle
 # is trusted to weight its own contribution, matching the one existing precedent in this project (the
 # GRB080916C ROOT cross-check's "n3+n4 summed" light curve, variability_analysis.md). This also
