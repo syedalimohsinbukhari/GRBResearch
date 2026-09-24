@@ -82,7 +82,7 @@ PLOT_PAD_S = 25.0
 # COMPLEX 7-pulse seed, copied verbatim from ../fitter_GRB140206275.py's COMPLEX_P0 -- see module
 # docstring for why COMPLEX, not SIMPLE.
 P0 = [
-    # (0.18, -6e-4, 1e-4, 1.5), # replaceable # try not to include
+    (0.18, -6e-4, 1e-4, 1.5), # replaceable # try not to include
     (0.4, 0.6, 28, 5),
     (0.5, 11, 2.74, 1.9),
     (0.2, 15, 1, 1), # replaceable

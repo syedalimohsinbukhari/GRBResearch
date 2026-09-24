@@ -38,13 +38,13 @@ print(f"fit window: {FIT_WINDOW} (full x.min()/x.max())")
 
 # --- Plot
 fig, ax = plt.subplots(figsize=(13, 6.5))
-data_label = f"10-400 keV NaI ({'+'.join(DAT_NAI)}, summed)\nBackground Subtracted"
+data_label = f"10-400 keV NaI\n({'+'.join(DAT_NAI)})"
 nf.plot_fit(
     show_individuals=True,
     x_label="Time since trigger [s]",
     y_label="Normalized count rate",
     data_label=data_label,
-    title=f"{GRB_PAPER_NAME}: normalized fit (COMPLEX), full range {FIT_WINDOW[0]:.1f}-{FIT_WINDOW[1]:.1f}s",
+    title=" ",
     axis=ax,
 )
 add_lat_photon_overlay(ax, y_top_data=y_norm.max())
