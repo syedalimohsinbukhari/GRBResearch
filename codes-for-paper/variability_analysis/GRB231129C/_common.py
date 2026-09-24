@@ -59,16 +59,18 @@ EPISODE_BOUNDS = {
 # T05/T95 (T90 start/end) -- plot-axis bounding only, does not change what was fitted. Same values as
 # experiments/normalized_vs_unnormalized_fit/full_range_single_burst.py's T90 dict for this burst.
 T05, T95 = 0.384, 7.296
-PLOT_PAD_S = 25.0
+PLOT_PAD_S = 5.0
 
 # 5-pulse seed, copied verbatim from ../fitter_GRB231129779.py.
 P0 = [
-    (0.6, -0.2, 1, 1),
-    (0.3, 0.08, 1, 1),
-    (0.6, 2, 0.5, 0.5),
-    (0.6, 4, 0.5, 0.5),
-    (0.3, 4.2, 2, 1),
+    (0.57, -0.35, 1.2, 0.7),
+    (0.71, -5.8, 1065, 0.05),
+    (0.5, 0.218, 2.66, 0.4),
+    (0.3, 3.5, 1.3, 0.8), # replaceable
+    (0.4, 2.7, 1.7, 1.0),
+    (0.3, 4.651, 0.2, 2.57),
 ]
+
 N_PULSES = len(P0)
 
 # LAT photon overlay -- every individual photon (energy, arrival time), no energy floor -- same
@@ -213,9 +215,9 @@ def add_lat_photon_overlay(ax, y_top_data):
     )
     ax_photon.set_ylabel("Photon energy [MeV]")
 
-    n_yticks = 6
+    n_yticks = 5
     y_buffer_frac = 0.05
-    photon_top = PHOTON_ENERGY_MEV.max()
+    photon_top = np.round(PHOTON_ENERGY_MEV.max(), -3)
 
     ax.set_ylim(-y_buffer_frac * y_top_data, y_top_data * (1 + y_buffer_frac))
     ax_photon.set_ylim(-y_buffer_frac * photon_top, photon_top * (1 + y_buffer_frac))

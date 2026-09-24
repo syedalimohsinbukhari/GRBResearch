@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 
+from grb_research.grb_utils import save_fig
+
 HERE = Path(__file__).resolve().parent  # .../variability_analysis/GRB131014215/
 VARIABILITY_DIR = HERE.parent  # .../variability_analysis/
 CODES_FOR_PAPER_DIR = VARIABILITY_DIR.parent  # .../codes-for-paper/
@@ -34,8 +36,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from light_curves import lightcurve_data  # noqa: E402
 from norris_fit import t_peak, tv_mc_summary  # noqa: E402
-from grb_research import update_style, MARKER_SIZE, LINE_WIDTH  # noqa: E402
-from grb_research.grb_utils import save_fig  # noqa: E402
+from grb_research import update_style, MARKER_SIZE  # noqa: E402
 
 update_style()
 
@@ -63,19 +64,23 @@ EPISODE_BOUNDS = {
 # against results.json's own "T90 0.960_4.160" entry (not copied from another file's comment without
 # checking -- see module docstring).
 T05, T95 = 0.960, 4.160
-PLOT_PAD_S = 25.0
+PLOT_PAD_S = 5.0
 
 # 5-pulse seed, copied verbatim from ../fitter_CLAUDE_GRB131014215.py.
+
 P0 = [
-    (0.115, -0.9, 1, 1),
-    (0.2, -0.8, 1, 1),
-    (0.9, 1.19, 1, 1),
-    (0.4, 2.4, 1, 1),
-    (0.3, 2.71, 1, 1),
+    (0.1, -0.9, 4.5, 0.3),
+    (0.3, -0.34, 56, 0.04),
+    # (0.4, -0.6, 56, 0.1),  # replaceable
+    (0.9, 1.18, 1, 0.3),
+    (0.4, 2.4, 0.04, 1),
+    # (0.35, 2.5, 0.04, 1),  # replaceable
+    (0.3, 2.5, 9, 0.1)
 ]
+
 N_PULSES = len(P0)
 
-# LAT photon overlay -- every individual photon (energy, arrival time), no energy floor -- same
+# LAT photon overlay -- every individual photon (energy, arrival time), no energy floor -- the same
 # convention as ../fitter_CLAUDE_GRB131014215.py. T0_MET_S copied, not re-derived; see that file's own
 # comment for the GTI cross-check that validated it.
 LAT_FITS = VARIABILITY_DIR / "GRB131014215_lat.fits"
@@ -153,7 +158,7 @@ def photon_summary_for(photon_pulse, n_pulses):
 
 
 def build_results_df(method_label: str, fit_result: FitResult, n_pulses: int, y_max_cts_per_s: float,
-                      amplitude_is_physical: bool, photon_summary: dict) -> pd.DataFrame:
+                     amplitude_is_physical: bool, photon_summary: dict) -> pd.DataFrame:
     """One row per (pulse, episode) match, same schema as ../fitter_CLAUDE_GRB131014215.py's CSV plus a
     `fit_method` column and an `A_norm` column derived either way (A/y_max) -- see
     GRB080916C/_common.py's build_results_df for the identical convention."""
@@ -214,16 +219,16 @@ def add_lat_photon_overlay(ax, y_top_data):
     )
     ax_photon.set_ylabel("Photon energy [MeV]")
 
-    n_yticks = 6
+    n_yticks = 5
     y_buffer_frac = 0.05
-    photon_top = PHOTON_ENERGY_MEV.max()
+    photon_top = np.round(PHOTON_ENERGY_MEV.max(), -3)
 
     ax.set_ylim(-y_buffer_frac * y_top_data, y_top_data * (1 + y_buffer_frac))
     ax_photon.set_ylim(-y_buffer_frac * photon_top, photon_top * (1 + y_buffer_frac))
     ax.set_yticks(np.linspace(0, y_top_data, n_yticks))
     ax_photon.set_yticks(np.linspace(0, photon_top, n_yticks))
 
-    minor_ticks_per_major = 5
+    minor_ticks_per_major = n_yticks
     ax.yaxis.set_minor_locator(AutoMinorLocator(minor_ticks_per_major))
     ax_photon.yaxis.set_minor_locator(AutoMinorLocator(minor_ticks_per_major))
     return ax_photon
