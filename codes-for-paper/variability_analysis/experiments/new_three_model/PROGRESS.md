@@ -21,6 +21,9 @@ from `date "+%Y-%m-%d %H:%M %Z"` at the time the test was run.
 | 7 | T3/T4/T5 (FWHM brentq, synthetic degeneracy, profile sanity) | `test_fwhm_brentq.py`, `test_multistart_t4.py`, `test_profile_sanity_t5.py` | done, all pass (T1/T2 in `test_pulse3.py`) |
 | 8 | post-fit audit checklist | `audit_checklist.py` | done, all pass |
 
+**Closed for now, 2026-09-26 01:41 PKT -- user decision.** See the final entry at the bottom of this file for
+the full closure note and the state left behind for a future session.
+
 ## Section 6 -- tv_value() consistency check
 
 **File:** `check_tv_consistency.py`
@@ -754,3 +757,27 @@ document order: 6 (consistency, explicitly "read before implementing" in the spe
 -> 3 (bounds/seed) -> 5 (profile scan) -> 4 (uncertainty propagation, blocked on 5's flat-zone
 output). Remaining work (7's T3-T5, then 8) follows the same rule: T3 has no dependencies and could
 run anytime; T4/T5 and section 8 depend on each other in that order.
+
+## Closed for now, 2026-09-26 01:41 PKT -- user decision
+
+**User decision:** close out this experiment folder (the whole 3-param Norris pulse reduction
+effort) for now. Not a negative result and nothing here is reverted or found wrong -- see
+`norris_3param_reduction.md`'s "Validation performed" section for what actually landed: the full
+spec (sections 1-8) implemented and tested on synthetic data, then validated end-to-end on two real
+bursts (GRB231129C single-pulse + joint 6-pulse fit, GRB131014A blind 5-pulse discovery). Work
+simply stops here until picked back up.
+
+**State left behind, so a future session doesn't have to reconstruct it from this file:**
+- Still **not wired into production** -- `norris_fit.py` (what every `fitter_*.py` in the parent
+  `variability_analysis/` folder actually uses) is untouched by any of this.
+- Two production-relevant decisions were never made: GRB231129C 5-vs-6-pulse ("Open item: 5 vs. 6
+  pulses for GRB231129C" above) and GRB131014A 6-vs-7-pulse (`GRB131014215/PROGRESS.md`'s own
+  closing note).
+- GRB080916C and GRB140206B were never run through this pipeline at all.
+- The hierarchical (shared-r-per-episode) variant is untested at the level the spec actually asks
+  for (well-determined, non-degenerate per-episode r values, not the whole-project population
+  already checked).
+- The `_common.py` P0-docstring/pulse-count inconsistency found during the GRB231129C work was
+  never filed as a `BUGS.md` entry.
+
+Picking this back up means resuming from "Next candidates" above, not re-deriving the method.

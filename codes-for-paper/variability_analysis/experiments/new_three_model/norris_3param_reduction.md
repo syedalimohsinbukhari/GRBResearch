@@ -1,5 +1,10 @@
 # 3-parameter Norris pulse fit: method note
 
+**Status: closed for now, 2026-09-26 01:41 PKT -- user decision.** Not a negative result -- the method is
+validated (see "Validation performed" below) but not wired into production, and several
+production-relevant decisions (pulse-count calls for GRB231129C/GRB131014A, GRB080916C/GRB140206B
+never run) are left open. Full closure note and state-to-resume-from: `PROGRESS.md`'s final entry.
+
 Per-folder reference note (CLAUDE.md's "Per-folder method notes" convention). Written for the
 user's own understanding of *how and why* this folder's code works, as a standalone reference --
 not a chronological log (that's `PROGRESS.md`) and not a replacement for the spec itself

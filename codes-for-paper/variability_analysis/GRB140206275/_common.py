@@ -79,19 +79,48 @@ EPISODE_BOUNDS = {
 T05, T95 = 7.488, 154.240
 PLOT_PAD_S = 25.0
 
-# COMPLEX 7-pulse seed, copied verbatim from ../fitter_GRB140206275.py's COMPLEX_P0 -- see module
-# docstring for why COMPLEX, not SIMPLE.
+# Two candidate COMPLEX decompositions for this burst, both derived from ../fitter_GRB140206275.py's
+# COMPLEX_P0 (see module docstring for why COMPLEX, not SIMPLE) by including/excluding its two
+# originally-"# replaceable" pulses (near t=0 and t=15s). Both now written out fully explicit --
+# no commented-out lines -- after two real bugs (commit a57d164, then this same desync again on
+# 2026-09-26) came from toggling one line of a single shared P0 and forgetting to rerun both fitters
+# in step. Full numeric comparison of all three tried configurations (this pair plus the 6-pulse
+# "both replaceable pulses out" configuration):
+# ../normalized_vs_unnormalized_full_range_comparison_2026-09-24.md.
+#
+# P0 -- 7-pulse, kept for the historical record only ("Stage 2" in that doc): near-t=0 pulse OUT,
+# t=15s pulse IN. Worst normalized/unnormalized t_v gap: 31.5% (TR3). Used by
+# fitter_{normalized,unnormalized}_p0.py, writing to *_p0-suffixed output files (not *_7pulse --
+# Q0 below also has 7 pulses, so that suffix wouldn't distinguish them).
 P0 = [
-    (0.18, -6e-4, 1e-4, 1.5), # replaceable # try not to include
     (0.4, 0.6, 28, 5),
     (0.5, 11, 2.74, 1.9),
-    (0.2, 15, 1, 1), # replaceable
+    (0.2, 15, 1, 1),
     (0.1, 19, 4.48, 22),
     (0.05, 23, 0.15, 2.17),
     (0.25, 26, 3, 4),
     (0.05, 57, 364, 11),
 ]
-N_PULSES = len(P0)
+N_PULSES_P0 = len(P0)
+
+# Q0 -- 7-pulse-2, the DEFINITIVE decomposition for this burst (user decision, 2026-09-26): near-t=0
+# pulse IN, t=15s pulse OUT. Worst normalized/unnormalized t_v gap: 2.15% (TR3) -- better than both
+# P0 above (31.5%) and the 6-pulse configuration tried in between (5.58%, both replaceable pulses
+# out). The near-t=0 pulse's own mc_kept_fraction is low (~0.50, still weakly constrained in an
+# absolute sense) but its normalized/unnormalized agreement is the tightest of any pulse in any of
+# the three configurations (0.02%) -- it stabilizes the TR3 pulse's degeneracy rather than adding
+# noise. Used by fitter_{normalized,unnormalized}.py, writing to the canonical (unsuffixed) output
+# files -- this is "the" GRB140206B result going forward.
+Q0 = [
+    (0.18, -6e-4, 1e-4, 1.5),
+    (0.4, 0.6, 28, 5),
+    (0.5, 11, 2.74, 1.9),
+    (0.1, 19, 4.48, 22),
+    (0.05, 23, 0.15, 2.17),
+    (0.25, 26, 3, 4),
+    (0.05, 57, 364, 11),
+]
+N_PULSES_Q0 = len(Q0)
 
 # LAT photon overlay -- every individual photon (energy, arrival time), no energy floor -- same
 # convention as ../fitter_GRB140206275.py. T0_MET_S copied, not re-derived; see that file's own comment

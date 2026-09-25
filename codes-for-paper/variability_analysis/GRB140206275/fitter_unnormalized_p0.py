@@ -1,16 +1,14 @@
-"""GRB140206B, UNNORMALIZED method, fit over the light curve's own full x.min()/x.max() range.
+"""GRB140206B, UNNORMALIZED method, fit over the light curve's own full x.min()/x.max() range --
+HISTORICAL RECORD ONLY, the P0 decomposition (7 pulses: near-t=0 pulse out, t=15s pulse in)
+superseded by fitter_unnormalized.py's Q0 (also 7 pulses, but the other way around -- user decision,
+2026-09-26; see _common.py's P0/Q0 comments for the numeric comparison). Kept on disk under
+*_p0-suffixed filenames rather than deleted, per the user's request that both configurations remain
+available for future reference. Suffix is "_p0", not "_7pulse", because both configurations have 7
+pulses -- see fitter_unnormalized.py for the canonical (Q0) counterpart.
 
-Same raw-counts/explicit-x_scale scipy.optimize.least_squares path as
-experiments/normalized_vs_unnormalized_fit/fit_comparison.py's Method 2 and
-GRB080916C/fitter_unnormalized.py -- see that file's docstring for the full rationale (why x_scale='jac'
-was rejected, and how the covariance is derived from the least_squares Jacobian the same way
-scipy.optimize.curve_fit does internally). Same dominant-flux LAT-photon assignment and episode-matching
-logic as fitter_normalized.py in this folder -- only the fitting method differs.
-
-Uses Q0, the 7-pulse-2 decomposition -- the DEFINITIVE choice for this burst (user decision,
-2026-09-26; see _common.py's Q0 comment for the numeric justification). The historical P0 (also
-7 pulses, but with the near-t=0/t=15s pulses swapped) run lives in fitter_unnormalized_p0.py, writing
-to separate *_p0-suffixed output files so both stay on disk.
+Otherwise identical to fitter_unnormalized.py -- same raw-counts/explicit-x_scale
+scipy.optimize.least_squares path, same dominant-flux LAT-photon assignment and episode-matching
+logic. Only the seed (P0 vs Q0) and the output filenames differ.
 """
 from pathlib import Path
 
@@ -20,7 +18,7 @@ from scipy.optimize import least_squares
 
 from _common import (  # noqa: E402 -- sets up sys.path, must import before norris_fit
     T_FULL, Y_RAW_FULL, Y_MAX_CTS_PER_S, FIT_WINDOW, DAT_NAI, GRB_140206, GRB_PAPER_NAME,
-    N_PULSES_Q0, Q0, MAX_NFEV, X_SCALE_TS_TAU1, X_SCALE_TAU2, T05, T95, PLOT_PAD_S, FitResult,
+    N_PULSES_P0, P0, MAX_NFEV, X_SCALE_TS_TAU1, X_SCALE_TAU2, T05, T95, PLOT_PAD_S, FitResult,
     assign_pulses, photon_summary_for, build_results_df, add_lat_photon_overlay, save_fig,
 )
 from norris_fit import norris_pulse  # noqa: E402
@@ -31,8 +29,8 @@ def total_model(t, params, n_pulses):
     return sum(norris_pulse(t, params[i * 4:(i + 1) * 4]) for i in range(n_pulses))
 
 
-N_PULSES = N_PULSES_Q0
-p0_raw = np.array([(a * Y_MAX_CTS_PER_S, ts, tau1, tau2) for (a, ts, tau1, tau2) in Q0]).flatten()
+N_PULSES = N_PULSES_P0
+p0_raw = np.array([(a * Y_MAX_CTS_PER_S, ts, tau1, tau2) for (a, ts, tau1, tau2) in P0]).flatten()
 lb = np.tile([0.0, T_FULL.min(), 1e-4, 1e-4], N_PULSES)
 ub = np.tile([np.inf, T_FULL.max(), np.inf, np.inf], N_PULSES)
 x_scale = np.tile([Y_MAX_CTS_PER_S, X_SCALE_TS_TAU1, X_SCALE_TS_TAU1, X_SCALE_TAU2], N_PULSES)
@@ -64,7 +62,7 @@ results_df = build_results_df(
     method_label="unnormalized_xscale", fit_result=fit_result, n_pulses=N_PULSES,
     y_max_cts_per_s=Y_MAX_CTS_PER_S, amplitude_is_physical=True, photon_summary=photon_summary,
 )
-csv_path = Path(__file__).parent / f"norris_fit_results_{GRB_140206.name}_unnormalized.csv"
+csv_path = Path(__file__).parent / f"norris_fit_results_{GRB_140206.name}_unnormalized_p0.csv"
 results_df.to_csv(csv_path, index=False)
 print(f"wrote {csv_path} ({len(results_df)} rows)")
 print(f"fit window: {FIT_WINDOW} (full x.min()/x.max())")
@@ -86,13 +84,13 @@ for i in range(N_PULSES):
 
 ax.set_xlabel("Time since trigger [s]")
 ax.set_ylabel("Count rate [counts/s]")
-ax.set_title(f"{GRB_PAPER_NAME}: unnormalized (x_scale) fit (COMPLEX, 7-pulse-2 Q0), full range {FIT_WINDOW[0]:.1f}-{FIT_WINDOW[1]:.1f}s")
+ax.set_title(f"{GRB_PAPER_NAME}: unnormalized (x_scale) fit (COMPLEX, P0 -- historical), full range {FIT_WINDOW[0]:.1f}-{FIT_WINDOW[1]:.1f}s")
 add_lat_photon_overlay(ax, y_top_data=Y_RAW_FULL.max())
 legend = ax.legend(fontsize="x-small", loc="upper left", bbox_to_anchor=(1.08, 1.0))
 
 # Plot-axis bounding only (T05-{PLOT_PAD_S}s .. T95+{PLOT_PAD_S}s) -- does not change what was fitted.
 ax.set_xlim(T05 - PLOT_PAD_S, T95 + PLOT_PAD_S)
 
-fig_path = Path(__file__).parent / f"norris_fitted_{GRB_140206.name}_unnormalized"
+fig_path = Path(__file__).parent / f"norris_fitted_{GRB_140206.name}_unnormalized_p0"
 save_fig(fig, fig_path, bbox_extra_artists=(legend,))
 print(f"wrote {fig_path}.png / .pdf")

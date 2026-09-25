@@ -6,6 +6,30 @@ GRB140206B). Companion to `variability_analysis.md`'s "Session update, 2026-09-2
 `t_peak_tv_reparametrization_idea.md` — this file is the numeric record; those two carry the narrative and
 the theory, respectively.
 
+**Re-verified 2026-09-26 01:53 PKT — GRB140206B's numbers below are confirmed reproducible, after fixing a
+regression.** Commit `a57d164` (2026-09-25, after this doc was first written) re-enabled one of
+`GRB140206275/_common.py`'s two `# replaceable` P0 pulses and reran only `fitter_normalized.py`, leaving
+the normalized CSV at 8 pulses against the unnormalized CSV's stale 7 — no valid comparison was sitting on
+disk. Re-commenting that pulse reproduced this doc's own "Stage 2" 7-pulse numbers (pulse 5/TR3's `t_v`
+gap: 31.5% here vs. 31.4% below — same fit, confirmed independently). The *second* `# replaceable` pulse
+(`(0.2, 15, 1, 1)`) turned out to have never actually been committed as commented-out anywhere in this
+file's git history, despite this doc describing that 6-pulse state as "current" — the Stage 3 P0 reduction
+had apparently only ever been applied on the machine that produced these numbers, not synced back here.
+Commenting out both `# replaceable` pulses and rerunning both fitters reproduced the GRB140206B table
+below bit-for-bit. `_common.py` now carries a comment recording that both must stay commented together.
+
+**CLOSED, 2026-09-26 02:14 PKT — user decision.** Following the re-verification above, the user asked
+for a third configuration to be tried: re-enable the near-t=0 pulse instead of the t=15s one (7 pulses
+either way). That configuration ("Q0", `t_v` worst gap 2.15%) beat both the original 7-pulse
+configuration ("P0", 31.5%) and the in-between 6-pulse one (5.58%) — see the GRB140206B section below
+for the full numeric comparison. `_common.py` now defines `P0` and `Q0` as two permanent, fully-explicit
+arrays (no more comment-toggling one shared list, which is what caused both prior desyncs). Both
+configurations' fits are kept on disk under distinct filenames for future reference: `Q0` writes the
+canonical (unsuffixed) files via `fitter_{normalized,unnormalized}.py`; `P0` writes `*_p0`-suffixed
+files via `fitter_{normalized,unnormalized}_p0.py`. **Q0 is the definitive result. This closes the
+normalized-vs-unnormalized comparison task for all four bursts — no open items remain anywhere in this
+file.**
+
 **Method reminder**: "normalized" = production convention, peak-normalize the light curve then fit with
 `NorrisFitter`/pymultifit. "unnormalized" = fit the raw counts/s directly via
 `scipy.optimize.least_squares` with an explicit `x_scale` array, bypassing pymultifit. Both use the same
@@ -66,7 +90,77 @@ this P0 may have resolved a limitation that was previously written up as fundame
 playbook: seed the normalized fit from its own unnormalized fit's converged shape parameters rather than
 hand-guessing a fresh P0.**
 
-## GRB140206B — 6 pulses (COMPLEX model), one open item on pulse 4/TR3
+## GRB140206B — RESOLVED 2026-09-26 02:14 PKT: Q0 (7-pulse-2) is the definitive result
+
+**Closed, user decision.** Everything below this point (the 6-pulse "Stage 3" table and its pulse
+4/TR3 open item) is superseded — kept as historical narrative, not the current status. The actual
+resolution: `GRB140206275/_common.py` now defines two fully-explicit, non-overlapping P0 arrays
+instead of toggling comment lines in one shared list (that toggling caused two real desyncs between
+the normalized and unnormalized CSVs — commit `a57d164`, then a repeat on 2026-09-26 — see
+`_common.py`'s own comments for the full incident history):
+
+- **P0** — 7 pulses, near-t=0 pulse OUT, t=15s pulse IN. Historical record only
+  (`fitter_{normalized,unnormalized}_p0.py`, `*_p0`-suffixed output files). Worst t_v gap: **31.5%**
+  (pulse 5/TR3) — this is what the "Stage 2" table further down actually describes.
+- **Q0** — 7 pulses, near-t=0 pulse IN, t=15s pulse OUT. **DEFINITIVE**
+  (`fitter_{normalized,unnormalized}.py`, canonical unsuffixed output files). Worst t_v gap:
+  **2.15%** (pulse 5/TR3) — better than P0 (31.5%) *and* better than the 6-pulse configuration
+  below (5.58%), because dropping the t=15s pulse alone, with the near-t=0 pulse still available to
+  absorb whatever flux sits at the window's start, lets pulse 5/TR3 settle into a shape both fitting
+  methods agree on far more tightly than either P0 or the 6-pulse compromise:
+
+| pulse | episode | t_peak (norm / unnorm) | Δ | t_v (norm / unnorm) | Δ | kept (norm / unnorm) |
+|---|---|---|---|---|---|---|
+| 1 | — | 0.0116 / 0.0116 | 0.01% | 0.5909 / 0.5908 | 0.02% | 0.506 / 0.504 |
+| 2 | TR2 | 13.2038 / 13.2093 | 0.04% | 7.0849 / 7.1008 | 0.22% | 1.000 / 1.000 |
+| 3 | TR2 | 13.9390 / 13.9394 | 0.00% | 1.8832 / 1.8811 | 0.11% | 1.000 / 1.000 |
+| 4 | TR4 | 29.1286 / 29.1156 | 0.04% | 14.4947 / 14.5375 | 0.29% | 1.000 / 1.000 |
+| 5 | TR3 | 23.8157 / 23.8460 | 0.13% | 1.0210 / 0.9990 | 2.15% | 0.800 / 0.800 |
+| 6 | TR4 | 29.9013 / 29.9006 | 0.00% | 3.2328 / 3.2298 | 0.09% | 1.000 / 1.000 |
+| 7 | TR6 | 122.0541 / 121.9736 | 0.07% | 22.6489 / 22.6272 | 0.10% | 0.997 / 0.998 |
+
+Pulse 1 (the near-t=0 pulse) has a low `mc_kept_fraction` (~0.50, still weakly constrained in an
+absolute sense) but the tightest normalized/unnormalized agreement of any pulse in any of the three
+configurations tried (0.02% on `t_v`) — it is not adding noise to the fit, it's what lets pulse
+5/TR3 resolve cleanly. **No open items remain for this burst.**
+
+---
+
+## GRB231129C — 6 pulses, clean (first full run — previously incomplete)
+
+| pulse | episode | t_peak (norm / unnorm) | Δ | t_v (norm / unnorm) | Δ | kept (norm / unnorm) |
+|---|---|---|---|---|---|---|
+| 1 | EX0 | 0.6518 / 0.6516 | 0.03% | 0.8094 / 0.8088 | 0.08% | 0.996 / 0.996 |
+| 2 | EX0 | 2.4657 / 2.4657 | 0.00% | 0.4816 / 0.4813 | 0.06% | 0.640 / 0.639 |
+| 3 | EX0 | 1.3195 / 1.3197 | 0.01% | 0.6068 / 0.6072 | 0.06% | 0.989 / 0.985 |
+| 4 | TR2 | 3.4902 / 3.4903 | 0.00% | 0.4331 / 0.4319 | 0.27% | 0.811 / 0.807 |
+| 5 | TR2 | 4.2874 / 4.2874 | 0.00% | 0.8245 / 0.8242 | 0.04% | 1.000 / 1.000 |
+| 6 | TR2 | 5.5075 / 5.5075 | 0.00% | 1.3471 / 1.3471 | 0.00% | 1.000 / 1.000 |
+
+Cleanest of the four bursts — every pulse agrees to ≤0.3% on both `t_peak` and `t_v`. This is the burst
+whose light curve/detector set changed mid-session (more NaI detectors than previously accounted for,
+per `variability_analysis.md`); these numbers are from the resulting refit, now complete in both methods.
+
+---
+
+## Cross-burst summary
+
+| burst | pulses | worst t_peak Δ | worst t_v Δ | open items |
+|---|---|---|---|---|
+| GRB080916C | 6 | 0.13% | 1.73% (pulse 5/TR4) | none |
+| GRB131014A | 5 | 0.35% | 1.66% (pulse 1/EX0) | none — previously "unresolved" pulses 1/2 now fixed |
+| GRB140206B | 7 (Q0) | 0.13% | 2.15% (pulse 5/TR3) | none — resolved 2026-09-26, see Q0 above |
+| GRB231129C | 6 | 0.03% | 0.27% (pulse 4/TR2) | none |
+
+**All four bursts are now clean by any reasonable threshold, with no open items remaining.**
+GRB140206B needed the most iteration (three P0 configurations tried — see the historical section
+below) before landing on Q0.
+
+---
+
+## Historical narrative, superseded by the above — kept for the record only
+
+### GRB140206B — 6 pulses (COMPLEX model), one open item on pulse 4/TR3
 
 | pulse | episode | t_peak (norm / unnorm) | Δ | t_v (norm / unnorm) | Δ | kept (norm / unnorm) |
 |---|---|---|---|---|---|---|
@@ -123,32 +217,3 @@ table at the top of this section are Stage 3, not Stage 1 or 2.
 window-sensitivity check (same diagnostic already used elsewhere in this project) before relying on either
 method's point value in isolation.
 
-## GRB231129C — 6 pulses, clean (first full run — previously incomplete)
-
-| pulse | episode | t_peak (norm / unnorm) | Δ | t_v (norm / unnorm) | Δ | kept (norm / unnorm) |
-|---|---|---|---|---|---|---|
-| 1 | EX0 | 0.6518 / 0.6516 | 0.03% | 0.8094 / 0.8088 | 0.08% | 0.996 / 0.996 |
-| 2 | EX0 | 2.4657 / 2.4657 | 0.00% | 0.4816 / 0.4813 | 0.06% | 0.640 / 0.639 |
-| 3 | EX0 | 1.3195 / 1.3197 | 0.01% | 0.6068 / 0.6072 | 0.06% | 0.989 / 0.985 |
-| 4 | TR2 | 3.4902 / 3.4903 | 0.00% | 0.4331 / 0.4319 | 0.27% | 0.811 / 0.807 |
-| 5 | TR2 | 4.2874 / 4.2874 | 0.00% | 0.8245 / 0.8242 | 0.04% | 1.000 / 1.000 |
-| 6 | TR2 | 5.5075 / 5.5075 | 0.00% | 1.3471 / 1.3471 | 0.00% | 1.000 / 1.000 |
-
-Cleanest of the four bursts — every pulse agrees to ≤0.3% on both `t_peak` and `t_v`. This is the burst
-whose light curve/detector set changed mid-session (more NaI detectors than previously accounted for,
-per `variability_analysis.md`); these numbers are from the resulting refit, now complete in both methods.
-
----
-
-## Cross-burst summary
-
-| burst | pulses | worst t_peak Δ | worst t_v Δ | open items |
-|---|---|---|---|---|
-| GRB080916C | 6 | 0.13% | 1.73% (pulse 5/TR4) | none |
-| GRB131014A | 5 | 0.35% | 1.66% (pulse 1/EX0) | none — previously "unresolved" pulses 1/2 now fixed |
-| GRB140206B | 6 | 0.94% | 5.58% (pulse 4/TR3) | pulse 4/TR3's `tau1`/`tau2` split still comparatively soft |
-| GRB231129C | 6 | 0.03% | 0.27% (pulse 4/TR2) | none |
-
-Three of four bursts are now clean by any reasonable threshold. GRB140206B's pulse 4/TR3 is the one
-remaining pulse across the whole sample worth a second look before its `t_v` is used for anything
-precision-sensitive.
