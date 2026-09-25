@@ -21,6 +21,20 @@ each script's own docstring/comments and the sections further down for the other
 note is extended. Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline — same deliverable-boundary
 stance as the abandoned automated pipeline.
 
+**Related but separate track, `experiments/new_three_model/` — added 2026-09-25, closed for now
+2026-09-26.** A standalone reparametrization exercise: fitting `(A, t_peak, t_v)` at a fixed
+asymmetry ratio $r_0=\tau_1/\tau_2$ (chosen per pulse via a $\chi^2$ profile scan) instead of the
+standard 4-parameter `(A, t_s, \tau_1, \tau_2)` form used everywhere else in this folder, specifically
+to remove the $\tau_1{\leftrightarrow}\tau_2$ degenerate direction behind several findings below (the
+"unresolved" GRB131014A pulses 1/2, GRB080916C's dropped 7th pulse, GRB140206B's own sloppy-parameter
+`t_v` behavior in the section below). Fully implemented and tested (own spec, `norris_3param_spec.md`
+in that folder), validated on synthetic data and two real bursts (GRB231129C, and a blind 5-pulse
+discovery test on GRB131014A) — see that folder's own `norris_3param_reduction.md` and `PROGRESS.md`
+for the full method note and chronological detail; not duplicated here. **Not wired into
+`norris_fit.py`** (what every `fitter*.py` in this folder actually imports) — closed per user decision
+once its immediate motivating case (GRB140206B's comparison, resolved a different way below) was
+settled, not because the method failed.
+
 **Open cross-burst issue, flagged 2026-09-18 — resolved 2026-09-23.** Every fit in this folder (all four
 bursts) used to use only a single NaI detector (`nai_data[0]`) — documented at the time as `n3` for GRB080916C,
 `na` for GRB131014A, `n3` for GRB140206B, `n7` for GRB231129C — rather than summing across the GRB's full
@@ -201,6 +215,19 @@ out of alignment even when the (explicitly-set) major ticks match.
     diagnosed. Worth checking first on the heavier machine.
   - Pulse 1 shows a 101% `t_peak` difference but is trivial in absolute terms (0.045s vs 0.091s, both
     essentially at the trigger) — checked against every other pulse and ruled out as a swap.
+  - **RESOLVED, 2026-09-26 — this whole bullet describes a stale intermediate state.** Root cause
+    traced to `GRB140206275/_common.py`'s `P0` carrying two originally-"# replaceable" pulses (near
+    t=0, at t=15s) that were being toggled on/off by hand-editing comment lines in one shared list —
+    this caused the 21% (here) and later a 31.5%/5.58% (further iterations, see
+    `normalized_vs_unnormalized_full_range_comparison_2026-09-24.md`) `t_v` gap on this same pulse
+    depending on which pulses happened to be active, and twice caused a worse failure mode (mismatched
+    pulse counts between the normalized/unnormalized CSVs, no valid comparison at all). Fixed by
+    replacing the toggle with two permanent, fully-explicit seed arrays: `P0` (near-t=0 pulse out,
+    t=15s pulse in — the family of configurations that produced this section's 21%/31.5% gaps;
+    historical record only, `fitter_{normalized,unnormalized}_p0.py`) and `Q0` (near-t=0 pulse in,
+    t=15s pulse out — worst gap now **2.15%**, **DEFINITIVE**, user decision, via the canonical
+    `fitter_{normalized,unnormalized}.py`). No open items remain for this burst. Committed as
+    `[main-minor-100]`.
 - **GRB231129C**: folder built (`_common.py` + both drivers), **not run to completion in this track**.
   Superseded mid-session: the user found GRB231129C's light curve/detector set had changed significantly
   (more NaI detectors than previously accounted for) and is handling that burst's refit manually, directly
