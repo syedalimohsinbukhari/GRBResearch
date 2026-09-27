@@ -1,0 +1,2 @@
+label,shape,r0_at_min,chi2_min_3param,flat_zone_lo,flat_zone_hi,flat_zone_span,r0_chosen,r0_choice_reason,chi2_4param_best,delta_chi2,delta_chi2_verdict,fit4_amplitude,fit4_t_peak_s,fit4_t_v_s,fit4_r
+synthetic_flat,flat,82.5404185268019,515.748151438497,4.641588833612779,10000.0,2154.4346900318837,200.0,"flat-bottom profile (flat zone (4.641588833612779, 10000.0), span x2154.4); fixed to archived population median r=200.0",515.7458317655687,0.002319672928251748,4th parameter is dead weight,19.623353328936734,15.000246773554348,1.2006280580166893,76.93793964367097
