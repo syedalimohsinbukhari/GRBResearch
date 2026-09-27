@@ -29,6 +29,15 @@ here, so this script cannot drift out of sync with the fitted-model database.
 Only quantities that do not live in ``results.json`` — the LAT photon
 properties and the redshifts — are tabulated below.
 
+delta_T (t_v) precedence, per episode (see ``variability_timescale()``):
+    1. a literature override, if one is entered in ``VARIABILITY_TIMESCALE``;
+    2. a measured value from the Norris-pulse fits in
+       ``codes-for-paper/variability_analysis/`` (Phase 5), if one exists for
+       that episode and passes the ``MC_KEPT_FRACTION_MIN`` quality gate --
+       see ``load_norris_tv()`` and ``lorentz_factor.md``;
+    3. otherwise the episode's own duration, an upper bound on the true t_v
+       (conservative by construction, the original convention).
+
 Outputs:
     lorentz_results.csv   — all computed values
     lorentz_table.tex     — LaTeX table for paper
@@ -90,6 +99,25 @@ LAT_PHOTONS_CSV = find_project_root() / "LAT_analysis" / "lat_photons.csv"
 # This is the threshold quoted in the table caption and in the appendix footnotes.
 TS_SECURE_DETECTION = 25.0
 
+# Below this, the highest-energy photon gives too weak a pair-production constraint to report as a
+# Limit A/B bound. GRB080916C only -- see lorentz_factor.md sec 12.
+PHOTON_E_MIN_MEV = 1000.0
+
+# Kept despite a sub-GeV photon: both are 2 of the 3 BB-inclusive episodes (with T90) the existing
+# thermal-vs-opacity comparison (Figure 9, sec 8.6) depends on; dropping them would silently
+# invalidate an already-published comparison. TR4/TR5/EX1 have no such stake and are cut cleanly.
+PHOTON_ENERGY_CUT_EXEMPT_EPISODES = {"EX0", "TR1"}
+
+# Measured variability timescale from the manual Norris-pulse fits in codes-for-paper/variability_analysis/
+# (Phase 5, PHASE5_TV_PLAN.md / NORRIS_TV_LORENTZ_INTEGRATION_PLAN.md). Read as plain CSVs rather than an
+# import across folders, per CLAUDE.md's "copy rather than fight sys.path" convention.
+VARIABILITY_ANALYSIS_DIR = find_project_root() / "codes-for-paper" / "variability_analysis"
+
+# A Norris-measured t_v is only trusted if its MC propagation kept at least this fraction of draws;
+# variability_analysis.md flags several pulses below this as "unresolved" (e.g. GRB131014A pulses 1-2,
+# 0.10-0.21). Below the threshold the episode falls back to duration, exactly as before -- see load_norris_tv().
+MC_KEPT_FRACTION_MIN = 0.5
+
 
 def load_lat_photons(csv_path=LAT_PHOTONS_CSV):
     """Read the LAT table, returning per-episode photon data and the weak detections.
@@ -114,12 +142,83 @@ def load_lat_photons(csv_path=LAT_PHOTONS_CSV):
 
 LAT_PHOTONS, LOW_SIGNIFICANCE = load_lat_photons()
 
+
+def load_norris_tv(photons):
+    """Per-episode measured t_v from the manual Norris-pulse fits, one row selected per episode.
+
+    Several episodes have more than one candidate pulse (their window overlaps a neighbouring
+    episode's -- e.g. EX0 is a strict superset of TR1's window, so a pulse belonging to TR1 also
+    falls inside EX0). Where more than one candidate exists, the one whose ``t_peak_s`` is closest
+    to that episode's own Gamma_min-defining LAT photon arrival time (``t_arr_s``, from `photons`)
+    is selected -- the rule locked in `PHASE5_TV_PLAN.md` for the (abandoned) automated pipeline,
+    applied here to the manual joint-fit CSVs instead. Every episode this function is ever asked
+    about is already restricted to ``episode in photons`` by the caller, so `t_arr_s` always exists.
+
+    A selected candidate is only used if its `mc_kept_fraction` is at least `MC_KEPT_FRACTION_MIN`;
+    otherwise the rejection is recorded (`rejected_reason`) and the caller falls back to duration --
+    per `CLAUDE.md`'s "flag rather than silently use" convention, this is never a silent drop.
+
+    Parameters
+    ----------
+    photons :
+        `LAT_PHOTONS`-shaped: `{short_name: {episode: (E_max_MeV, t_arr_s)}}`.
+
+    Returns
+    -------
+    dict :
+        `{(short_name, episode): {"t_v_s", "t_v_err_lower_s", "t_v_err_upper_s", "pulse_index",
+        "mc_kept_fraction", "rejected_reason"}}`. `t_v_s` is `None` when the only candidate(s)
+        failed the quality gate.
+    """
+    result = {}
+    for short_name, episode_photons in photons.items():
+        csv_path = VARIABILITY_ANALYSIS_DIR / f"norris_fit_results_GRB{short_name}.csv"
+        if not csv_path.exists():
+            continue
+
+        table = pd.read_csv(csv_path)
+        table = table[table["episode"].notna()]
+
+        for episode, t_arr in ((ep, t) for ep, (_, t) in episode_photons.items()):
+            candidates = table[table["episode"] == episode]
+            if candidates.empty:
+                continue
+
+            row = candidates.loc[(candidates["t_peak_s"] - t_arr).abs().idxmin()]
+            kept_fraction = float(row["mc_kept_fraction"])
+
+            if kept_fraction < MC_KEPT_FRACTION_MIN:
+                result[(short_name, episode)] = {
+                    "t_v_s": None,
+                    "t_v_err_lower_s": None,
+                    "t_v_err_upper_s": None,
+                    "pulse_index": int(row["pulse_index"]),
+                    "mc_kept_fraction": kept_fraction,
+                    "rejected_reason": f"mc_kept_fraction={kept_fraction:.4f} < {MC_KEPT_FRACTION_MIN}",
+                }
+            else:
+                result[(short_name, episode)] = {
+                    "t_v_s": float(row["t_v_s"]),
+                    "t_v_err_lower_s": float(row["t_v_err_lower_s"]),
+                    "t_v_err_upper_s": float(row["t_v_err_upper_s"]),
+                    "pulse_index": int(row["pulse_index"]),
+                    "mc_kept_fraction": kept_fraction,
+                    "rejected_reason": None,
+                }
+
+    return result
+
+
+NORRIS_TV = load_norris_tv(LAT_PHOTONS)
+
 # Spectroscopic redshifts; None means Gamma_min cannot be computed.
 REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
 
-# Variability timescale: the episode's own duration is used for every episode, uniformly.
-# It is an upper bound on the true variability timescale, so the resulting Gamma_min is a conservative (weaker) lower limit -- the right posture given these bounds is already weaker than published treatments.
-# Populate this map to override an episode with a published value; mixing sources within one table was previously an inconsistency (see `lorentz_factor.md` section 4).
+# Variability timescale precedence: a literature override (this map) beats a measured Norris t_v
+# (NORRIS_TV, Phase 5), which beats the episode's own duration -- the original, still-conservative
+# fallback for any episode Phase 5 doesn't cover (T90, or a low-confidence Norris candidate).
+# Populate this map to override an episode with a published value; mixing sources within one table
+# is fine now -- build_latex_table() marks the source per cell (see NORRIS_TV_LORENTZ_INTEGRATION_PLAN.md).
 VARIABILITY_TIMESCALE: dict = {}
 
 # Monte-Carlo settings, matching the rest of the project.
@@ -260,17 +359,46 @@ def episode_label(interval):
 
 
 def variability_timescale(short_name, episode, interval):
-    """Variability timescale for an episode, and how it was obtained.
+    """Variability timescale for an episode, its source, and its errors if measured.
 
-    A published value is used where one exists. Otherwise the episode duration
-    is adopted: it is an upper bound on the true variability timescale, so the
-    resulting Gamma_min is a conservative lower limit rather than an optimistic
-    one. Gamma_min depends only weakly on it, as delta_T^(-1/(2*alpha+2)).
+    Precedence: a literature override (`VARIABILITY_TIMESCALE`) beats a measured Norris-fit t_v
+    (`NORRIS_TV`, Phase 5), which beats the episode's own duration. The duration is an upper bound
+    on the true variability timescale, so falling back to it keeps Gamma_min a conservative lower
+    limit rather than an optimistic one; Gamma_min depends only weakly on t_v regardless of source,
+    as delta_T^(-1/(2*alpha+2)).
+
+    Returns
+    -------
+    t_v_s : float
+    source : {"literature", "norris", "duration"}
+    err_lower_s, err_upper_s : float or None
+        Only set when source is "norris" -- a literature value and a duration are both treated as
+        exact (no uncertainty to propagate); see `lorentz_factor.md` for the split-normal
+        approximation used to turn these into per-draw resamples in `main()`.
     """
     key = (short_name, episode)
     if key in VARIABILITY_TIMESCALE:
-        return VARIABILITY_TIMESCALE[key], "literature"
-    return interval.end - interval.start, "duration"
+        return VARIABILITY_TIMESCALE[key], "literature", None, None
+
+    norris = NORRIS_TV.get(key)
+    if norris is not None and norris["t_v_s"] is not None:
+        return norris["t_v_s"], "norris", norris["t_v_err_lower_s"], norris["t_v_err_upper_s"]
+
+    return interval.end - interval.start, "duration", None, None
+
+
+def sample_split_normal(median, err_lower, err_upper, size, rng):
+    """Draw `size` samples from a two-piece (split) normal built from an asymmetric 1-sigma interval.
+
+    An approximation, not a reproduction of the Norris fit's own MC draws (which aren't persisted --
+    only their 16/50/84 percentiles are). Used to propagate a measured t_v's own uncertainty into
+    Gamma_min's MC loop; see `lorentz_factor.md` for why this approximation was chosen over
+    re-running the Norris fit here. Draws are clipped to stay positive, since t_v enters
+    `compute_gamma_min` as a divisor.
+    """
+    u = rng.standard_normal(size)
+    sigma = np.where(u < 0.0, err_lower, err_upper)
+    return np.clip(median + u * sigma, 1e-6, None)
 
 
 def main():
@@ -292,7 +420,17 @@ def main():
                 continue
 
             e_max_mev, t_arr = photons[episode]
-            delta_t, delta_t_source = variability_timescale(short_name, episode, model.interval)
+            if (
+                short_name == "080916C"
+                and e_max_mev < PHOTON_E_MIN_MEV
+                and episode not in PHOTON_ENERGY_CUT_EXEMPT_EPISODES
+            ):
+                print(f"GRB{short_name:<9}{episode:<6}  skipped: E_max={e_max_mev:.1f} MeV < {PHOTON_E_MIN_MEV:.0f} MeV cut")
+                continue
+
+            delta_t, delta_t_source, delta_t_err_lo, delta_t_err_hi = variability_timescale(
+                short_name, episode, model.interval
+            )
             beta = high_energy_index(model)
 
             if redshift is None or beta is None or beta >= -1.0:
@@ -310,8 +448,17 @@ def main():
                 alpha_draws = -samples[:, index_position]
                 f1_draws = f1_from_values(model.name, samples)
 
+                # When t_v is a measured Norris value, resample it too (split-normal approximation from
+                # its own asymmetric error) so Gamma_min's error bars reflect its uncertainty as well,
+                # not just f_1/alpha's -- a duration or literature t_v is treated as exact, as before.
+                if delta_t_source == "norris":
+                    delta_t_for_draws = sample_split_normal(delta_t, delta_t_err_lo, delta_t_err_hi, N_SAMPLES, rng)
+                else:
+                    delta_t_for_draws = delta_t
+
                 usable = np.isfinite(f1_draws) & (f1_draws > 0) & (alpha_draws > 1.0)
-                gamma_draws, _ = compute_gamma_min(alpha_draws[usable], f1_draws[usable], e_max_mev, delta_t, redshift)
+                delta_t_usable = delta_t_for_draws[usable] if delta_t_source == "norris" else delta_t
+                gamma_draws, _ = compute_gamma_min(alpha_draws[usable], f1_draws[usable], e_max_mev, delta_t_usable, redshift)
                 gamma_draws = gamma_draws[np.isfinite(gamma_draws)]
                 lo, med, hi = np.percentile(gamma_draws, PERCENTILES)
                 gamma_lo, gamma_hi = med - lo, hi - med
@@ -334,6 +481,8 @@ def main():
                     "t_arr_s": t_arr,
                     "t_v_s": delta_t,
                     "t_v_source": delta_t_source,
+                    "t_v_err_lower_s": delta_t_err_lo,
+                    "t_v_err_upper_s": delta_t_err_hi,
                     "model": model.name,
                     "beta": beta,
                     "alpha_LS": alpha_ls,
@@ -362,6 +511,26 @@ def fmt(val, fmt_str):
     return r"\ldots" if val is None else f"${format(val, fmt_str)}$"
 
 
+# t_v source -> table marker. "literature" carries none today (VARIABILITY_TIMESCALE is empty),
+# but is included so a future entry there doesn't need this map touched again.
+T_V_SOURCE_MARKER = {"duration": r"\dagger", "norris": r"\ast", "literature": ""}
+
+
+def fmt_t_v(r):
+    """Format the t_v cell: a bare value with its source marker, or value +- error for a measured one.
+
+    Per-cell, not per-column -- t_v_source now varies row to row (duration vs. a measured Norris
+    value, see load_norris_tv()), so a single header dagger can no longer describe every row.
+    """
+    if r["t_v_s"] is None:
+        return r"\ldots"
+
+    marker = T_V_SOURCE_MARKER[r["t_v_source"]]
+    if r["t_v_source"] == "norris":
+        return f"${r['t_v_s']:.3f}^{{+{r['t_v_err_upper_s']:.3f}}}_{{-{r['t_v_err_lower_s']:.3f}}}\\,{marker}$"
+    return f"${r['t_v_s']:.3f}" + (f"\\,{marker}" if marker else "") + "$"
+
+
 def build_latex_table(results):
     """Render the per-episode Gamma_min table.
 
@@ -370,17 +539,6 @@ def build_latex_table(results):
     -- the CSV keeps every row regardless, this is a table-only presentation choice.
     """
     results = [r for r in results if r["z"] is not None]
-
-    # The dagger marking "duration adopted as t_v" is carried once, in the column
-    # header, rather than repeated per cell -- true today because every remaining
-    # row (all GRB080916C, VARIABILITY_TIMESCALE is empty) shares the same source.
-    # Asserted rather than assumed: if a literature t_v is ever added for one of
-    # these episodes, this must fail loudly instead of silently mislabeling it.
-    t_v_sources = {r["t_v_source"] for r in results}
-    assert t_v_sources == {"duration"}, (
-        f"build_latex_table assumes every shown row's t_v is duration-sourced (header carries a single "
-        f"dagger accordingly); found {t_v_sources}. Move the dagger back to per-cell if this is no longer true."
-    )
 
     rows = ""
     current = None
@@ -403,7 +561,7 @@ def build_latex_table(results):
 
         rows += (
             f"    {r['episode']} & {fmt(r['z'], '.2f')} & {fmt(r['E_max_MeV'] / 1e3, '.2f')} & "
-            f"{fmt(r['t_arr_s'], '.2f')} & {fmt(r['t_v_s'], '.3f')} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
+            f"{fmt(r['t_arr_s'], '.2f')} & {fmt_t_v(r)} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
         )
 
     return (
@@ -419,9 +577,10 @@ $t_{\rm v}$ the variability timescale,
 $\beta$ the high-energy photon index of the episode's best-fit model,
 and $\Gamma_{\min}$ the derived lower limit~\citep{Lithwick2001}.
 Errors on $\Gamma_{\min}$ are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo
-draws (seed __SEED__) of the spectral parameters; they are far smaller than the systematic
-uncertainty from the choice of $t_{\rm v}$ and from the analytic approximation
-adopted, and should not be read as the total uncertainty.
+draws (seed __SEED__) of the spectral parameters (and, for a $\dagger$-free $t_{\rm v}$, of
+$t_{\rm v}$'s own measured uncertainty as well); they are far smaller than the systematic
+uncertainty from the analytic approximation adopted, and should not be read as the total
+uncertainty.
 Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z = 4.35$);
 the other three bursts lack a measured redshift, so $\Gamma_{\min}$ is undetermined for
 them and they are omitted from this table.}
@@ -432,7 +591,7 @@ them and they are omitted from this table.}
 \begin{tabular}{lcccccc}
 \toprule
 Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
-    $t_{\rm v}$ [s]$^{\dagger}$ & $\beta$ & $\Gamma_{\min}$ \\
+    $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
 \midrule
 """
         + rows
@@ -441,6 +600,7 @@ Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
 \begin{tablenotes}
 \footnotesize
 \item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$.
+\item[$\ast$] Measured variability timescale from a joint Norris-pulse fit to the light curve, given with its $1\sigma$ Monte Carlo uncertainty.
 \item[$\ddagger$] \ac{LAT} detection with $\mathrm{TS} < 25$; the highest-energy photon association is not secure.
 \end{tablenotes}
 \end{threeparttable}

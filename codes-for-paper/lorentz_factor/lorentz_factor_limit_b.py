@@ -51,15 +51,20 @@ from lorentz_factor import (
     LAT_PHOTONS,
     N_SAMPLES,
     PERCENTILES,
+    PHOTON_E_MIN_MEV,
+    PHOTON_ENERGY_CUT_EXEMPT_EPISODES,
     REDSHIFTS,
     TEX_NAMES,
     H0,
     OM0,
+    T_V_SOURCE_MARKER,
     compute_tau_hat,
     episode_label,
     f1_from_values,
+    fmt_t_v,
     high_energy_index,
     high_energy_index_param_name,
+    sample_split_normal,
     variability_timescale,
 )
 
@@ -117,7 +122,20 @@ def main():
                 # (mirrors the paper's own Table 3, which lists both limits side by side).
                 continue
 
-            delta_t, delta_t_source = variability_timescale(short_name, episode, model.interval)
+            e_max_mev, _ = photons[episode]
+            if (
+                short_name == "080916C"
+                and e_max_mev < PHOTON_E_MIN_MEV
+                and episode not in PHOTON_ENERGY_CUT_EXEMPT_EPISODES
+            ):
+                # Same energy floor as Limit A, so both tables keep the same episode set -- see
+                # lorentz_factor.py's identical check and lorentz_factor.md sec 12.
+                print(f"GRB{short_name:<9}{episode:<6}  skipped: E_max={e_max_mev:.1f} MeV < {PHOTON_E_MIN_MEV:.0f} MeV cut")
+                continue
+
+            delta_t, delta_t_source, delta_t_err_lo, delta_t_err_hi = variability_timescale(
+                short_name, episode, model.interval
+            )
             beta = high_energy_index(model)
 
             if redshift is None or beta is None or beta >= -1.0:
@@ -133,8 +151,16 @@ def main():
                 alpha_draws = -samples[:, index_position]
                 f1_draws = f1_from_values(model.name, samples)
 
+                # Same t_v error propagation as Limit A -- see lorentz_factor.py::main() and
+                # lorentz_factor.md; both limits share every t_v caveat (lorentz_factor.md sec 8.4).
+                if delta_t_source == "norris":
+                    delta_t_for_draws = sample_split_normal(delta_t, delta_t_err_lo, delta_t_err_hi, N_SAMPLES, rng)
+                else:
+                    delta_t_for_draws = delta_t
+
                 usable = np.isfinite(f1_draws) & (f1_draws > 0) & (alpha_draws > 1.0)
-                gamma_draws, _ = compute_gamma_min_limit_b(alpha_draws[usable], f1_draws[usable], delta_t, redshift)
+                delta_t_usable = delta_t_for_draws[usable] if delta_t_source == "norris" else delta_t
+                gamma_draws, _ = compute_gamma_min_limit_b(alpha_draws[usable], f1_draws[usable], delta_t_usable, redshift)
                 gamma_draws = gamma_draws[np.isfinite(gamma_draws)]
                 lo, med, hi = np.percentile(gamma_draws, PERCENTILES)
                 gamma_lo, gamma_hi = med - lo, hi - med
@@ -154,6 +180,8 @@ def main():
                     "z": redshift,
                     "t_v_s": delta_t,
                     "t_v_source": delta_t_source,
+                    "t_v_err_lower_s": delta_t_err_lo,
+                    "t_v_err_upper_s": delta_t_err_hi,
                     "model": model.name,
                     "beta": beta,
                     "alpha_LS": alpha_ls,
@@ -190,15 +218,6 @@ def build_latex_table(results):
     """
     results = [r for r in results if r["z"] is not None]
 
-    # See lorentz_factor.py::build_latex_table for why this is asserted rather than
-    # assumed: the header carries one dagger for all rows, valid only while every
-    # remaining row's t_v is duration-sourced.
-    t_v_sources = {r["t_v_source"] for r in results}
-    assert t_v_sources == {"duration"}, (
-        f"build_latex_table assumes every shown row's t_v is duration-sourced (header carries a single "
-        f"dagger accordingly); found {t_v_sources}. Move the dagger back to per-cell if this is no longer true."
-    )
-
     rows = ""
     current = None
     for r in results:
@@ -216,7 +235,7 @@ def build_latex_table(results):
 
         rows += (
             f"    {r['episode']} & {fmt(r['z'], '.2f')} & "
-            f"{fmt(r['t_v_s'], '.3f')} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
+            f"{fmt_t_v(r)} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
         )
 
     return (
@@ -228,7 +247,7 @@ def build_latex_table(results):
 Minimum bulk Lorentz factor $\Gamma_{\min}$ from Compton scattering off pair-produced $e^{\pm}$ (Lithwick \& Sari 2001, Limit B), evaluated for every episode with \ac{LAT} coverage -- the same episode set as the Limit A table (\ref{tab:lorentz}).
 Unlike Limit A, this bound does not depend on the LAT photon energy, so it applies equally to episodes whose highest-energy photon is a low-significance association.
 $t_{\rm v}$ the variability timescale, $\beta$ the high-energy photon index of the episode's best-fit model, and $\Gamma_{\min}$ the derived lower limit~\citep{Lithwick2001}.
-Errors are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo draws (seed __SEED__) of the spectral parameters; as with Limit A they are far smaller than the systematic uncertainty from the choice of $t_{\rm v}$ and the analytic approximation adopted.
+Errors are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo draws (seed __SEED__) of the spectral parameters (and, for a $\dagger$-free $t_{\rm v}$, of $t_{\rm v}$'s own measured uncertainty as well); as with Limit A they are far smaller than the systematic uncertainty from the analytic approximation adopted.
 Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z = 4.35$); the other three bursts lack a measured redshift, so $\Gamma_{\min}$ is undetermined for them and they are omitted from this table.
 }
 \label{tab:lorentz_limit_b}
@@ -237,7 +256,7 @@ Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z =
 \resizebox{\columnwidth}{!}{
 \begin{tabular}{lcccc}
 \toprule
-Episode & $z$ & $t_{\rm v}$ [s]$^{\dagger}$ & $\beta$ & $\Gamma_{\min}$ \\
+Episode & $z$ & $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
 \midrule
 """
         + rows
@@ -247,6 +266,7 @@ Episode & $z$ & $t_{\rm v}$ [s]$^{\dagger}$ & $\beta$ & $\Gamma_{\min}$ \\
 \begin{tablenotes}
 \footnotesize
 \item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$.
+\item[$\ast$] Measured variability timescale from a joint Norris-pulse fit to the light curve, given with its $1\sigma$ Monte Carlo uncertainty.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}

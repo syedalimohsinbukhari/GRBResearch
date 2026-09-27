@@ -52,7 +52,7 @@ Five episodes have LAT detections with TS < 25 (footnotes a–e of the appendix 
 
 ## 3. Results
 
-**STALE — kept for historical narrative only, do not read these numbers as current.** Confirmed 2026-09-16: the $\Gamma_\text{min}$ values below (134/78/86/129/137/80/83/71) are the pre-BUG-18 numbers. The current `lorentz_results.csv` (and §8.3's Limit A column) instead give 507/350/380/447/504/295/287/260 for the same episodes in the same order — see §8.3's own note ("Limit A values here are post-BUG-18 ... not the pre-fix numbers in §3 above"), which this session's check confirms still describes the live discrepancy correctly. The thermal-$\Gamma$ comparison and $Y$-constraint below were computed from the *stale* column and have not been redone with the current values; the qualitative conclusion (bounds too weak to constrain $Y$) almost certainly still holds since $(350/852)^4\approx0.03$ is still $\ll1$, but the quoted figure ($7\times10^{-5}$) is off by roughly two orders of magnitude and should be recomputed before being cited again.
+**STALE — kept for historical narrative only, do not read these numbers as current.** Confirmed 2026-09-16: the $\Gamma_\text{min}$ values below (134/78/86/129/137/80/83/71) are the pre-BUG-18 numbers. `lorentz_results.csv` moved on twice since: to 507/350/380/447/504/295/287/260 post-BUG-18 (§8.3's original note), then, as of 2026-09-27 (§11), to **507/361/374/741/585/360/375/308** once measured Norris-fit $t_v$ replaced duration for every episode but T90. See §11 for the full before/after table and the decisions behind it. The thermal-$\Gamma$ comparison and $Y$-constraint below were computed from the doubly-stale column and have not been redone with the current values; the qualitative conclusion (bounds too weak to constrain $Y$) almost certainly still holds, but the quoted figures should be recomputed from §11's numbers before being cited again.
 
 Only GRB080916C has a spectroscopic redshift, so only it yields values:
 
@@ -156,14 +156,16 @@ With $\alpha \approx 2.2$ the exponent on $f_1$ and $\Delta T$ is only $\approx 
 
 ## 6. Limitations
 
-- **Our bounds are much weaker than published ones for the same burst.** Abdo et al. (2009) obtain $\Gamma_\text{min} = 887 \pm 21$ (their bin b, 3.6–7.7 s) and $608 \pm 15$ (bin d); our TR2, which contains the same ~2 GeV photon, gives 129 pre-BUG-18 / **447 in the current, post-BUG-18 `lorentz_results.csv`** (see §3's staleness note). Even at the corrected value the gap to Abdo et al. remains large and is still methodological, not explained by $\Delta T$ alone — Lithwick & Sari's Limit A is a simplified analytic form and Abdo et al. use a fuller treatment. **Our values should be presented as conservative lower limits, not as competitive with published ones.**
+- **Our bounds are much weaker than published ones for the same burst.** Abdo et al. (2009) obtain $\Gamma_\text{min} = 887 \pm 21$ (their bin b, 3.6–7.7 s) and $608 \pm 15$ (bin d); our TR2, which contains the same ~2 GeV photon, gives 129 pre-BUG-18 / 447 post-BUG-18 / **741 in the current `lorentz_results.csv`, since §11's Norris-measured $t_v$** (see §3's staleness note). The gap to Abdo et al. has narrowed substantially with each correction but is still methodological where it remains, not fully explained by $\Delta T$ alone — Lithwick & Sari's Limit A is a simplified analytic form and Abdo et al. use a fuller treatment. **Our values should be presented as conservative lower limits, not as competitive with published ones.**
 - **Only GRB080916C yields values**, since the other three lack redshifts.
 - **T90 rows are not independent** of the TR rows that tile them.
 - Episodes whose best-fit model has $\beta \geq -1$ are skipped: $\alpha \leq 1$ makes the expression singular.
 
 ---
 
-## 6b. A better $t_v$: the Norris-profile fit — **assessed 2026-08-21, feasible; measurement now in progress, see status note**
+## 6b. A better $t_v$: the Norris-profile fit — **assessed 2026-08-21, feasible; wired into Gamma_min 2026-09-27, see §11**
+
+**Status update (2026-09-27): done — see §11.** Everything below this line describes the assessment and the measurement work as it stood before wiring; §11 records what was actually fed into `Gamma_min` and the resulting numbers. Kept here for the historical reasoning (why it was worth doing, what the caveats were before a real fit existed), not as the current state.
 
 **Status update (2026-09-16):** this section's "not yet done" is now only true of *this file* (`VARIABILITY_TIMESCALE` below is still empty and $\Gamma_\text{min}$ is still computed at episode duration). The actual measurement work described here started under `PHASE5_TV_PLAN.md` (project root): an automated MEPSA-based pipeline was tried and abandoned (stalled on GRB080916C's TR2), and a manual, GRB-by-GRB joint-Norris-fit track is now underway in `codes-for-paper/variability_analysis/` (see that folder's `variability_analysis.md`), covering GRB131014A, GRB140206B, and GRB231129C so far — GRB080916C (the burst that actually feeds a published $\Gamma_\text{min}$ here) does not yet have a manual fit. None of this has been fed back into `VARIABILITY_TIMESCALE` or this script; that remains a separate, explicit follow-up per `PHASE5_TV_PLAN.md`'s own deliverable-boundary decision.
 
@@ -194,7 +196,7 @@ with free parameters $F$, $t_s$, $\tau_1$, $\tau_2$. For GRB110721A they fit the
 
 **$t_v$ is currently the single largest systematic in $\Gamma_\text{min}$** — larger than everything in §5 except the analytic approximation itself. The three candidate conventions span a factor of two (134 / 209 / 258 for T90). We deliberately chose the most conservative, the episode duration, which is an *upper bound* on the true variability timescale and therefore *depresses* $\Gamma_\text{min}$.
 
-A Norris fit would replace that upper bound with a measurement. Since $\Gamma_\text{min} \propto t_v^{-1/(2\alpha+2)}$, the effect is predictable: for TR3, moving $t_v$ from its 40.256 s duration to a Norris-like $\sim$0.7 s would raise $\Gamma_\text{min}$ by a factor $(40.256/0.7)^{0.154} \approx 1.87$ — from the pre-BUG-18 137 to roughly 256 as originally estimated here, or, applied to the current post-BUG-18 value (504, §3/§8.3), to roughly $504\times1.87\approx943$. That closes part — not all, in the pre-BUG-18 estimate, or plausibly all, at the current value — of the gap to \citet{Abdo2009FermiObservations080916C}'s 887; this illustrative number has not been recomputed properly with the current $f_1$/$\alpha$, only rescaled by the same factor, so treat it as indicative only. It would let us state that our limits are conservative *for a quantified reason* rather than by construction.
+A Norris fit would replace that upper bound with a measurement. Since $\Gamma_\text{min} \propto t_v^{-1/(2\alpha+2)}$, the effect is predictable: for TR3, moving $t_v$ from its 40.256 s duration to a Norris-like $\sim$0.7 s would raise $\Gamma_\text{min}$ by a factor $(40.256/0.7)^{0.154} \approx 1.87$ — from the pre-BUG-18 137 to roughly 256 as originally estimated here, or, applied to the then-current post-BUG-18 value (504, §3/§8.3), to roughly $504\times1.87\approx943$. **This illustrative projection is now superseded by an actual measurement, §11**: TR3's real fitted $t_v$ is 15.385 s (not the ~0.7 s guessed here from Bukhari et al.'s GRB110721A), giving $\Gamma_\text{min}=585$ — real, but a smaller jump than this section's illustrative estimate assumed, since GRB080916C's TR3 pulse turned out substantially wider than the guessed proxy value. It would let us state that our limits are conservative *for a quantified reason* rather than by construction.
 
 ### Caveats to settle first
 
@@ -256,7 +258,7 @@ using the *same* $\hat\tau$ as Limit A (eq. 4/9) — the two limits share the op
 | EX1 | $287^{+3}_{-3}$ | $131 \pm 5$ | A |
 | TR5 | $260^{+6}_{-5}\,^\ddagger$ | $141 \pm 9$ | A |
 
-(Limit A values here are post-BUG-18, i.e. the corrected MeV-consistent table, not the pre-fix numbers in §3 above.) For this sample, **Limit A is the larger (binding) bound in every episode**, so $\max(A,B) = A$ throughout and this does not change the paper's reported $\Gamma_\text{min}$. This is a real result, not a wasted computation: it confirms Limit A's dominance rather than assuming it, and Limit B remains available as the fallback for the low-significance-flagged episodes should Limit A's photon association ever be reconsidered.
+(Limit A/B values here are post-BUG-18 but pre-§11, i.e. duration-sourced $t_v$ — **superseded by §11's Norris-measured values**, not the pre-fix numbers in §3 above.) For this sample, **Limit A is the larger (binding) bound in every episode**, so $\max(A,B) = A$ throughout and this does not change the paper's reported $\Gamma_\text{min}$ — re-checked with §11's numbers, same conclusion holds. This is a real result, not a wasted computation: it confirms Limit A's dominance rather than assuming it, and Limit B remains available as the fallback for the low-significance-flagged episodes should Limit A's photon association ever be reconsidered.
 
 ### 8.4 Limitations
 
@@ -305,3 +307,180 @@ The user hand-edited `GRBResearchPaper/tex_files/generated/lorentz_table_limit_b
 ## 10. Build tooling — **switched from `latexmk` to `pdflatex`+`bibtex`, 2026-08-21**
 
 At the user's request, after past friction with `latexmk` elsewhere. Full command sequence and the `BIBINPUTS`/`BSTINPUTS` gotcha this surfaced (plain `bibtex out/main` cannot find `ref.bib`/`bibtex/aa.bst`, both of which live at the repo root, not `out/`) are recorded in `HANDOFF.md` §2, not duplicated here — that file is the build-instructions source of truth for the whole paper, not just this topic's tables.
+
+## 11. Norris-measured t_v wired into Gamma_min — **added 2026-09-27**
+
+Full plan in `NORRIS_TV_LORENTZ_INTEGRATION_PLAN.md` (project root) — this section records what
+was actually implemented and the resulting numbers; the plan file records the reasoning behind
+each decision before implementation and isn't duplicated here.
+
+**What changed.** §4/§6b above describe using each episode's duration as $t_v$ because no
+measurement existed. Phase 5 (`PLAN.md`, `codes-for-paper/variability_analysis/`) has since
+produced one: a manual, per-burst joint Norris-pulse fit to the 10–400 keV summed light curve,
+with per-pulse $t_v$ and its MC-propagated uncertainty in `norris_fit_results_GRB<name>.csv`.
+`lorentz_factor.py`/`lorentz_factor_limit_b.py` now use this measurement wherever one exists and
+passes a quality gate, falling back to duration otherwise. **This is the fourth time
+$\Gamma_\text{min}$ has changed (197→258→134→507→see below)** — every prior change is recorded in
+`BUGS.md`/`HANDOFF.md` §4; this one is a systematic improvement (a measurement replacing a
+deliberately conservative upper bound), not a bug fix.
+
+### 11.1 Decisions (user, 2026-09-27)
+
+1. **Multi-pulse → episode selection.** Several episodes have more than one Norris-fitted pulse
+   whose `t_peak_s` falls inside their window (e.g. `EX0` is a strict superset of `TR1`'s window,
+   so `TR1`'s own pulse is also a candidate for `EX0`). The candidate whose `t_peak_s` is closest
+   to that episode's own $\Gamma_\text{min}$-defining LAT photon arrival time (`t_arr_s`) is
+   selected — the exact rule already locked in `PHASE5_TV_PLAN.md` for the (abandoned) automated
+   pipeline, applied here to the manual joint-fit CSVs instead. Implemented in
+   `load_norris_tv()`.
+2. **GRB080916C's missing `EX0`/`EX1` bounds.** `variability_analysis/shared_utilities.py`'s
+   `grb080916C_bounds()` was the only one of the four bursts' bounds functions without `EX0`/`EX1`
+   entries (confirmed against `results.json`: `EX0 -0.128_4.864`, `EX1 59.520_67.904`) — so before
+   this fix, only `TR1`–`TR5` were eligible for a measured $t_v$ for this burst, the one that
+   actually matters. Added, and `fitter_GRB080916C.py` rerun to regenerate
+   `norris_fit_results_GRB080916C.csv` (8 rows, was 6) — diffed against the pre-fix CSV first:
+   exactly two new rows (`EX0`/pulse 1 relabelled from blank, `EX0`/pulse 2 and `EX1`/pulse 6
+   newly added), every pre-existing row's fit parameters unchanged to ~1e-7 relative (ordinary
+   optimizer floating-point noise, same class as documented for BUG-23).
+3. **Quality gate.** A Norris measurement is only used if the selected pulse's `mc_kept_fraction`
+   is at least `MC_KEPT_FRACTION_MIN = 0.5`; below it, the episode falls back to duration with the
+   rejection recorded (`load_norris_tv()`'s `rejected_reason`), never silently dropped. Verified
+   the gate actually triggers (not a no-op) by temporarily raising the threshold to 0.99 in a
+   throwaway check: it correctly flagged exactly the lower-confidence candidates
+   (`GRB080916C` EX1/TR2/TR4/TR5, `GRB140206B` TR3, `GRB231129C` EX1/TR2 — all in the
+   0.53–0.86 `mc_kept_fraction` range) and none of the high-confidence ones. At the adopted
+   threshold (0.5), every one of GRB080916C's episodes passes.
+4. **Error propagation.** A measured $t_v$ has its own MC uncertainty
+   (`t_v_err_lower_s`/`upper_s`, 16/50/84 percentiles from the Norris fit's own MC), which should
+   show up in $\Gamma_\text{min}$'s error bars (`CLAUDE.md`'s "every MC-derived quantity carries an
+   error"). The underlying per-draw $t_v$ samples aren't persisted (only the percentiles are), and
+   re-deriving them exactly would mean importing the fitted `NorrisFitter` object across folders —
+   against `CLAUDE.md`'s "copy rather than fight `sys.path`" convention. **Approximation, stated
+   explicitly here rather than left implicit:** `sample_split_normal()` draws $t_v$ per MC
+   iteration from a two-piece (split) normal built from the median and its asymmetric
+   lower/upper errors, then clips to stay positive (t_v is a divisor in `compute_gamma_min`). This
+   is not a reproduction of the Norris fit's own MC draws, and is acceptable only because
+   $\Gamma_\text{min}$ is already known to depend weakly on $t_v$ (exponent $\approx0.15$, §5
+   above). Duration- and literature-sourced rows are unaffected (a bound/adopted value is treated
+   as exact, no resampling).
+
+### 11.2 Results, GRB080916C — supersedes §3/§8.3
+
+Every episode except `T90` (Norris deliberately never fits it — a multi-pulse span, §6b) moves
+from duration to a measured $t_v$; every candidate passed the quality gate at the adopted 0.5
+threshold.
+
+| Episode | $t_v$ old (duration) [s] | $t_v$ new (Norris) [s] | source | Limit A $\Gamma_\text{min}$: old → new | Limit B $\Gamma_{\text{min},B}$: old → new |
+|---|---|---|---|---|---|
+| T90 | 62.976 | 62.976 | duration (unchanged) | 507 → 507 | 112 → 112 |
+| EX0 | 4.992 | 4.030 | norris | 350 → 361 | 190 → 197 |
+| TR1 | 3.584 | 4.030 | norris | 380 → 374 | 213 → 209 |
+| TR2 | 10.176 | 0.432 | norris | 447 → **741** | 190 → **352** |
+| TR3 | 40.256 | 15.385 | norris | 504 → 585 | 115 → 138 |
+| TR4 | 4.224 | 1.192 | norris | 295 → 360 | 154 → 197 |
+| EX1 | 8.384 | 1.599 | norris | 287 → 375 | 131 → 182 |
+| TR5 | 4.736 | 1.599 | norris | 260 → 308 | 141 → 174 |
+
+`TR2` moves the most (a much shorter measured pulse than its 10.176 s duration), narrowing the gap
+to Abdo et al.'s 887 (overlapping interval) further than any prior correction alone. **Limit A
+still dominates Limit B in every episode** — re-verified after this change, same conclusion as
+§8.3. The shared `tau_hat` bit-identity between the two limits (§8.2) was re-checked and still
+holds exactly (max abs diff `0.0`) with the new Norris-derived `delta_T`, as it must for two
+functions computing the same closed form from the same inputs.
+
+`gamma_comparison.png`/`.pdf` regenerated from the new CSVs; visually confirmed clean (no gaps,
+legend intact, both limits and the thermal $\Gamma$ correctly ordered).
+
+### 11.3 Table changes
+
+`build_latex_table()` in both scripts previously carried a single `\dagger` in the column header,
+asserting every shown row was duration-sourced. That assertion would now fail (rows are a mix of
+`duration` and `norris`), so the marker moved per-cell (`fmt_t_v()`): `\dagger` for
+duration-sourced (unchanged meaning), a new `\ast` for Norris-sourced, printed with its
+$1\sigma$ MC uncertainty (`$4.030^{+0.168}_{-0.181}\,\ast$`, not a bare median) per `CLAUDE.md`'s
+uncertainty rule. Both tablenotes blocks gained a `$\ast$` entry.
+
+### 11.4 Scope boundary
+
+This work is `GRBResearchWork`-only: `lorentz_results.csv`/`lorentz_results_limit_b.csv`/both
+`.tex` tables/`gamma_comparison.png`/`.pdf` are regenerated, and `norris_fit_results_GRB080916C.csv`
+now has 8 rows. **`GRBResearchPaper` is untouched** (confirmed via `git status`) — paper
+integration (new prose, a `VERIFY.md` entry, copying the regenerated tables) is a deliberate
+follow-up once these numbers are reviewed, matching the precedent set by BUG-18 and the RNG
+overhaul (§13 of `HANDOFF.md`).
+
+### 11.5 Files
+
+- `codes-for-paper/lorentz_factor/_backup_2026-09-27_pre_norris_tv/` — every file in this folder
+  as it stood before this change.
+- `codes-for-paper/variability_analysis/_backup_2026-09-27_pre_ex0ex1/` — `shared_utilities.py`
+  and `norris_fit_results_GRB080916C.csv` as they stood before the `EX0`/`EX1` bounds fix.
+- New in `lorentz_factor.py`: `load_norris_tv()`, `sample_split_normal()`, `fmt_t_v()`,
+  `T_V_SOURCE_MARKER`, `VARIABILITY_ANALYSIS_DIR`, `MC_KEPT_FRACTION_MIN`, `NORRIS_TV`.
+  `variability_timescale()` now returns a 4-tuple (value, source, err_lower, err_upper).
+- `lorentz_factor_limit_b.py` imports the new shared helpers from `lorentz_factor.py` (same
+  pattern as the existing `compute_tau_hat` sharing) rather than duplicating them.
+
+## 12. A `>1 GeV` LAT-photon floor on GRB080916C's episode set — **added 2026-09-27**
+
+Follow-up to §11, same session. Raised by the user asking which LAT photons actually anchor each
+episode's Norris-measured $t_v$ selection.
+
+### 12.1 The photon inventory that motivated this
+
+Pulling GRB080916C's full LAT photon list (`shared_utilities.py::lat_details()`, `>1 GeV` floor —
+matching `fitter_GRB080916C.py`'s own `PHOTON_E_MIN_MEV=1000` convention for photon-to-pulse
+assignment) found only **14 photons above 1 GeV in the whole burst**, clustering into exactly two
+windows:
+
+| Window (pulse) | Photons `>1 GeV` | Energies [MeV] |
+|---|---|---|
+| TR2 (pulse 3, $t_\text{peak}=5.85$ s) | 3 | 1693.6, 2110.1, 1500.6 |
+| TR3 (pulse 4, $t_\text{peak}=25.91$ s) | 11 | 1106.1, 12421.5, 1230.4, 1382.1, 2568.1, 1649.1, 2499.7, 1742.3, 6721.3, 27428.8, 5707.0 |
+
+No `>1 GeV` photon falls anywhere near `TR1`/`EX0`, `TR4`, or `TR5`/`EX1` — their current
+`LAT_analysis/lat_photons.csv` "defining photon" is sub-GeV (301.2/464.5/340.0/989.4 MeV
+respectively). One photon (1106.1 MeV, $t=10.215$s) sits inside `TR2`'s *time window* but is
+`assign_pulse()`-assigned to pulse 4 (TR3's pulse) rather than pulse 3 — the two classification
+schemes (simple time-bounds vs. which pulse's profile actually dominates at that instant) disagree
+for this one photon. Doesn't change which photon is TR2's highest-energy one either way (2110.1 >
+1106.1), so it doesn't affect anything below.
+
+### 12.2 Decision (user, 2026-09-27)
+
+A sub-GeV highest-energy photon gives too weak a $\gamma\gamma$ pair-production constraint to be
+worth reporting as a Limit A/B bound. Episodes without any `>1 GeV` photon are dropped from
+`lorentz_factor.py`/`lorentz_factor_limit_b.py`'s output entirely — no CSV row, no table row —
+**for GRB080916C only** (the other three bursts' rows are informational, no redshift, no real
+$\Gamma_\text{min}$, and are left untouched).
+
+**Conflict found and resolved before implementing:** `gamma_comparison_plot.py` (paper Figure 9)
+derives its entire x-axis from `lorentz_results.csv`'s episode set, and GRB080916C's thermal
+$\Gamma$ (Pe'er 2007, §8.6) only exists for **T90, EX0, TR1** — the three BB-inclusive episodes.
+Dropping `EX0`/`TR1` under this cut would have silently invalidated the paper's existing
+comparison ("thermal $\Gamma$ exceeds Limit A by 1.5–2.4$\times$ and Limit B by 4.0–6.7$\times$
+across T90/EX0/TR1", already in `section-5-data-analysis.tex`/Figure 9). **Resolved: `EX0`/`TR1`
+are exempted from the cut** (`PHOTON_ENERGY_CUT_EXEMPT_EPISODES`) — they keep their existing
+sub-GeV-photon Limit A/B bound so that comparison is unaffected. `TR4`/`TR5`/`EX1` have no
+BB/thermal-$\Gamma$ counterpart at all (non-BB best-fit models), so nothing downstream depends on
+keeping them; they're dropped cleanly.
+
+### 12.3 Result
+
+GRB080916C's Limit A/B tables go from 8 rows to **5**: `T90`, `EX0`, `TR1`, `TR2`, `TR3` survive;
+`TR4`, `TR5`, `EX1` are dropped. **Every surviving row's values are bit-identical to before this
+change** (max abs diff `0.0` across `t_v_s`/`Gamma_min`/`Gamma_min_B`/both error columns) — this is
+a pure row filter, not a recomputation, verified by diffing against the pre-cut CSVs rather than
+assumed. The three dropped episodes print a `skipped: E_max=... MeV < 1000 MeV cut` console line
+each run, so their absence is never silent.
+
+`gamma_comparison_plot.py` needed **no code changes** — thermal $\Gamma$'s episode set
+(T90/EX0/TR1) remains a full subset of the new, smaller Limit A/B episode set, so there's no
+`KeyError` risk. Regenerated and visually confirmed: 5 columns instead of 8, T90/EX0/TR1 still
+show all three series (thermal, Limit A, Limit B), no gaps or crashes.
+
+### 12.4 Scope
+
+Same boundary as §11: `GRBResearchWork`-only. `GRBResearchPaper` is untouched (confirmed via
+`git status`) — the paper's Figure 9/Table 3/prose still reflect the pre-cut 8-episode data until
+this is reviewed and integrated deliberately.

@@ -49,11 +49,13 @@ def grb080916C_bounds(low: float = E_LOW, high: float = E_HIGH) -> GRB_PROPERTIE
             `(low, high)`, echoed back unchanged.
     """
     episode_bounds = {
+        "EX0": (-0.128, 4.864),
         "TR1": (1.280, 4.864),
         "TR2": (4.864, 15.040),
         "TR3": (15.040, 55.296),
         "TR4": (55.296, 59.52),
         "TR5": (59.52, 64.256),
+        "EX1": (59.520, 67.904),
     }
 
     t05, t95 = 1.280, 64.256
