@@ -693,6 +693,56 @@ this fit, weighted or not — expected, not a new problem from any of this.
   the 5-pulse/[-1,10]s window choice generalize to the other three bursts is untested; the user's plan is to
   work through them manually one at a time.
 
+## Session update, 2026-09-27: GRB231129C widest-window re-check — BUG-26 found and fixed, pulse 3 degeneracy deferred as later work
+
+Prompted by `experiments/window_sensitivity_GRB231129779/window_sensitivity.py` raising
+`RuntimeWarning: overflow encountered in exp` / `invalid value encountered in multiply` when refit
+at the full-range window with the same 6-pulse `P0` copied from the canonical `fitter_GRB231129C.py`.
+
+**Root cause found and fixed: BUG-26.** `norris_fit.py`'s `norris_pulse()` computed two separate
+exponentials multiplied together (`A * exp(2*sqrt(tau1/tau2)) * exp(-tau1/x - x/tau2)`) rather than
+combining them into one clipped argument before a single `exp()` call. Pulse 2's seed
+(`tau1=1065, tau2=0.05`, ratio 21300) doesn't overflow at the seed itself, but the optimizer's own
+Jacobian/line-search probing pushes the ratio further during the fit, and once
+`2*sqrt(tau1/tau2)` exceeds ~709 the first exponential alone overflows to `inf`, which then
+multiplies against the (near-zero) second factor to produce `nan`. Fixed by porting the
+already-validated clipped single-exponent form from `experiments/new_three_model/pulse3.py`'s
+`norris_raw()` into all 5 copies of `norris_fit.py` — bit-identical to the old form for ordinary
+parameters (verified to ~1e-14), only changes behavior in the overflow regime itself. Full
+writeup: `BUGS.md` BUG-26.
+
+**Separate, deeper finding, not a bug: pulse 3 is genuinely degenerate at the full-range window.**
+Fixing BUG-26 removed the warning but did not fix convergence — re-run with the same `P0` (renamed
+`P0_WIDEST` in the script) still failed to converge (`RuntimeError: Optimal parameters not found`),
+even after re-seeding from this file's own pre-BUG-23 widest-window converged result and raising
+`max_iterations` to 20000. Diagnosed directly (not assumed): a short capped-iteration run showed
+pulse 3's parameters running away along the classic `t_s`<->`tau1` degenerate ridge
+(`t_s` −1.196→−3.360, `tau1` 93.9→467.5, `tau2` 0.142→0.073, cost barely moving) — the same
+pathology already documented above for GRB140206B's SIMPLE pulse 5 ("does not anchor, drifts
+continuously along the `t_s`<->`tau1` degenerate ridge as the window opens"). Pulse 3 was already
+the most extreme pulse in the narrow-window fit (`tau1=75.7, tau2=0.154`, ratio ~490 even there),
+consistent with a narrow, spiky pulse whose tail carries too little information density over a
+~600s window to pin `tau1` down.
+
+**Deferred as later work, 2026-09-27 (user decision): not blocking, this session's primary
+objectives (the BUG-25 seeding-fix rerun campaign, BUG-26, and the canonical
+`fitter_GRB<paper-name>.py` restructuring) are done.** The user cannot get remote access to the
+Xeon machine used for the rest of this folder's heavier reruns right now, and resolving pulse 3
+(bound `tau1`, drop the pulse from this check, or accept non-convergence as the finding — the three
+options originally raised) needs more compute time than is worth spending on a side machine.
+`experiments/window_sensitivity_GRB231129779/window_sensitivity.py` is left as-is: `WINDOWS` has
+all three windows active again (`narrow_-1_10`, `wide_-10_20`, `widest_full_range`), `narrow`/`wide`
+share `P0_THIN` (the original narrow-window converged parameters, both converge fine per every
+prior run of this script), and `widest_full_range` uses `P0_WIDEST` — which will still fail to
+converge on pulse 3 exactly as described above until that decision is made and applied. The
+`WINDOW_ORDER`/`by_window` crash fix from earlier in this session (only compares windows actually
+present in `WINDOWS`) remains in place and is unaffected by this.
+
+**Not yet rerun since BUG-26** (see `RERUN_CHECKLIST_seeding_fix.md`): this script's `narrow_-1_10`/
+`wide_-10_20` windows should converge cleanly now (they always did before this session's `P0_WIDEST`
+detour) and are safe to pick up whenever compute is available; `widest_full_range` will not
+converge until the pulse 3 decision above is made.
+
 ## Files here
 
 GRB131014A (documented above):
