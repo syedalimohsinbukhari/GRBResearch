@@ -11,6 +11,7 @@ report_pulse.py).
 
 Every check below returns an AuditItem; run_audit() assembles them into one AuditReport.
 """
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -61,7 +62,7 @@ def _is_pinned(value: float, lo: float, hi: float, rel_tol: float = EDGE_REL_TOL
 
 
 def check_edge_pinning(t_window, reported: ReportedPulse, dt: float | None = None) -> AuditItem:
-    """"No parameter sitting on a box edge (esp. t_v at 2*dt or t_peak at window edge)"."""
+    """ "No parameter sitting on a box edge (esp. t_v at 2*dt or t_peak at window edge)"."""
     lb, ub = pulse3_bounds(t_window, dt=dt)
     t_peak_pinned = _is_pinned(reported.t_peak, lb[1], ub[1])
     t_v_pinned = _is_pinned(reported.t_v, lb[2], ub[2])
@@ -76,7 +77,7 @@ def check_edge_pinning(t_window, reported: ReportedPulse, dt: float | None = Non
 def check_multistart_reproducibility(
     t_window, y_window, r0: float, rng: np.random.Generator, sigma=None, dt: float | None = None, n: int = 5
 ) -> AuditItem:
-    """"Multi-start reproducibility exact (3-param) -- if not, something is wrong upstream".
+    """ "Multi-start reproducibility exact (3-param) -- if not, something is wrong upstream".
     rng is required (see jittered_seeds' docstring -- src/grb_research/SEEDING.md)."""
     seeds = jittered_seeds(t_window, y_window, rng, n=n, dt=dt)
     solutions = []
@@ -93,28 +94,28 @@ def check_multistart_reproducibility(
     arr = np.array(solutions)
     spread = arr.max(axis=0) - arr.min(axis=0)
     scale = np.abs(arr).mean(axis=0)
-    passed = bool(spread[0] < REPRO_REL_TOL * scale[0] and spread[1] < REPRO_REL_TOL and spread[2] < REPRO_REL_TOL * scale[2])
+    passed = bool(
+        spread[0] < REPRO_REL_TOL * scale[0] and spread[1] < REPRO_REL_TOL and spread[2] < REPRO_REL_TOL * scale[2]
+    )
     detail = f"{n} jittered seeds at r0={r0:.4g}: spread(A, t_peak, t_v)={spread}"
     return AuditItem(name="multi-start reproducibility", passed=passed, detail=detail)
 
 
 def check_delta_chi2_recorded(selection: R0SelectionResult) -> AuditItem:
-    """"Delta-chi2 vs 4-param recorded (section 5.4)"."""
+    """ "Delta-chi2 vs 4-param recorded (section 5.4)"."""
     d = selection.delta_chi2
     passed = d["delta_chi2"] is not None
-    detail = (
-        f"delta_chi2={d['delta_chi2']:.4g} ({d['verdict']})"
-        if passed
-        else f"NOT recorded: {d['verdict']}"
-    )
+    detail = f"delta_chi2={d['delta_chi2']:.4g} ({d['verdict']})" if passed else f"NOT recorded: {d['verdict']}"
     return AuditItem(name="Delta-chi2 vs 4-param recorded", passed=passed, detail=detail)
 
 
 def check_flat_zone_recorded(reported: ReportedPulse) -> AuditItem:
-    """"r0 flat-zone range recorded; t_peak/t_v r0-systematic added in quadrature"."""
+    """ "r0 flat-zone range recorded; t_peak/t_v r0-systematic added in quadrature"."""
     lo, hi = reported.r0_flat_zone
     zone_valid = lo <= reported.r0 <= hi or np.isclose(reported.r0, lo) or np.isclose(reported.r0, hi) or lo <= hi
-    quadrature_applied = reported.t_peak_err >= reported.t_peak_err_stat - 1e-12 and reported.t_v_err >= reported.t_v_err_stat - 1e-12
+    quadrature_applied = (
+        reported.t_peak_err >= reported.t_peak_err_stat - 1e-12 and reported.t_v_err >= reported.t_v_err_stat - 1e-12
+    )
     passed = bool(zone_valid and quadrature_applied)
     detail = (
         f"flat_zone={reported.r0_flat_zone}, t_peak_err={reported.t_peak_err:.4g} "
@@ -133,7 +134,7 @@ def check_window_widening(
     background_rate: float = 0.0,
     rel_tol: float = WINDOW_WIDEN_REL_TOL,
 ) -> AuditItem:
-    """"Window-widening diagnostic rerun: result (t_peak, t_v) should be invariant under window
+    """ "Window-widening diagnostic rerun: result (t_peak, t_v) should be invariant under window
     changes; if t_peak rides to a window edge, the window itself is wrong, not the fit".
 
     make_window_data(t_min, t_max) -> (t_window, y_window, sigma) is the caller's data source
@@ -144,7 +145,9 @@ def check_window_widening(
     t0, y0, sigma0 = make_window_data(t_min0, t_max0)
     base = fit_single_r0(t0, y0, r0, sigma=sigma0, dt=dt, background_rate=background_rate)
     if not base.success:
-        return AuditItem(name="window-widening invariance", passed=False, detail="base-window fit did not converge", data=None)
+        return AuditItem(
+            name="window-widening invariance", passed=False, detail="base-window fit did not converge", data=None
+        )
 
     rows = [("base", t_min0, t_max0, base.t_peak, base.t_v)]
     all_ok = True

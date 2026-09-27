@@ -35,16 +35,23 @@ import matplotlib.pyplot as plt
 from light_curves import lightcurve_data
 from norris_fit import NorrisFitter, t_peak, tv_mc_summary
 
-from grb_research import update_style
+from grb_research import update_style, seed_from_name
 from grb_research.grb_utils import save_fig
 
 update_style()
+
+# Deterministic, per-script seed -- project convention (SEEDING.md); added 2026-09-26 (BUG-25),
+# every tv_mc_summary() call below used to omit seed= entirely, silently falling back to
+# norris_fit.py's own hardcoded SEED=12345 default, which that module no longer has.
+SEED = seed_from_name(__file__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 LC_DIR = PROJECT_ROOT / "light_curves" / "GRB080916009"
 ENERGY_LOW, ENERGY_HIGH = 10, 400
 
-dat_NaI = sorted(f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
+dat_NaI = sorted(
+    f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f
+)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 
 # BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
 # count rates raw, with no per-detector normalization -- matching fitter.py's own fix and the existing
@@ -61,11 +68,7 @@ y_full = r1 - b1
 
 T_MIN, T_MAX = float(np.min(t_full)), float(np.max(t_full))
 
-WINDOWS = {
-    "narrow_-1_70": (-1, 70),
-    "wide_-20_150": (-20, 150),
-    "widest_full_range": (T_MIN, T_MAX),
-}
+WINDOWS = {"narrow_-1_70": (-1, 70), "wide_-20_150": (-20, 150), "widest_full_range": (T_MIN, T_MAX)}
 
 # Raw p0 from fitter.py -- SIX pulses (the file's currently-live, uncommented fit).
 P0_6 = [
@@ -91,6 +94,7 @@ P0_7 = [
 
 MODELS_RAW = {"SIX": P0_6, "SEVEN": P0_7}
 
+
 def fit_window(p0, start, stop):
     mask = np.logical_and(t_full > start, t_full < stop)
     t_w, y_w = t_full[mask], y_full[mask]
@@ -100,25 +104,37 @@ def fit_window(p0, start, stop):
     nf.fit(p0=p0)
     return nf, y_max
 
+
 def summarize(nf, n_pulses, label):
     rows = []
     print(f"\n=== {label} ({n_pulses} pulses) ===")
     for i in range(n_pulses):
         A, ts, tau1, tau2 = nf.params[i * 4 : (i + 1) * 4]
         tp = t_peak(ts, tau1, tau2)
-        mc = tv_mc_summary(nf, pulse_index=i + 1)
+        mc = tv_mc_summary(nf, pulse_index=i + 1, seed=SEED)
         print(
             f"  pulse {i + 1}: A={A:.4f} ts={ts:9.4f} tau1={tau1:10.4f} tau2={tau2:8.4f}  "
             f"t_peak={tp:9.4f}  t_v={mc['t_v_s']:.4f} +{mc['t_v_err_upper_s']:.4f} "
             f"-{mc['t_v_err_lower_s']:.4f}  kept={mc['kept_fraction']:.3f}"
         )
         rows.append(
-            {"pulse_index": i + 1, "A_norm": A, "t_s": ts, "tau1": tau1, "tau2": tau2,
-             "t_peak_s": tp, "t_v_s": mc["t_v_s"], "t_v_err_lower_s": mc["t_v_err_lower_s"],
-             "t_v_err_upper_s": mc["t_v_err_upper_s"], "mc_kept_fraction": mc["kept_fraction"],
-             "n_samples": mc["n_samples"], "seed": mc["seed"]}
+            {
+                "pulse_index": i + 1,
+                "A_norm": A,
+                "t_s": ts,
+                "tau1": tau1,
+                "tau2": tau2,
+                "t_peak_s": tp,
+                "t_v_s": mc["t_v_s"],
+                "t_v_err_lower_s": mc["t_v_err_lower_s"],
+                "t_v_err_upper_s": mc["t_v_err_upper_s"],
+                "mc_kept_fraction": mc["kept_fraction"],
+                "n_samples": mc["n_samples"],
+                "seed": mc["seed"],
+            }
         )
     return rows
+
 
 # --- Stage 1: narrow-window fit from raw p0, both models.
 start, stop = WINDOWS["narrow_-1_70"]

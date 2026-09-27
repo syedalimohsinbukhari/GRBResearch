@@ -56,7 +56,8 @@ active_rows = [r for r in rows if r["status"] == "active"]
 CAPTION_SENTENCES = [
     r"Deterministic per-script Monte Carlo seed for every script in this project's analysis pipeline that performs "
     r"random sampling, each derived by hashing the script's file name together with a master seed of "
-    + str(MASTER_SEED) + ".",
+    + str(MASTER_SEED)
+    + ".",
     r"The master seed itself was drawn from a cryptographic random-number generator prior to any analysis, so it is "
     r"auditable and was not chosen to influence any result.",
     r"Deriving each script's seed this way, rather than sharing one literal value, ensures independent analyses draw "
@@ -82,14 +83,11 @@ lines += [
 ]
 for row in active_rows:
     lines.append(f"        {row['seed']} & {row['item']} & {row['cref']} \\\\")
-lines += [
-    r"        \bottomrule",
-    r"    \end{tabular}",
-    r"    }",
-    r"\end{table*}",
-]
+lines += [r"        \bottomrule", r"    \end{tabular}", r"    }", r"\end{table*}"]
 
 TEX_PATH.write_text("\n".join(lines) + "\n")
-print(f"Saved: {CSV_PATH.name} ({len(rows)} rows: {len(active_rows)} active, "
-      f"{sum(r['status'] == 'unused' for r in rows)} unused, {sum(r['status'] == 'dormant' for r in rows)} dormant)")
+print(
+    f"Saved: {CSV_PATH.name} ({len(rows)} rows: {len(active_rows)} active, "
+    f"{sum(r['status'] == 'unused' for r in rows)} unused, {sum(r['status'] == 'dormant' for r in rows)} dormant)"
+)
 print(f"Saved: {TEX_PATH.name} ({len(active_rows)} rows)")

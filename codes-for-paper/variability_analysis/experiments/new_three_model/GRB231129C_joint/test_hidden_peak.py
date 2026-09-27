@@ -12,6 +12,7 @@ to partly absorb it -- adjacent-bin correlated excess, not an isolated one-bin o
 this folder's full single-pulse pipeline (bounds/seed -> profile scan -> finalize -> audit) on
 that residual, exactly as if it were pulse 7, and report honestly whether a real feature emerges.
 """
+
 import sys
 from pathlib import Path
 
@@ -63,12 +64,16 @@ def main():
 
     lb, ub, seed = pulse3_bounds_and_seed(t_c, y_c, dt=dt)
     print(f"neutral seed (argmax-based, NO manual P0): A0={seed[0]:.2f}, t_peak0={seed[1]:.4f}, t_v0={seed[2]:.4f}")
-    print(f"bounds: A in [{lb[0]:.2f},{ub[0]:.2f}], t_peak in [{lb[1]:.4f},{ub[1]:.4f}], t_v in [{lb[2]:.4f},{ub[2]:.4f}]")
+    print(
+        f"bounds: A in [{lb[0]:.2f},{ub[0]:.2f}], t_peak in [{lb[1]:.4f},{ub[1]:.4f}], t_v in [{lb[2]:.4f},{ub[2]:.4f}]"
+    )
 
     print("\n--- chi2 with vs. without a candidate pulse (null test) ---")
     chi2_null = chi_square(y_c, np.zeros_like(y_c), sigma=sigma_c)
-    print(f"chi2_null (no pulse, residual should be pure noise) = {chi2_null:.3f} over {len(y_c)} bins "
-          f"(expect ~{len(y_c)} if residual really is just noise)")
+    print(
+        f"chi2_null (no pulse, residual should be pure noise) = {chi2_null:.3f} over {len(y_c)} bins "
+        f"(expect ~{len(y_c)} if residual really is just noise)"
+    )
 
     print("\n--- Section 5: chi2 profile scan over r0 ---")
     selection = select_r0(t_c, y_c, sigma=sigma_c, dt=dt)
@@ -81,14 +86,20 @@ def main():
     chi2_with_pulse = c.chi2_min
     print(f"\nchi2_null (no pulse) = {chi2_null:.3f}")
     print(f"chi2_with_candidate_pulse (best r0) = {chi2_with_pulse:.3f}")
-    print(f"delta_chi2 (null - with_pulse) = {chi2_null - chi2_with_pulse:.3f} "
-          f"(a real pulse costs 3 parameters; >~7-10 would usually justify adding them)")
+    print(
+        f"delta_chi2 (null - with_pulse) = {chi2_null - chi2_with_pulse:.3f} "
+        f"(a real pulse costs 3 parameters; >~7-10 would usually justify adding them)"
+    )
 
     print("\n--- Section 4: finalize ---")
     reported = finalize_pulse(t_c, y_c, selection, sigma=sigma_c, dt=dt)
     print(f"A={reported.amplitude:.2f}+/-{reported.amplitude_err:.2f}")
-    print(f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f} (stat={reported.t_peak_err_stat:.4f}, sys={reported.t_peak_err_sys:.4f})")
-    print(f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f} (stat={reported.t_v_err_stat:.4f}, sys={reported.t_v_err_sys:.4f})")
+    print(
+        f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f} (stat={reported.t_peak_err_stat:.4f}, sys={reported.t_peak_err_sys:.4f})"
+    )
+    print(
+        f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f} (stat={reported.t_v_err_stat:.4f}, sys={reported.t_v_err_sys:.4f})"
+    )
     print(f"r0_flat_zone={reported.r0_flat_zone}  r0_refined_zone={reported.r0_refined_zone}")
 
     print("\n--- Section 8: audit ---")
@@ -100,9 +111,14 @@ def main():
     model3 = make_pulse3(reported.r0)
     y_pulse_fit = model3(t_c, reported.amplitude, reported.t_peak, reported.t_v)
     paths = plot_fit_overlay(
-        t_c, y_c, y_pulse_fit, out_dir=str(HERE), label="candidate_hidden_peak", sigma=sigma_c,
+        t_c,
+        y_c,
+        y_pulse_fit,
+        out_dir=str(HERE),
+        label="candidate_hidden_peak",
+        sigma=sigma_c,
         extra_title=f"shape={c.shape}, r0={reported.r0:.3g}, t_peak={reported.t_peak:.3f}+/-{reported.t_peak_err:.3f}, "
-                    f"A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}",
+        f"A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}",
     )
     print(f"\nwrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")
 

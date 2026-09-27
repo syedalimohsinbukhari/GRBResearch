@@ -23,13 +23,13 @@ no per-detector normalization — see the parent folder's writeup):
 1. **Normalized (existing production method).** `NorrisFitter` (wraps `pymultifit.BaseFitter`, which
    calls plain `scipy.optimize.curve_fit(f, x, y, p0, bounds=...)` with no scaling option exposed) fit
    against $y/\max(y)$, amplitude seeds in $[0,1]$.
-2. **Unnormalized, explicit `x_scale`.** The same pulses fit directly against raw $y(t)$ via
+2. **Unnormalized, explicit `x_scale`.** The same pulses fit directly against raw $y (t)$ via
    `scipy.optimize.least_squares`, called directly (bypassing `pymultifit`, whose `BaseFitter.fit()` —
    `.venv/.../pymultifit/fitters/backend/baseFitter.py:262-291` — hardcodes the `curve_fit` call with no
    `x_scale`/`method` passthrough, so this cannot be reached through `NorrisFitter`). `x_scale` is an
    explicit array, one 4-tuple per pulse: `(Y_MAX_CTS_PER_S, 5.0, 5.0, 1.0)` — amplitude scaled to the
-   data's own peak, `t_s`/`tau1` given an O(5s) scale, `tau2` O(1s). Amplitude seed is the normalized
-   seed times `Y_MAX_CTS_PER_S`; `t_s`/`tau1`/`tau2` seeds unchanged.
+   data's own peak, `t_s`/`tau1` given an O (5s) scale, `tau2` O (1s). Amplitude seed is the normalized
+   seed times `max_y_cps`; `t_s`/`tau1`/`tau2` seeds unchanged.
 
 Both methods use identical bounds ($A\ge0$, $t_s\in[t_\min,t_\max]$, $\tau_1,\tau_2\ge10^{-4}$) and,
 where a burst needed it, an identical raised iteration budget (`max_nfev=20000`).
@@ -49,13 +49,13 @@ where a burst needed it, an identical raised iteration budget (`max_nfev=20000`)
   does. Chosen once and reused across all four bursts without per-burst tuning, and it worked for all
   four — the point of the experiment is that this generalizes without hand-tuning per burst.
 - **GRB131014A's `max_nfev=20000` (raised from `NorrisFitter`'s default 5000)** mirrors a fix applied
-  independently to the *production* `fitter_CLAUDE_GRB131014215.py` in the parent conversation while this
+  independently to the *production* `fitter_GRB131014A.py` in the parent conversation while this
   experiment was running (that burst's summed 3-detector curve, peak $\approx1.3\times10^5$ cts/s, needs
   more iterations than the single-detector curve it used to be fit against, peak $\approx4.4\times10^4$
   cts/s — an iteration-budget issue, not a bad seed). Applied here to both methods for a fair comparison,
   so a convergence failure isn't mistaken for a genuine method difference.
 - **GRB140206B uses `COMPLEX_P0`** (the 7-pulse decomposition), matching the paper's preferred model in
-  `fitter_GRB140206275.py`, not the alternative `SIMPLE_P0` — reusing an existing decision, not remaking it.
+  `fitter_GRB140206B.py`, not the alternative `SIMPLE_P0` — reusing an existing decision, not remaking it.
 
 ## Results
 
@@ -114,7 +114,7 @@ as a diagnostic signal, not dismissed by default.
 ## GRB140206B follow-up: window scan + pulse-6 reseed, and the recommended configuration
 
 Both GRB140206B pulses flagged above were investigated further, in two more standalone scripts in this
-same folder. **Neither production `fitter_GRB140206275.py`/`_simple.py` has been changed** — both still
+same folder. **Neither production `fitter_GRB140206B.py`/`_simple.py` has been changed** — both still
 use their original window `(-1, 160)` and converge cleanly there; this section documents a diagnosed
 *alternative* configuration, not a correction to a broken one.
 

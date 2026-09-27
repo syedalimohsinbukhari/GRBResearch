@@ -9,6 +9,7 @@ the (lb, ub) / p0 shape scipy.optimize.curve_fit expects, so a fit is just:
     p0 = pulse3_seed(t_window, y_window, dt)
     popt, pcov = curve_fit(model, t_window, y_window, p0=p0, bounds=(lb, ub))
 """
+
 import numpy as np
 
 
@@ -119,7 +120,11 @@ def jittered_seeds(
         a = a0 * (1 + rng.uniform(-amplitude_jitter_frac, amplitude_jitter_frac))
         t_peak = t_peak0 + rng.uniform(-t_peak_jitter_dt, t_peak_jitter_dt) * dt
         t_v = t_v0 * (1 + rng.uniform(-t_v_jitter_frac, t_v_jitter_frac))
-        clamped = (float(np.clip(a, lb[0], ub[0])), float(np.clip(t_peak, lb[1], ub[1])), float(np.clip(t_v, lb[2], ub[2])))
+        clamped = (
+            float(np.clip(a, lb[0], ub[0])),
+            float(np.clip(t_peak, lb[1], ub[1])),
+            float(np.clip(t_v, lb[2], ub[2])),
+        )
         seeds.append(clamped)
     return seeds
 

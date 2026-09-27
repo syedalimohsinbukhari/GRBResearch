@@ -115,20 +115,33 @@ def build_rows() -> list[dict]:
                 "selected_model": selected_name,
                 "beta": selected_beta,
                 "beta_err": selected_beta_err,
-                "sigma_beta": sigma_tension(selected_beta, selected_beta_err, lat_row.photon_index, lat_row.photon_index_err)
-                if selected_beta is not None and not pinned
-                else None,
+                "sigma_beta": (
+                    sigma_tension(selected_beta, selected_beta_err, lat_row.photon_index, lat_row.photon_index_err)
+                    if selected_beta is not None and not pinned
+                    else None
+                ),
                 "plbb_status": plbb_status,
                 "plbb_idx": plbb_idx,
                 "plbb_err": plbb_err,
-                "sigma_plbb": sigma_tension(plbb_idx, plbb_err, lat_row.photon_index, lat_row.photon_index_err)
-                if plbb_idx is not None and not pinned
-                else None,
+                "sigma_plbb": (
+                    sigma_tension(plbb_idx, plbb_err, lat_row.photon_index, lat_row.photon_index_err)
+                    if plbb_idx is not None and not pinned
+                    else None
+                ),
             }
 
             pl_variants_present = [name for name in PL_VARIANTS if name in models]
             if not pl_variants_present:
-                rows.append({**base_row, "pl_model": None, "pl_status": None, "add_index_pl": None, "add_err": None, "sigma_addpl": None})
+                rows.append(
+                    {
+                        **base_row,
+                        "pl_model": None,
+                        "pl_status": None,
+                        "add_index_pl": None,
+                        "add_err": None,
+                        "sigma_addpl": None,
+                    }
+                )
                 continue
 
             for pl_name in pl_variants_present:
@@ -141,9 +154,11 @@ def build_rows() -> list[dict]:
                         "pl_status": m.get("_status"),
                         "add_index_pl": add_idx,
                         "add_err": add_err,
-                        "sigma_addpl": sigma_tension(add_idx, add_err, lat_row.photon_index, lat_row.photon_index_err)
-                        if not pinned
-                        else None,
+                        "sigma_addpl": (
+                            sigma_tension(add_idx, add_err, lat_row.photon_index, lat_row.photon_index_err)
+                            if not pinned
+                            else None
+                        ),
                     }
                 )
 

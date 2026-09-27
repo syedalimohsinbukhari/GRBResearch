@@ -69,7 +69,7 @@ from grb_research import (
     seed_from_name,
     update_style,
 )
-from grb_research.grb_constants import (LEGEND_FONT_SIZE, LINE_WIDTH, kev_to_erg, N_SAMPLES, N_GRID)
+from grb_research.grb_constants import LEGEND_FONT_SIZE, LINE_WIDTH, kev_to_erg, N_SAMPLES, N_GRID
 from grb_research.grb_enums import GRBModelsCombinations as gmC
 from grb_research.grb_utils import save_fig
 
@@ -151,18 +151,18 @@ class PhotosphereResult:
 def script_r(flux_bb, kt_kev):
     """R = (F_BB / sigma T^4)^(1/2), Pe'er+07 eq. (1). Dimensionless."""
     temperature_k = kt_kev * KEV_TO_KELVIN
-    return np.sqrt(flux_bb / (SIGMA_SB * temperature_k ** 4))
+    return np.sqrt(flux_bb / (SIGMA_SB * temperature_k**4))
 
 
 def lorentz_factor(flux_total, r_value, z, d_l, y_ratio=Y_RATIO):
     """Gamma = eta, Pe'er+07 eq. (4). Coasting phase, so Gamma equals eta."""
     numerator = PREFACTOR_R * (1 + z) ** 2 * d_l * y_ratio * flux_total * SIGMA_T
-    return (numerator / (2 * M_P * C_LIGHT ** 3 * r_value)) ** 0.25
+    return (numerator / (2 * M_P * C_LIGHT**3 * r_value)) ** 0.25
 
 
 def base_radius_unsaturated(f_bb, r_value, z, d_l, y_ratio=Y_RATIO):
     """r_0 for r_ph > r_s, Pe'er+07 eq. (5) [cm]."""
-    prefactor = 4 ** 1.5 / (PREFACTOR_T ** 6 * PREFACTOR_R ** 4)
+    prefactor = 4**1.5 / (PREFACTOR_T**6 * PREFACTOR_R**4)
     return prefactor * d_l / (1 + z) ** 2 * (f_bb / y_ratio) ** 1.5 * r_value
 
 
@@ -187,7 +187,7 @@ def validate_against_peer2007(verbose=True):
     Returns the computed (gamma, r_0, r_ph, r_s).
     """
     z, kt, r_value, f_bb, d_l = 0.9578, 78.5, 1.88e-19, 0.64, 1.94e28
-    flux_bb = r_value ** 2 * SIGMA_SB * (kt * KEV_TO_KELVIN) ** 4
+    flux_bb = r_value**2 * SIGMA_SB * (kt * KEV_TO_KELVIN) ** 4
     flux_total = flux_bb / f_bb
 
     gamma = lorentz_factor(flux_total, r_value, z, d_l)
@@ -387,9 +387,9 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
     legend_axis = axes[3]
 
     for axis, key, axis_label in (
-            (axes[0], "r_zero", r"$r_0$ [cm]"),
-            (axes[1], "gamma", r"$\Gamma$"),
-            (axes[2], "r_ph", r"$r_\mathrm{ph}$ [cm]"),
+        (axes[0], "r_zero", r"$r_0$ [cm]"),
+        (axes[1], "gamma", r"$\Gamma$"),
+        (axes[2], "r_ph", r"$r_\mathrm{ph}$ [cm]"),
     ):
         for short_name in GRB_LIST:
             grb = f"GRB{short_name}"

@@ -1,5 +1,7 @@
 """Created on Jan 07 15:37:00 2026"""
 
+from __future__ import annotations
+
 import hashlib
 import os
 import warnings
@@ -9,7 +11,7 @@ from typing import Optional, Tuple, Literal, Callable
 import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 from matplotlib import pyplot as plt
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from scipy.integrate import simpson
 from tqdm import tqdm
 
@@ -48,9 +50,10 @@ def get_rng(seed: int | None = None, rng: np.random.Generator | None = None) -> 
 
 
 def seed_from_name(name: str, master_seed: int = MASTER_SEED) -> int:
-    """
-    Derive a deterministic 32-bit seed from a file name and a master seed.
+    """Derive a deterministic 32-bit seed from a file name and a master seed.
 
+    Notes
+    -----
     Hashes the basename of `name` together with `master_seed` so different scripts get different, reproducible seeds
     without any script hardcoding a literal seed value.
     Uses `os.path.basename` rather than full path so the derived seed is stable across machines and checkout locations.
@@ -59,13 +62,13 @@ def seed_from_name(name: str, master_seed: int = MASTER_SEED) -> int:
     ----------
     name :
         Path or file name to derive the seed from.
-        Typically, a script's ``__file__``.
+        Typically, a script's `__file__`.
     master_seed :
         Project-wide master seed mixed into the hash (default: `MASTER_SEED`).
 
     Returns
     -------
-    int
+    int :
         A deterministic seed in [0, 2**32).
     """
     digest = hashlib.sha256(f"{os.path.basename(name)}-{master_seed}".encode()).hexdigest()
@@ -78,30 +81,20 @@ def legacy_build_mp(pars):
 
     Parameters
     ----------
-    pars : tuple
-        Tuple containing:
-        - m_name: str
-            Model name.
-        - interval: object
-            Model interval object (opaque to this function).
-        - m_keys: list of str
-            List of parameter names.
-        - sample: list of float
-            Parameter values for this sample.
-        - covar: np.ndarray
-            Covariance matrix.
-        - model_type: str
-            String passed through to `legacy_build`.
-        - e_range: tuple
-            Energy range for the model.
-        - n_sample: int
-            Number of samples.
-        - n_grid: int
-            Number of grid points.
+    pars :
+        - m_name : Model name.
+        - interval : Model interval object (opaque to this function).
+        - m_keys : List of parameter names.
+        - sample : Parameter values for this sample.
+        - covar : Covariance matrix.
+        - model_type : String passed through to `legacy_build`.
+        - e_range : Energy range for the model.
+        - n_sample : Number of samples.
+        - n_grid : Number of grid points.
 
     Returns
     -------
-    np.ndarray
+    NDArray
         The evaluated model values.
     """
     m_name, interval, m_keys, sample, covar, model_type, e_range, n_sample, n_grid = pars
@@ -139,21 +132,21 @@ def mc_spectra_sampler(
 
     Parameters
     ----------
-    model : Model
+    model :
         The model to sample from.
-    model_type : str, optional
+    model_type :
         Type of model to generate (default: 'counts').
-    e_range : tuple, optional
+    e_range :
         Energy range for the model (default: (1, 7)).
-    n_samples : int, optional
+    n_samples :
         Number of MC samples to draw (default: 10,000).
-    n_grid : int, optional
+    n_grid :
         Number of grid points for numerical integration (default: 10,000).
-    n_workers : int, optional
+    n_workers :
         Number of parallel workers (default: CPU count).
-    samples : np.ndarray, optional
+    samples :
         Pre-generated samples. If None, samples will be generated.
-    rng : np.random.Generator
+    rng :
         Random number generator instance for reproducibility.
 
     Returns
@@ -188,14 +181,7 @@ def mc_spectra_sampler(
 
 class ModelResampler:
 
-    def __init__(
-        self,
-        model: Model,
-        samples: np.ndarray,
-        *,
-        rng: np.random.Generator,
-        destroy: bool = True,
-    ):
+    def __init__(self, model: Model, samples: NDArray, *, rng: np.random.Generator, destroy: bool = True):
         self.model = model
         self._samples = samples if destroy else samples.copy()
         self.rng: np.random.Generator = rng
@@ -204,18 +190,19 @@ class ModelResampler:
         self.errs = np.sqrt(np.diag(model.covariance_matrix_value))
         self.err_ratio = [(j / abs(i)) * 100 for i, j in zip(self.m_val, self.errs)]
 
-    def _cond_check(self, schema=None) -> Tuple[bool, np.ndarray, np.ndarray]:
+    @staticmethod
+    def _cond_check(schema=None) -> Tuple[bool, NDArray, NDArray]:
         pos_mask = np.array([p[-1] for p in schema], dtype=bool)
         neg_mask = ~pos_mask
         return True, pos_mask, neg_mask
 
     def _resampler(
         self,
-        samples: np.ndarray,
-        pos_mask: np.ndarray,
-        neg_mask: np.ndarray,
-        extra_mask_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-    ) -> np.ndarray:
+        samples: NDArray,
+        pos_mask: NDArray,
+        neg_mask: NDArray,
+        extra_mask_fn: Optional[Callable[[NDArray], NDArray]] = None,
+    ) -> NDArray:
         """Resample invalid rows until all masked constraints are satisfied.
 
         Parameters
@@ -227,11 +214,11 @@ class ModelResampler:
         neg_mask :
             Boolean column mask; flagged parameters must be strictly negative.
         extra_mask_fn :
-            Optional callable ``(samples) -> bool array of shape (n_samples,)``
-            returning ``True`` for rows that are *valid* under the model-specific
+            Optional callable `(samples) -> bool array of shape (n_samples,)`
+            returning `True` for rows that are *valid* under the model-specific
             constraint (e.g. Kaneko condition).  Recomputed from the current
-            ``samples`` on every iteration so stale row assignments do not
-            prevent convergence.  Pass ``None`` when there is no extra constraint.
+            `samples` on every iteration so stale row assignments do not
+            prevent convergence.  Pass `None` when there is no extra constraint.
         """
         max_rounds = 100
         for _ in range(max_rounds):
@@ -253,61 +240,61 @@ class ModelResampler:
         return samples
 
     def __runner(
-        self, samples: np.ndarray, extra_mask_fn: Optional[Callable[[np.ndarray], np.ndarray]] = None
-    ) -> np.ndarray:
+        self, samples: NDArray, extra_mask_fn: Callable[[NDArray], NDArray] | None = None
+    ) -> NDArray:
         schema = build_composite_schema(self.model.name)
         check, pos_mask, neg_mask = self._cond_check(schema)
         if check:
             samples = self._resampler(samples, pos_mask, neg_mask, extra_mask_fn=extra_mask_fn)
         return samples
 
-    def _pl_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _pl_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _cpl_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _cpl_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _band_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _band_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _sbpl_resampler(self, samples: np.ndarray) -> np.ndarray:
-        def _sbpl_valid(s: np.ndarray) -> np.ndarray:
+    def _sbpl_resampler(self, samples: NDArray) -> NDArray:
+        def _sbpl_valid(s: NDArray) -> NDArray:
             l1, l2 = s[:, 2], s[:, 5]
             return np.logical_and(l1 > -2.0, l2 < -2.05)
 
         return self.__runner(samples, extra_mask_fn=_sbpl_valid)
 
-    def _pl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _pl_bb_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _cpl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _cpl_bb_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _band_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _band_bb_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _sbpl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _sbpl_bb_resampler(self, samples: NDArray) -> NDArray:
         return self._sbpl_resampler(samples)
 
-    def _cpl_pl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _cpl_pl_bb_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _band_pl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _band_pl_bb_resampler(self, samples: NDArray) -> NDArray:
         return self.__runner(samples)
 
-    def _sbpl_pl_bb_resampler(self, samples: np.ndarray) -> np.ndarray:
+    def _sbpl_pl_bb_resampler(self, samples: NDArray) -> NDArray:
         # amp_pl, index1_pl, e_piv_pl
         # amp_sbpl, e_piv_sbpl, index1_sbpl, e_break_sbpl, break_scale_sbpl, index2_sbpl
         # amp_bb, kT_bb
-        def _sbpl_pl_bb_valid(s: np.ndarray) -> np.ndarray:
+        def _sbpl_pl_bb_valid(s: NDArray) -> NDArray:
             # rows where the SBPL physical condition is NOT satisfied are invalid
             return ~np.logical_and(s[:, 5] > -2, s[:, 8] < -2.05)
 
         return self.__runner(samples, extra_mask_fn=_sbpl_pl_bb_valid)
 
-    def run_resampler(self) -> np.ndarray:
+    def run_resampler(self) -> NDArray:
         """Return a corrected copy of sampled parameters after model-specific resampling."""
-        dispatcher: dict[str, Callable[[np.ndarray], np.ndarray]] = {
+        dispatcher: dict[str, Callable[[NDArray], NDArray]] = {
             gmC.PL.name_upper: self._pl_resampler,
             gmC.PL_BB.name_upper: self._pl_bb_resampler,
             gmC.CPL.name_upper: self._cpl_resampler,
@@ -329,21 +316,21 @@ class ModelResampler:
             return self._samples.copy()
 
 
-def credible_interval_partition(samples: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def credible_interval_partition(samples: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
     """
     Compute 16th, 50th (median), and 84th percentiles per parameter from MC samples.
 
     Parameters
     ----------
-    samples : np.ndarray
-        2D input array with shape (n_samples, n_parameters). Each row is an independent
-        sample of the parameter vector.
+    samples :
+        2D input array with shape (n_samples, n_parameters).
+        Each row is an independent sample of the parameter vector.
 
     Returns
     -------
     tuple
-        A tuple (median, lower, upper), each a 1D array of shape (n_parameters,)
-        containing the 50th, 16th, and 84th percentiles respectively.
+        A tuple (median, lower, upper), each a 1D array of shape (n_parameters,) containing the 50th, 16th, and 84th
+        percentiles respectively.
     """
     s = samples.T
     part = np.nanpercentile(s, [16, 50, 84], axis=1)
@@ -362,7 +349,7 @@ def mc_e_iso_sampler(
     bol_max: float = 4.0,
     h0: float = 69.6,
     omega_m: float = 0.286,
-    method=1,
+    method: int = 1,
     samples=None,
     *,
     rng: np.random.Generator,
@@ -401,22 +388,16 @@ def mc_e_iso_sampler(
 
     Returns
     -------
-    np.ndarray
+    NDArray
         Array of E_iso samples in erg with shape (1, n_samples).
     """
     rng_instance = rng
     bolometric_fluence = 0
 
-    # The bolometric band [bol_min, bol_max] is defined in the REST frame, so the fitted (observer-frame) spectrum must
-    # be evaluated at the observed energies E_rest / (1 + z). Since logspace(a, b) / (1 + z) == logspace(a - s, b - s)
-    # with s = log10(1 + z), the shift is applied to the exponents directly — this keeps the grid the model is
-    # evaluated on identical to the grid integrated over. Pairing a rest-frame grid with an observed-frame variable,
-    # as this previously did, underestimated E_iso by ~3.7x at z = 4.35 (BUGS.md, BUG-11).
     redshift_shift = np.log10(1 + z)
     bol_range_observed = (bol_min - redshift_shift, bol_max - redshift_shift)
     e_observed = np.logspace(start=bol_range_observed[0], stop=bol_range_observed[1], num=n_grid)
 
-    # model_type="energy" returns E * N(E) [keV / cm^2 / s / keV], so integrating it over dE directly gives energy flux
     bolometric_samples = np.asarray(
         mc_spectra_sampler(
             model=model,
@@ -428,13 +409,9 @@ def mc_e_iso_sampler(
             rng=rng_instance,
         )
     )
-    # keV / cm^2 / s -> keV / cm^2 over the interval
     bolometric_flux = simpson(y=bolometric_samples, x=e_observed, axis=1)
 
     if method == 1:
-        # Explicit k-correction route: S_bol = S_obs * k, with k = (bolometric-band fluence) / (detector-band fluence).
-        # Algebraically, the detector term cancels, so this must agree with method 2 exactly; it is kept as an
-        # independent cross-check.
         energy_detector = np.logspace(start=det_min, stop=det_max, num=n_grid)
         detector_samples = np.asarray(
             mc_spectra_sampler(
@@ -454,7 +431,6 @@ def mc_e_iso_sampler(
     elif method == 2:
         bolometric_fluence = bolometric_flux * kev_to_erg * model.interval.duration
 
-    # astropy already returns d_L(z); integrating it over z would give \int_0^z d_L dz', which is not a distance
     lum_distance = FlatLambdaCDM(h0, omega_m).luminosity_distance(z).cgs.value
 
     return 4 * np.pi * lum_distance ** 2 * np.asarray(bolometric_fluence).reshape(1, -1) / (1 + z)
@@ -481,7 +457,7 @@ def plot_all_models(
 
     for i, v in enumerate(best_models):
         print(f"processing {grb_name[i]}")
-        is_ex = sum([ep.interval.is_ex for ep in v])  # fixed: was shadowing outer loop variable i
+        is_ex = sum([ep.interval.is_ex for ep in v])
         if is_ex == 2:
             v[-1], v[-2] = v[-2], v[-1]
 
@@ -494,8 +470,6 @@ def plot_all_models(
             med, low, high = med * kev_to_erg, low * kev_to_erg, high * kev_to_erg
 
             if j == 0:
-                # ax[i].loglog(x, med * x ** 2, "k-")  # , label=f"{w.interval.kind}")
-                # ax[i].fill_between(x, low * x ** 2, high * x ** 2, color="k", alpha=0.2)
                 ax[i].loglog(
                     x,
                     med * x ** 2,
@@ -516,17 +490,14 @@ def plot_all_models(
 
             ax[i].set_ylim(bottom=3.2e-10, top=1.65e-4)
 
-        # -- legend fix --------------------------------------------------------
         ax[i].legend(ncols=legend_col.get(i, 3), title=f"GRB{grb_name[i]}", loc="upper right")
-        # ---------------------------------------------------------------------
 
         if i % n_cols == 0:  # fixed: was hardcoded % 2, now uses n_cols
             ax[i].set_ylabel("Energy Flux\n" + r"[erg/cm$^2$/s]")
 
     [
-        ax[i].set_xlabel("Energy [keV]")
-        for i in range(len(best_models) - n_cols, len(best_models))
-    ]  # fixed: was hardcoded [ax[2], ax[3]]
+        ax[i].set_xlabel("Energy [keV]") for i in range(len(best_models) - n_cols, len(best_models))
+    ]
 
     if save:
         save_fig(figure, "butterfly_all")
@@ -595,12 +566,7 @@ def relative_error(
 
 
 class FluxFluenceCalculator:
-    """
-    Calculates flux and fluence based on a spectral model using Monte Carlo sampling.
-
-    This class is designed to compute flux and fluence within a specified energy range using a Monte Carlo sampler.
-    It supports numerical integration over an energy grid with options for detailed outputs such as percentiles or
-    error margins.
+    """Calculates flux and fluence based on a spectral model using Monte Carlo sampling.
 
     Attributes
     ----------
@@ -632,17 +598,12 @@ class FluxFluenceCalculator:
 
         self.rng = rng
 
-    def _flux(self) -> np.ndarray:
-        """
-        Generate flux values based on a given spectral model within a specified energy range.
-
-        This method calculates the flux by sampling spectra using a Monte Carlo (MC) sampler over a log-spaced
-        energy grid.
-        The integration is performed using Simpson's rule to provide a numerical estimate of the flux.
+    def _flux(self) -> NDArray:
+        """Generate flux values based on a given spectral model within a specified energy range.
 
         Returns
         -------
-        numpy.ndarray
+        NDArray
             An array containing the integrated flux values corresponding to the specified energy grid.
             Each element represents the calculated flux for the associated energy range.
         """
@@ -657,7 +618,7 @@ class FluxFluenceCalculator:
         )
         return np.asarray(simpson(np.array(n_of_e), x))
 
-    def _fluence(self, in_ergs: bool = False, energy_flux: bool = False) -> np.ndarray:
+    def _fluence(self, in_ergs: bool = False, energy_flux: bool = False) -> NDArray:
         """Calculates the fluence over a specified energy range using Monte Carlo sampling and numerical integration.
 
         Parameters
@@ -669,7 +630,7 @@ class FluxFluenceCalculator:
 
         Returns
         -------
-        np.ndarray
+        NDArray
             The computed fluence over the specified energy range.
         """
         converter = kev_to_erg if in_ergs else 1
@@ -692,11 +653,8 @@ class FluxFluenceCalculator:
         in_ergs: bool = True,
         energy_flux: bool = False,
         get_errors: bool = True,
-    ) -> np.ndarray | tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> NDArray | tuple[NDArray, NDArray, NDArray]:
         """Performs a calculation based on the specified type.
-
-        The calculation can be for either 'flux' or 'fluence', and additional options allow for returning percentiles
-        or error margins.
 
         Parameters
         ----------
@@ -716,8 +674,9 @@ class FluxFluenceCalculator:
 
         Returns
         -------
-        numpy.ndarray or tuple of numpy.ndarray
+        NDArray :
             The returned value depends on the parameters:
+
             - If `get_percentiles`: Returns a numpy array containing the 16th, 50th, and 84th percentiles of the output.
             - If `get_errors`: Returns a tuple consisting of the median value, upper margin, and lower margin.
             - Otherwise, returns a numpy array of the calculated results for 'flux' or 'fluence'.
@@ -743,8 +702,6 @@ class FluxFluenceCalculator:
         return output
 
 
-# ─── Component-resolved energy fluxes ────────────────────────────────────────
-
 _SED_FUNCTIONS = {
     gmC.PL: powerlaw,
     gmC.CPL: cutoff_powerlaw,
@@ -755,16 +712,7 @@ _SED_FUNCTIONS = {
 
 
 def _component_energy_flux_block(model_name, values, energy):
-    """Vectorized per-component energy-flux integration for a block of draws.
-
-    `energy` is either 1D ``(n_grid,)`` -- the original single-grid case, unchanged -- or 2D
-    ``(n_bands, n_grid)``, integrating every band's grid in one batched call instead of
-    `n_bands` separate calls (e.g. a redshift sweep's per-z shifted grids). Batched mode
-    returns per-band results of shape ``(n, n_bands)`` instead of ``(n,)``.
-
-    Verified bit-identical to looping ``simpson`` per band one at a time (the `x` array is
-    only broadcast to match `y`'s shape for scipy's benefit, not resampled or reordered).
-    """
+    """Vectorized per-component energy-flux integration for a block of draws."""
     components = MODEL_MAP.get(gmC(model_name.lower()), (gmC(model_name.lower()),))
     energy = np.asarray(energy)
     batched = energy.ndim == 2
@@ -800,42 +748,37 @@ def _component_energy_flux_block(model_name, values, energy):
 def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
     """Integrate each spectral component's energy flux, and their total.
 
-    Components are sliced in declaration order exactly as
-    ``SpectralModels._evaluate_components`` does, so the decomposition is
-    identical to the rest of the codebase. Every draw is evaluated at once --
-    parameters of shape ``(n, 1)`` broadcast against energy of shape
-    ``(1, n_grid)`` -- and integrated by a single ``simpson(..., axis=1)``,
-    matching the pattern used by :func:`mc_e_iso_sampler`.
+    Notes
+    -----
+    Components are sliced in declaration order, matching `SpectralModels._evaluate_components`.
+    All draws are evaluated at once, with parameters of shape `(n, 1)` broadcast against energy of shape `(1, n_grid)`,
+    then integrated via a single `simpson(..., axis=1)` (same pattern as :func:`mc_e_iso_sampler`).
 
-    Draws are processed in blocks so peak memory stays bounded at roughly
-    ``chunk * n_grid * 8`` bytes per component. When `energy` is 2D (`n_bands` batched grids),
-    `chunk` is divided by `n_bands` internally so peak memory per block stays the same
-    regardless of how many bands are batched together -- a block's working array is
-    `(block_size, n_bands, n_grid)`, so leaving `chunk` at its 1D-case value here would multiply
-    peak memory by `n_bands` (verified this matters: at this project's real `N_SAMPLES`/`N_GRID`
-    and a 26-band redshift sweep, un-scaled `chunk` would demand roughly 50 GB of peak memory
-    across 8 parallel workers -- checked with `free -h` before running anything at scale, not
-    assumed safe).
+    Draws are processed in blocks to bound peak memory at roughly `chunk * n_grid * 8` bytes per component.
+    For 2D `energy` (`n_bands` batched grids), `chunk` is divided by `n_bands` internally, since a block's working
+    array is `(block_size, n_bands, n_grid)` -- without this, peak memory would scale with `n_bands`.
 
     Parameters
     ----------
     model_name :
-        Composite model name, e.g. ``"SBPL_BB"``.
+        Composite model name, e.g. `"SBPL_BB"`.
     values :
-        Parameter values, shape ``(n_pars,)`` or ``(n, n_pars)``.
+        Parameter values, shape `(n_pars,)` or `(n, n_pars)`.
     energy :
-        Energy grid in keV. Either 1D ``(n_grid,)`` -- one band, the original behavior -- or
-        2D ``(n_bands, n_grid)`` to integrate several bands (e.g. per-redshift shifted grids)
-        in one batched pass; see :func:`_component_energy_flux_block`.
+        Energy grid in keV.
+        Either 1D `(n_grid,)` or 2D `(n_bands, n_grid)` to integrate several bands in one batched pass;
+        see :func:`_component_energy_flux_block`.
     chunk :
-        Number of draws evaluated per block, at one band. Automatically reduced (never below 1)
-        when `energy` is 2D, so peak memory per block is independent of `n_bands`.
+        Number of draws evaluated per block, at one band.
+        Automatically reduced (never below 1) when `energy` is 2D, so peak memory per block is independent of `n_bands`.
 
     Returns
     -------
-    (fluxes, total) :
-        ``fluxes`` maps each component enum to an array of shape ``(n,)`` (or ``(n, n_bands)``
-        if `energy` is 2D); ``total`` has the matching shape. Both are in keV / cm^2 / s.
+    fluxes :
+        Maps each component enum to an array of shape `(n, )` or `(n, n_bands)` if `energy` is 2D.
+    total :
+        The total combined flux of the components.
+        Has the same shape as `fluxes`.
     """
     values = np.atleast_2d(np.asarray(values, dtype=float))
     energy = np.asarray(energy)
@@ -855,11 +798,10 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
 def draw_model_samples(model, n_samples: int = 10_000, *, rng: np.random.Generator):
     """Draw fit-covariance parameter samples, filtered by physical constraints.
 
-    Mirrors the sampling half of :func:`mc_spectra_sampler` -- multivariate
-    normal draws from the (symmetrised) fit covariance, then
-    :meth:`ModelResampler.run_resampler` to reject unphysical rows -- but
-    returns the parameter draws instead of evaluated spectra, so callers can
-    compute their own derived quantities from correlated samples.
+    Notes
+    -----
+    Mirrors the sampling half of :func:`mc_spectra_sampler` but returns the parameter draws instead of evaluated
+    spectra, so callers can compute their own derived quantities from correlated samples.
     """
     rng_instance = rng
 

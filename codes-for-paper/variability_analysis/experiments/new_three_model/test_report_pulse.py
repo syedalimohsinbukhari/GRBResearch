@@ -6,6 +6,7 @@ flat zone verbatim was wrong for a sharp profile) and a flat-bottom pulse (large
 expected, dominating the statistical term, since the flat zone spans the whole grid and
 r0_chosen sits far from the profile minimum's own grid neighborhood).
 """
+
 from plot_diagnostics import plot_fit_overlay
 from profile_scan import select_r0
 from pulse3 import make_pulse3
@@ -44,16 +45,24 @@ def sharp_case():
     model = make_pulse3(reported.r0)
     y_fit = model(t_window, reported.amplitude, reported.t_peak, reported.t_v)
     paths = plot_fit_overlay(
-        t_window, y_window, y_fit, out_dir=".", label="section4_sharp", sigma=sigma,
+        t_window,
+        y_window,
+        y_fit,
+        out_dir=".",
+        label="section4_sharp",
+        sigma=sigma,
         extra_title=f"r0={reported.r0:.3g}, t_peak={reported.t_peak:.3f}+/-{reported.t_peak_err:.3f}, t_v={reported.t_v:.3f}+/-{reported.t_v_err:.3f}",
     )
     print(f"     wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")
 
     ok1 = check("A recovered within 3-sigma of truth", abs(reported.amplitude - a_true) < 3 * reported.amplitude_err)
-    ok2 = check("t_peak recovered within 3-sigma of truth", abs(reported.t_peak - t_peak_true) < 3 * reported.t_peak_err)
+    ok2 = check(
+        "t_peak recovered within 3-sigma of truth", abs(reported.t_peak - t_peak_true) < 3 * reported.t_peak_err
+    )
     ok3 = check(
         "refined r0-choice systematic is small (but non-zero) relative to the statistical term on a sharp profile",
-        0.0 <= reported.t_peak_err_sys < 3 * reported.t_peak_err_stat and 0.0 <= reported.t_v_err_sys < 3 * reported.t_v_err_stat,
+        0.0 <= reported.t_peak_err_sys < 3 * reported.t_peak_err_stat
+        and 0.0 <= reported.t_v_err_sys < 3 * reported.t_v_err_stat,
     )
     ok4 = check(
         "combined t_peak_err is at least as large as the statistical term alone (quadrature never shrinks it)",
@@ -87,7 +96,12 @@ def flat_case():
     model = make_pulse3(reported.r0)
     y_fit = model(t_window, reported.amplitude, reported.t_peak, reported.t_v)
     paths = plot_fit_overlay(
-        t_window, y_window, y_fit, out_dir=".", label="section4_flat", sigma=sigma,
+        t_window,
+        y_window,
+        y_fit,
+        out_dir=".",
+        label="section4_flat",
+        sigma=sigma,
         extra_title=f"r0={reported.r0:.3g}, t_peak={reported.t_peak:.3f}+/-{reported.t_peak_err:.3f}, t_v={reported.t_v:.3f}+/-{reported.t_v_err:.3f}",
     )
     print(f"     wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")
@@ -96,7 +110,10 @@ def flat_case():
         "r0-choice systematic dominates over statistical term for a flat (whole-grid) profile",
         reported.t_v_err_sys > reported.t_v_err_stat,
     )
-    ok2 = check("t_v_err (combined) is strictly larger than the statistical term alone", reported.t_v_err > reported.t_v_err_stat)
+    ok2 = check(
+        "t_v_err (combined) is strictly larger than the statistical term alone",
+        reported.t_v_err > reported.t_v_err_stat,
+    )
     ok3 = check(
         "t_peak still recovered reasonably despite the missing rise (informative from the decay alone)",
         abs(reported.t_peak - t_peak_true) < 2.0,

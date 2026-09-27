@@ -46,12 +46,7 @@ from .grb_sed import SpectralModels
 from .grb_stability import ModelComparison
 from .grb_styles import GRBPlotStyle
 from .grb_time import EpisodeTypes, TimeInterval, TimeIntervalSet
-from .grb_utils import (
-    EpisodeMarkerResolver,
-    break_e_to_e_peak,
-    plot_per_episode,
-    save_value_error_as_parquet,
-)
+from .grb_utils import EpisodeMarkerResolver, break_e_to_e_peak, plot_per_episode, save_value_error_as_parquet
 from .safe_good_best import pick_best_single_model
 
 

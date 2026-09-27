@@ -20,6 +20,7 @@ Plot is boxed to [T05-PLOT_PAD_S, T95+PLOT_PAD_S] (the production convention -- 
 plot-axis bounding only, matching that file's own documented meaning: it changes what's shown, not
 what's fitted, since what's fitted here is already the entire light curve.
 """
+
 import sys
 from pathlib import Path
 
@@ -55,8 +56,10 @@ def main():
     # resolves to).
     t_window, y_window, sigma_window = t_full, y_full, sigma_full
     dt = median_dt(t_window)
-    print(f"fit window: [{t_window.min():.3f}, {t_window.max():.3f}] s ({t_window.size} bins) -- "
-          f"the data's own full extent, matching fitter_GRB231129779.py's START1=-inf, END1=inf")
+    print(
+        f"fit window: [{t_window.min():.3f}, {t_window.max():.3f}] s ({t_window.size} bins) -- "
+        f"the data's own full extent, matching fitter_GRB231129779.py's START1=-inf, END1=inf"
+    )
 
     r0_list = prior["r0_chosen"].tolist()
     p0_flat = flatten_seed(list(zip(prior["amplitude"], prior["t_peak_s"], prior["t_v_s"])))
@@ -71,8 +74,10 @@ def main():
 
     print("\n--- Compare against the windowed (-2, 20) joint fit ---")
     windowed = pd.read_csv(HERE / "GRB231129C_joint_results.csv")
-    print(f"{'pulse':>6} {'t_peak(windowed)':>18} {'t_peak(full-span)':>18} {'delta':>10}   "
-          f"{'t_v(windowed)':>15} {'t_v(full-span)':>15} {'delta':>10}")
+    print(
+        f"{'pulse':>6} {'t_peak(windowed)':>18} {'t_peak(full-span)':>18} {'delta':>10}   "
+        f"{'t_v(windowed)':>15} {'t_v(full-span)':>15} {'delta':>10}"
+    )
     max_dt_peak_rel = 0.0
     max_dt_v_rel = 0.0
     for i, pulse_index in enumerate(prior["pulse_index"].tolist()):
@@ -82,8 +87,10 @@ def main():
         d_tv = tv_f - row["t_v_s"]
         max_dt_peak_rel = max(max_dt_peak_rel, abs(d_tp) / max(abs(row["t_peak_s"]), 1.0))
         max_dt_v_rel = max(max_dt_v_rel, abs(d_tv) / row["t_v_s"])
-        print(f"{pulse_index:>6} {row['t_peak_s']:>18.5f} {tp_f:>18.5f} {d_tp:>+10.5f}   "
-              f"{row['t_v_s']:>15.5f} {tv_f:>15.5f} {d_tv:>+10.5f}")
+        print(
+            f"{pulse_index:>6} {row['t_peak_s']:>18.5f} {tp_f:>18.5f} {d_tp:>+10.5f}   "
+            f"{row['t_v_s']:>15.5f} {tv_f:>15.5f} {d_tv:>+10.5f}"
+        )
     print(f"\nmax relative t_peak difference: {100*max_dt_peak_rel:.4f}%")
     print(f"max relative t_v difference: {100*max_dt_v_rel:.4f}%")
 
@@ -96,15 +103,23 @@ def main():
         t_window, y_window, sigma_window, r0_list, p0_flat, dt, rng
     )
     print(f"multi-start reproducibility: {'PASS' if repro_ok else 'FAIL'}, chi2 spread={repro_chi2_spread:.6f}")
-    print("window-widening: not applicable -- this IS the full data span, nothing left to widen into "
-          "(that's the whole point of this test).")
+    print(
+        "window-widening: not applicable -- this IS the full data span, nothing left to widen into "
+        "(that's the whole point of this test)."
+    )
 
     print("\n--- Plot (fit: full span; display: boxed to [T05-pad, T95+pad], production convention) ---")
     plot_lo, plot_hi = T05 - PLOT_PAD_S, T95 + PLOT_PAD_S
     box_mask = (t_full >= plot_lo) & (t_full <= plot_hi)
     t_box, y_box, sigma_box = t_full[box_mask], y_full[box_mask], sigma_full[box_mask]
     paths = plot_joint_overlay(
-        t_box, y_box, sigma_box, model, popt, out_dir=str(HERE), label="GRB231129C_joint_fullspan",
+        t_box,
+        y_box,
+        sigma_box,
+        model,
+        popt,
+        out_dir=str(HERE),
+        label="GRB231129C_joint_fullspan",
         pulse_indices=prior["pulse_index"].tolist(),
     )
     print(f"plot boxed to [{plot_lo:.3f}, {plot_hi:.3f}] s (T05={T05}, T95={T95}, pad={PLOT_PAD_S})")

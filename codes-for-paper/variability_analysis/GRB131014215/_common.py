@@ -18,6 +18,7 @@ P0 (the 5-pulse seed) and max_iterations=20000 are copied verbatim from ../fitte
 -- see that file's own comment for why 20000 is needed (the summed 3-detector curve, peak ~130,030 cts/s,
 needs more iterations than the single-detector-tuned default of 5000).
 """
+
 import sys
 from pathlib import Path
 
@@ -53,12 +54,7 @@ X_SCALE_TAU2 = 1.0
 
 # Episode boundaries for GRB131014215, read directly from results.json (not eyeballed) -- copied from
 # ../fitter_CLAUDE_GRB131014215.py: "EX0 -0.192_2.432", "TR1 0.960_2.432", "TR2 2.432_4.160", "EX1 2.432_6.976".
-EPISODE_BOUNDS = {
-    "EX0": (-0.192, 2.432),
-    "TR1": (0.960, 2.432),
-    "TR2": (2.432, 4.160),
-    "EX1": (2.432, 6.976),
-}
+EPISODE_BOUNDS = {"EX0": (-0.192, 2.432), "TR1": (0.960, 2.432), "TR2": (2.432, 4.160), "EX1": (2.432, 6.976)}
 
 # T05/T95 (T90 start/end) -- plot-axis bounding only, does not change what was fitted. Verified directly
 # against results.json's own "T90 0.960_4.160" entry (not copied from another file's comment without
@@ -75,7 +71,7 @@ P0 = [
     (0.9, 1.18, 1, 0.3),
     (0.4, 2.4, 0.04, 1),
     # (0.35, 2.5, 0.04, 1),  # replaceable
-    (0.3, 2.5, 9, 0.1)
+    (0.3, 2.5, 9, 0.1),
 ]
 
 N_PULSES = len(P0)
@@ -83,7 +79,7 @@ N_PULSES = len(P0)
 # LAT photon overlay -- every individual photon (energy, arrival time), no energy floor -- the same
 # convention as ../fitter_CLAUDE_GRB131014215.py. T0_MET_S copied, not re-derived; see that file's own
 # comment for the GTI cross-check that validated it.
-LAT_FITS = VARIABILITY_DIR / "GRB131014215_lat.fits"
+LAT_FITS = VARIABILITY_DIR / "GRB131014A_lat.fits"
 T0_MET_S = 403420143.2
 
 
@@ -157,51 +153,60 @@ def photon_summary_for(photon_pulse, n_pulses):
     return summary
 
 
-def build_results_df(method_label: str, fit_result: FitResult, n_pulses: int, y_max_cts_per_s: float,
-                     amplitude_is_physical: bool, photon_summary: dict) -> pd.DataFrame:
+def build_results_df(
+    method_label: str,
+    fit_result: FitResult,
+    n_pulses: int,
+    y_max_cts_per_s: float,
+    amplitude_is_physical: bool,
+    photon_summary: dict,
+    seed: int,
+) -> pd.DataFrame:
     """One row per (pulse, episode) match, same schema as ../fitter_CLAUDE_GRB131014215.py's CSV plus a
     `fit_method` column and an `A_norm` column derived either way (A/y_max) -- see
     GRB080916C/_common.py's build_results_df for the identical convention."""
     rows = []
     for i in range(n_pulses):
-        A, ts, tau1, tau2 = fit_result.params[i * 4: (i + 1) * 4]
+        A, ts, tau1, tau2 = fit_result.params[i * 4 : (i + 1) * 4]
         A_cts_per_s = A if amplitude_is_physical else A * y_max_cts_per_s
         tp = t_peak(ts, tau1, tau2)
-        mc = tv_mc_summary(fit_result, pulse_index=i + 1)
+        mc = tv_mc_summary(fit_result, pulse_index=i + 1, seed=seed)
         matched = [name for name, (start, end) in EPISODE_BOUNDS.items() if start <= tp <= end]
         for episode in matched or [None]:
-            rows.append({
-                "grb_name": GRB_PAPER_NAME,
-                "fit_method": method_label,
-                "episode": episode,
-                "pulse_index": i + 1,
-                "n_pulses_total": n_pulses,
-                "fit_window_start_s": FIT_WINDOW[0],
-                "fit_window_end_s": FIT_WINDOW[1],
-                "energy_low_keV": ENERGY_LOW,
-                "energy_high_keV": ENERGY_HIGH,
-                "detectors": "+".join(DAT_NAI),
-                "A_norm": A_cts_per_s / y_max_cts_per_s,
-                "A_cts_per_s": A_cts_per_s,
-                "y_max_cts_per_s": y_max_cts_per_s,
-                "t_s": ts,
-                "tau1": tau1,
-                "tau2": tau2,
-                "t_peak_s": tp,
-                "t_v_s": mc["t_v_s"],
-                "t_v_err_lower_s": mc["t_v_err_lower_s"],
-                "t_v_err_upper_s": mc["t_v_err_upper_s"],
-                "t_v_definition": (
-                    "t_v=(tau2/2)*sqrt((ln2+2*sqrt(tau1/tau2))^2-4*tau1/tau2), "
-                    "Bukhari et al. 2022 Adv.Space Res. eq.10, attributed to Norris et al. 2005; = FWHM/2"
-                ),
-                "mc_kept_fraction": mc["kept_fraction"],
-                "n_samples": mc["n_samples"],
-                "seed": mc["seed"],
-                "n_lat_photons_assigned": photon_summary[i + 1]["n_photons"],
-                "photon_e_max_MeV": photon_summary[i + 1]["photon_e_max_MeV"],
-                "photon_t_arr_at_e_max_s": photon_summary[i + 1]["photon_t_arr_at_e_max_s"],
-            })
+            rows.append(
+                {
+                    "grb_name": GRB_PAPER_NAME,
+                    "fit_method": method_label,
+                    "episode": episode,
+                    "pulse_index": i + 1,
+                    "n_pulses_total": n_pulses,
+                    "fit_window_start_s": FIT_WINDOW[0],
+                    "fit_window_end_s": FIT_WINDOW[1],
+                    "energy_low_keV": ENERGY_LOW,
+                    "energy_high_keV": ENERGY_HIGH,
+                    "detectors": "+".join(DAT_NAI),
+                    "A_norm": A_cts_per_s / y_max_cts_per_s,
+                    "A_cts_per_s": A_cts_per_s,
+                    "y_max_cts_per_s": y_max_cts_per_s,
+                    "t_s": ts,
+                    "tau1": tau1,
+                    "tau2": tau2,
+                    "t_peak_s": tp,
+                    "t_v_s": mc["t_v_s"],
+                    "t_v_err_lower_s": mc["t_v_err_lower_s"],
+                    "t_v_err_upper_s": mc["t_v_err_upper_s"],
+                    "t_v_definition": (
+                        "t_v=(tau2/2)*sqrt((ln2+2*sqrt(tau1/tau2))^2-4*tau1/tau2), "
+                        "Bukhari et al. 2022 Adv.Space Res. eq.10, attributed to Norris et al. 2005; = FWHM/2"
+                    ),
+                    "mc_kept_fraction": mc["kept_fraction"],
+                    "n_samples": mc["n_samples"],
+                    "seed": mc["seed"],
+                    "n_lat_photons_assigned": photon_summary[i + 1]["n_photons"],
+                    "photon_e_max_MeV": photon_summary[i + 1]["photon_e_max_MeV"],
+                    "photon_t_arr_at_e_max_s": photon_summary[i + 1]["photon_t_arr_at_e_max_s"],
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -213,8 +218,13 @@ def add_lat_photon_overlay(ax, y_top_data):
 
     ax_photon = ax.twinx()
     ax_photon.scatter(
-        PHOTON_T_ARR_S, PHOTON_ENERGY_MEV,
-        marker="o", facecolors="none", edgecolors="red", linewidths=1.2, s=MARKER_SIZE ** 2,
+        PHOTON_T_ARR_S,
+        PHOTON_ENERGY_MEV,
+        marker="o",
+        facecolors="none",
+        edgecolors="red",
+        linewidths=1.2,
+        s=MARKER_SIZE**2,
         label="LAT photons",
     )
     ax_photon.set_ylabel("Photon energy [MeV]")

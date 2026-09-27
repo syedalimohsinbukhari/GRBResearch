@@ -25,6 +25,7 @@ fit window from its own fitter_*.py file's *committed* values (copied here as li
 this script must not import or execute any fitter_*.py, since those are separate scripts with side
 effects of their own).
 """
+
 import sys
 from pathlib import Path
 
@@ -145,7 +146,7 @@ def summed_nai_curve(grb_dir: Path, window):
 
 
 def total_model(t, params, n_pulses):
-    return sum(norris_pulse(t, params[i * 4:(i + 1) * 4]) for i in range(n_pulses))
+    return sum(norris_pulse(t, params[i * 4 : (i + 1) * 4]) for i in range(n_pulses))
 
 
 def fit_normalized(t, y_raw, y_max, p0, max_nfev):
@@ -204,25 +205,42 @@ def run_burst(grb_dir_name: str, cfg: dict):
         convergence["unnormalized_xscale"] = f"FAILED: {res_raw.message}"
 
     for i in range(n_pulses):
-        row = {"grb_dir": grb_dir_name, "grb_name": paper_name, "pulse_index": i + 1,
-               "n_pulses": n_pulses, "y_max_cts_per_s": y_max, "detectors": "+".join(dat_nai)}
+        row = {
+            "grb_dir": grb_dir_name,
+            "grb_name": paper_name,
+            "pulse_index": i + 1,
+            "n_pulses": n_pulses,
+            "y_max_cts_per_s": y_max,
+            "detectors": "+".join(dat_nai),
+        }
         if params_norm is not None:
-            A, ts, tau1, tau2 = params_norm[i * 4:(i + 1) * 4]
-            row.update({
-                # A_norm is the raw fitted amplitude in peak-normalized units (y/y_max scale, in [0,1] by
-                # construction of the fit bounds) -- the value NorrisFitter actually optimizes over, before
-                # rescaling by y_max back to physical counts/s.
-                "normalized_A_norm": A, "normalized_A_cts_per_s": A * y_max, "normalized_t_s": ts,
-                "normalized_tau1": tau1, "normalized_tau2": tau2,
-                "normalized_t_peak_s": t_peak(ts, tau1, tau2), "normalized_t_v_s": tv_value(tau1, tau2),
-            })
+            A, ts, tau1, tau2 = params_norm[i * 4 : (i + 1) * 4]
+            row.update(
+                {
+                    # A_norm is the raw fitted amplitude in peak-normalized units (y/y_max scale, in [0,1] by
+                    # construction of the fit bounds) -- the value NorrisFitter actually optimizes over, before
+                    # rescaling by y_max back to physical counts/s.
+                    "normalized_A_norm": A,
+                    "normalized_A_cts_per_s": A * y_max,
+                    "normalized_t_s": ts,
+                    "normalized_tau1": tau1,
+                    "normalized_tau2": tau2,
+                    "normalized_t_peak_s": t_peak(ts, tau1, tau2),
+                    "normalized_t_v_s": tv_value(tau1, tau2),
+                }
+            )
         if params_raw is not None:
-            A, ts, tau1, tau2 = params_raw[i * 4:(i + 1) * 4]
-            row.update({
-                "unnorm_xscale_A_cts_per_s": A, "unnorm_xscale_t_s": ts,
-                "unnorm_xscale_tau1": tau1, "unnorm_xscale_tau2": tau2,
-                "unnorm_xscale_t_peak_s": t_peak(ts, tau1, tau2), "unnorm_xscale_t_v_s": tv_value(tau1, tau2),
-            })
+            A, ts, tau1, tau2 = params_raw[i * 4 : (i + 1) * 4]
+            row.update(
+                {
+                    "unnorm_xscale_A_cts_per_s": A,
+                    "unnorm_xscale_t_s": ts,
+                    "unnorm_xscale_tau1": tau1,
+                    "unnorm_xscale_tau2": tau2,
+                    "unnorm_xscale_t_peak_s": t_peak(ts, tau1, tau2),
+                    "unnorm_xscale_t_v_s": tv_value(tau1, tau2),
+                }
+            )
         row["sse_normalized_rescaled"] = sse_norm
         row["sse_unnorm_xscale"] = sse_raw
         row["sse_ratio_unnorm_over_norm"] = (sse_raw / sse_norm) if (sse_norm and sse_raw) else None
@@ -231,8 +249,13 @@ def run_burst(grb_dir_name: str, cfg: dict):
     # --- Plot: data + both fits overlaid, whichever converged ---
     update_style()
     fig, ax = plt.subplots(figsize=(13, 6.5))
-    ax.plot(t, y_raw, color="0.6", lw=LINE_WIDTH * 0.6,
-            label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted")
+    ax.plot(
+        t,
+        y_raw,
+        color="0.6",
+        lw=LINE_WIDTH * 0.6,
+        label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted",
+    )
     if model_norm_raw is not None:
         ax.plot(t, model_norm_raw, color="tab:blue", lw=LINE_WIDTH, label="Normalized-fit total (rescaled)")
     if model_raw is not None:
@@ -249,19 +272,31 @@ def run_burst(grb_dir_name: str, cfg: dict):
     if params_norm is not None:
         norm_shades = plt.cm.Purples(np.linspace(0.4, 0.85, n_pulses))
         for i in range(n_pulses):
-            par = params_norm[i * 4:(i + 1) * 4]
+            par = params_norm[i * 4 : (i + 1) * 4]
             A, ts, tau1, tau2 = par
             y_i = norris_pulse(t, par) * y_max
-            ax.plot(t, y_i, ls=":", lw=LINE_WIDTH * 0.7, color=norm_shades[i],
-                    label=f"N pulse {i + 1} (A={A:.3f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})")
+            ax.plot(
+                t,
+                y_i,
+                ls=":",
+                lw=LINE_WIDTH * 0.7,
+                color=norm_shades[i],
+                label=f"N pulse {i + 1} (A={A:.3f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})",
+            )
     if params_raw is not None:
         raw_shades = plt.cm.Oranges(np.linspace(0.4, 0.85, n_pulses))
         for i in range(n_pulses):
-            par = params_raw[i * 4:(i + 1) * 4]
+            par = params_raw[i * 4 : (i + 1) * 4]
             A, ts, tau1, tau2 = par
             y_i = norris_pulse(t, par)
-            ax.plot(t, y_i, ls="-.", lw=LINE_WIDTH * 0.7, color=raw_shades[i],
-                    label=f"U pulse {i + 1} (A={A:.1f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})")
+            ax.plot(
+                t,
+                y_i,
+                ls="-.",
+                lw=LINE_WIDTH * 0.7,
+                color=raw_shades[i],
+                label=f"U pulse {i + 1} (A={A:.1f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})",
+            )
 
     ax.set_xlabel("Time since trigger [s]")
     ax.set_ylabel("Count rate [counts/s]")

@@ -20,6 +20,7 @@ Checks:
 This script does not modify anything outside this folder. It imports tv_value from norris_fit.py
 read-only (sys.path insert, matching the convention in ../normalized_vs_unnormalized_fit/fit_comparison.py).
 """
+
 import sys
 from pathlib import Path
 
@@ -97,8 +98,10 @@ def check_archived_fits(sigma_tol: float = 5.0):
         total_rows += len(df)
         worst_sigma = max(worst_sigma, float(np.max(n_sigma)))
         status = "PASS" if n_bad == 0 else "FAIL"
-        print(f"    {path.relative_to(PROJECT_ROOT)}: {len(df)} rows, max |diff|/sigma = "
-              f"{n_sigma.max():.3f} -> {status}")
+        print(
+            f"    {path.relative_to(PROJECT_ROOT)}: {len(df)} rows, max |diff|/sigma = "
+            f"{n_sigma.max():.3f} -> {status}"
+        )
         all_ok &= n_bad == 0
     print(f"    total rows checked: {total_rows}, worst-case deviation: {worst_sigma:.3f} sigma")
     print("    (deviation is expected: t_v_s is the MC-median of tv_value() over the fit covariance,")
@@ -111,10 +114,14 @@ if __name__ == "__main__":
     results = [check_worked_example(), check_pipeline_matches_spec_formula(), check_archived_fits()]
     print()
     if all(results):
-        print("ALL CHECKS PASSED: tv_value() matches the spec's width function. "
-              "f(r) in section 1/2 of norris_3param_spec.md may be used as-is.")
+        print(
+            "ALL CHECKS PASSED: tv_value() matches the spec's width function. "
+            "f(r) in section 1/2 of norris_3param_spec.md may be used as-is."
+        )
     else:
-        print("CHECKS FAILED: tv_value() diverges from the spec formula somewhere above. "
-              "f(r) must be rebuilt as the exact inverse of the pipeline's actual tv_value() "
-              "before writing the 3-param wrapper (spec section 6).")
+        print(
+            "CHECKS FAILED: tv_value() diverges from the spec formula somewhere above. "
+            "f(r) must be rebuilt as the exact inverse of the pipeline's actual tv_value() "
+            "before writing the 3-param wrapper (spec section 6)."
+        )
         sys.exit(1)

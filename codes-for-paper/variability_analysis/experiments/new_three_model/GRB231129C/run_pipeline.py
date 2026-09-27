@@ -19,6 +19,7 @@ column (which section 6 already established is an MC-propagated median, not a po
 comparing against it would manufacture disagreements on exactly the degenerate pulses this run
 cares about).
 """
+
 import sys
 from pathlib import Path
 
@@ -84,7 +85,9 @@ def select_r0_with_edge_check(t_window, y_window, sigma, dt, archived_r_median, 
         f"     pulse {pulse_index}: flat zone touched the default r0 grid edge "
         f"({selection.classification.flat_zone}) -- retrying with grid logspace({new_lo_exp:.0f}, {new_hi_exp:.0f}, {n_points})"
     )
-    selection2 = select_r0(t_window, y_window, r0_grid=widened_grid, sigma=sigma, dt=dt, archived_r_median=archived_r_median)
+    selection2 = select_r0(
+        t_window, y_window, r0_grid=widened_grid, sigma=sigma, dt=dt, archived_r_median=archived_r_median
+    )
     return selection2, True
 
 
@@ -105,8 +108,15 @@ def fit_one_pass(t_full, y_full, sigma_full, pulses_raw: dict, archived_r_median
         )
         reported = finalize_pulse(t_window, y_window, selection, sigma=sigma_window, dt=dt)
         audit = run_audit(
-            t_window, y_window, selection, reported, rng,
-            sigma=sigma_window, dt=dt, make_window_data=make_window_data, widen_factors=WIDEN_FACTORS,
+            t_window,
+            y_window,
+            selection,
+            reported,
+            rng,
+            sigma=sigma_window,
+            dt=dt,
+            make_window_data=make_window_data,
+            widen_factors=WIDEN_FACTORS,
         )
 
         print(
@@ -181,8 +191,10 @@ def main():
     archived_r_median = float(np.median(r_population))
     print(f"loaded light curve: {t_full.size} bins, t in [{t_full.min():.3f}, {t_full.max():.3f}]")
     print(f"archived pulses: {len(archived)}")
-    print(f"project-wide archived r population: n={len(r_population)}, median={archived_r_median:.4g}, "
-          f"p16/p84=[{np.percentile(r_population, 16):.4g}, {np.percentile(r_population, 84):.4g}]")
+    print(
+        f"project-wide archived r population: n={len(r_population)}, median={archived_r_median:.4g}, "
+        f"p16/p84=[{np.percentile(r_population, 16):.4g}, {np.percentile(r_population, 84):.4g}]"
+    )
 
     pulses_raw_archived = {
         int(row.pulse_index): (row.A_cts_per_s, row.t_s, row.tau1, row.tau2) for row in archived.itertuples()
@@ -216,7 +228,11 @@ def main():
         model = make_pulse3(r["reported"].r0)
         y_fit = model(r["t_window"], r["reported"].amplitude, r["reported"].t_peak, r["reported"].t_v)
         paths = plot_fit_overlay(
-            r["t_window"], r["y_window"], y_fit, out_dir=str(HERE), label=f"pulse{i}_pass2",
+            r["t_window"],
+            r["y_window"],
+            y_fit,
+            out_dir=str(HERE),
+            label=f"pulse{i}_pass2",
             sigma=r["sigma_window"],
             extra_title=f"r0={r['reported'].r0:.3g}, t_peak={r['reported'].t_peak:.3f}, t_v={r['reported'].t_v:.3f}",
         )
@@ -226,7 +242,13 @@ def main():
     print(f"\naudit: {n_audit_pass}/{len(pass2)} pulses fully passed all section-8 checks in pass 2")
     for i, r in pass2.items():
         if not r["audit"].all_passed:
-            print(f"  pulse {i} audit detail:\n" + "\n".join(f"    {item.name}: {'PASS' if item.passed else 'FAIL'} -- {item.detail}" for item in r["audit"].items))
+            print(
+                f"  pulse {i} audit detail:\n"
+                + "\n".join(
+                    f"    {item.name}: {'PASS' if item.passed else 'FAIL'} -- {item.detail}"
+                    for item in r["audit"].items
+                )
+            )
 
 
 if __name__ == "__main__":

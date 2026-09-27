@@ -103,11 +103,7 @@ JOINT_COLOR = two_way.JOINT_COLOR
 GBM_COLOR = two_way.GBM_COLOR
 GBM40_COLOR = "blue"
 
-FIT_LABELS = {
-    "joint": "Joint (GBM+LAT)",
-    "gbm": "GBM-only",
-    "gbm40": "GBM-only (NaI 40–900 keV)",
-}
+FIT_LABELS = {"joint": "Joint (GBM+LAT)", "gbm": "GBM-only", "gbm40": "GBM-only (NaI 40–900 keV)"}
 
 MARKER_EDGE_WIDTH = two_way.MARKER_EDGE_WIDTH
 
@@ -222,9 +218,7 @@ def build_row(ep, joint_interval, gbm_interval, gbm40_interval, rng):
 
     delta_joint = two_way.base_bb_delta_cstat(joint_interval, joint_best.name) if "BB" in joint_best.name else None
     delta_gbm = two_way.base_bb_delta_cstat(gbm_interval, gbm_best.name) if "BB" in gbm_best.name else None
-    delta_gbm40 = (
-        two_way.base_bb_delta_cstat(gbm40_interval, gbm40_best.name) if "BB" in gbm40_best.name else None
-    )
+    delta_gbm40 = two_way.base_bb_delta_cstat(gbm40_interval, gbm40_best.name) if "BB" in gbm40_best.name else None
 
     bb_required_joint = None if delta_joint is None else bool(delta_joint >= DELTA_CSTAT_THRESHOLD)
     bb_required_gbm = None if delta_gbm is None else bool(delta_gbm >= DELTA_CSTAT_THRESHOLD)
@@ -241,14 +235,12 @@ def build_row(ep, joint_interval, gbm_interval, gbm40_interval, rng):
     # Adjacent-comparison fractional differences (see module docstring for why these two edges
     # and not all three pairwise combinations): Joint -> GBM-only isolates dropping LAT;
     # GBM-only -> GBM-only(NaI>=40keV) isolates raising the NaI threshold.
-    (
-        kt_diff_gj, kt_diff_gj_lo, kt_diff_gj_hi,
-        f_diff_gj, f_diff_gj_lo, f_diff_gj_hi,
-    ) = two_way.paired_ratio_pct(joint_best, gbm_best, rng=rng)
-    (
-        kt_diff_g40g, kt_diff_g40g_lo, kt_diff_g40g_hi,
-        f_diff_g40g, f_diff_g40g_lo, f_diff_g40g_hi,
-    ) = two_way.paired_ratio_pct(gbm_best, gbm40_best, rng=rng)
+    kt_diff_gj, kt_diff_gj_lo, kt_diff_gj_hi, f_diff_gj, f_diff_gj_lo, f_diff_gj_hi = two_way.paired_ratio_pct(
+        joint_best, gbm_best, rng=rng
+    )
+    kt_diff_g40g, kt_diff_g40g_lo, kt_diff_g40g_hi, f_diff_g40g, f_diff_g40g_lo, f_diff_g40g_hi = (
+        two_way.paired_ratio_pct(gbm_best, gbm40_best, rng=rng)
+    )
 
     return ComparisonRow3(
         grb_name=GRB_DISPLAY_NAME,
@@ -378,14 +370,25 @@ def make_kt_plot(df, episode_markers, path_stub="gbm_only_refit_3way_kt_comparis
 
     fit_handles = [
         mlines.Line2D(
-            [], [], marker="o", mfc="none", mec=color, color=color, linestyle="None",
-            markeredgewidth=MARKER_EDGE_WIDTH, markersize=MARKER_SIZE, label=FIT_LABELS[key],
+            [],
+            [],
+            marker="o",
+            mfc="none",
+            mec=color,
+            color=color,
+            linestyle="None",
+            markeredgewidth=MARKER_EDGE_WIDTH,
+            markersize=MARKER_SIZE,
+            label=FIT_LABELS[key],
         )
         for key, color in (("joint", JOINT_COLOR), ("gbm", GBM_COLOR), ("gbm40", GBM40_COLOR))
     ]
     fit_legend = ax.legend(
-        handles=fit_handles, title="Fit type", fontsize=LEGEND_FONT_SIZE,
-        title_fontsize=LEGEND_TITLE_FONT_SIZE, loc="best",
+        handles=fit_handles,
+        title="Fit type",
+        fontsize=LEGEND_FONT_SIZE,
+        title_fontsize=LEGEND_TITLE_FONT_SIZE,
+        loc="best",
     )
     ax.add_artist(fit_legend)
     save_fig(fig, path_stub)
@@ -408,8 +411,15 @@ def make_delta_cstat_plot(df, episode_markers, path_stub="gbm_only_refit_3way_de
         marker = episode_markers[row["episode"]]
         for val_col, offset, color in series:
             ax.plot(
-                x[i] + offset, row[val_col], marker=marker, mfc="none", mec=color, color=color,
-                mew=MARKER_EDGE_WIDTH, markersize=MARKER_SIZE, linestyle="None",
+                x[i] + offset,
+                row[val_col],
+                marker=marker,
+                mfc="none",
+                mec=color,
+                color=color,
+                mew=MARKER_EDGE_WIDTH,
+                markersize=MARKER_SIZE,
+                linestyle="None",
             )
 
     ax.set_yscale("log")
@@ -420,18 +430,30 @@ def make_delta_cstat_plot(df, episode_markers, path_stub="gbm_only_refit_3way_de
 
     fit_handles = [
         mlines.Line2D(
-            [], [], marker="o", mfc="none", mec=color, mew=MARKER_EDGE_WIDTH, color=color,
-            linestyle="None", markersize=MARKER_SIZE, label=FIT_LABELS[key],
+            [],
+            [],
+            marker="o",
+            mfc="none",
+            mec=color,
+            mew=MARKER_EDGE_WIDTH,
+            color=color,
+            linestyle="None",
+            markersize=MARKER_SIZE,
+            label=FIT_LABELS[key],
         )
         for key, color in (("joint", JOINT_COLOR), ("gbm", GBM_COLOR), ("gbm40", GBM40_COLOR))
     ]
     fit_handles.append(
-        mlines.Line2D([], [], color="black", linewidth=LINE_WIDTH, linestyle="--",
-                       label=f"threshold = {DELTA_CSTAT_THRESHOLD}")
+        mlines.Line2D(
+            [], [], color="black", linewidth=LINE_WIDTH, linestyle="--", label=f"threshold = {DELTA_CSTAT_THRESHOLD}"
+        )
     )
     fit_legend = ax.legend(
-        handles=fit_handles, title="Fit type", fontsize=LEGEND_FONT_SIZE,
-        title_fontsize=LEGEND_TITLE_FONT_SIZE, loc="best",
+        handles=fit_handles,
+        title="Fit type",
+        fontsize=LEGEND_FONT_SIZE,
+        title_fontsize=LEGEND_TITLE_FONT_SIZE,
+        loc="best",
     )
     ax.add_artist(fit_legend)
     save_fig(fig, path_stub)
@@ -455,17 +477,25 @@ def make_fractional_diff_plot(df, episode_markers, path_stub="gbm_only_refit_3wa
 
     columns = [
         (
-            0, GBM_COLOR, "GBM-only vs Joint",
-            "kt_bb_diff_pct_gbm_vs_joint", "kt_bb_diff_pct_err_lower_gbm_vs_joint",
+            0,
+            GBM_COLOR,
+            "GBM-only vs Joint",
+            "kt_bb_diff_pct_gbm_vs_joint",
+            "kt_bb_diff_pct_err_lower_gbm_vs_joint",
             "kt_bb_diff_pct_err_upper_gbm_vs_joint",
-            "f_bb_diff_pct_gbm_vs_joint", "f_bb_diff_pct_err_lower_gbm_vs_joint",
+            "f_bb_diff_pct_gbm_vs_joint",
+            "f_bb_diff_pct_err_lower_gbm_vs_joint",
             "f_bb_diff_pct_err_upper_gbm_vs_joint",
         ),
         (
-            1, GBM40_COLOR, "GBM-only (NaI 40–900 keV) vs GBM-only",
-            "kt_bb_diff_pct_gbm40_vs_gbm", "kt_bb_diff_pct_err_lower_gbm40_vs_gbm",
+            1,
+            GBM40_COLOR,
+            "GBM-only (NaI 40–900 keV) vs GBM-only",
+            "kt_bb_diff_pct_gbm40_vs_gbm",
+            "kt_bb_diff_pct_err_lower_gbm40_vs_gbm",
             "kt_bb_diff_pct_err_upper_gbm40_vs_gbm",
-            "f_bb_diff_pct_gbm40_vs_gbm", "f_bb_diff_pct_err_lower_gbm40_vs_gbm",
+            "f_bb_diff_pct_gbm40_vs_gbm",
+            "f_bb_diff_pct_err_lower_gbm40_vs_gbm",
             "f_bb_diff_pct_err_upper_gbm40_vs_gbm",
         ),
     ]
@@ -479,9 +509,17 @@ def make_fractional_diff_plot(df, episode_markers, path_stub="gbm_only_refit_3wa
             for i, (_, row) in enumerate(plotted.iterrows()):
                 marker = episode_markers[row["episode"]]
                 ax.errorbar(
-                    x[i], row[val_col], yerr=[[row[lo_col]], [row[hi_col]]], fmt=marker,
-                    mfc="none", mec=color, ecolor=color, capsize=CAP_SIZE, markersize=MARKER_SIZE,
-                    markeredgewidth=MARKER_EDGE_WIDTH, linewidth=LINE_WIDTH,
+                    x[i],
+                    row[val_col],
+                    yerr=[[row[lo_col]], [row[hi_col]]],
+                    fmt=marker,
+                    mfc="none",
+                    mec=color,
+                    ecolor=color,
+                    capsize=CAP_SIZE,
+                    markersize=MARKER_SIZE,
+                    markeredgewidth=MARKER_EDGE_WIDTH,
+                    linewidth=LINE_WIDTH,
                 )
             if row_idx == 0:
                 ax.set_title(title, fontsize=LABEL_FONT_SIZE)
@@ -530,16 +568,36 @@ def main():
     make_fractional_diff_plot(df, episode_markers)
 
     pd.set_option("display.width", 220)
-    print(df[[
-        "episode", "model_name_joint", "model_name_gbm", "model_name_gbm40", "models_agree_all3",
-        "kt_bb_keV_joint", "kt_bb_keV_gbm", "kt_bb_keV_gbm40",
-        "kt_consistent_1sigma_joint_gbm", "kt_consistent_1sigma_joint_gbm40", "kt_consistent_1sigma_gbm_gbm40",
-        "status_consistent_with_threshold_gbm", "status_consistent_with_threshold_gbm40",
-    ]])
-    print(df[[
-        "episode", "kt_bb_diff_pct_gbm_vs_joint", "kt_bb_diff_pct_gbm40_vs_gbm",
-        "f_bb_diff_pct_gbm_vs_joint", "f_bb_diff_pct_gbm40_vs_gbm",
-    ]])
+    print(
+        df[
+            [
+                "episode",
+                "model_name_joint",
+                "model_name_gbm",
+                "model_name_gbm40",
+                "models_agree_all3",
+                "kt_bb_keV_joint",
+                "kt_bb_keV_gbm",
+                "kt_bb_keV_gbm40",
+                "kt_consistent_1sigma_joint_gbm",
+                "kt_consistent_1sigma_joint_gbm40",
+                "kt_consistent_1sigma_gbm_gbm40",
+                "status_consistent_with_threshold_gbm",
+                "status_consistent_with_threshold_gbm40",
+            ]
+        ]
+    )
+    print(
+        df[
+            [
+                "episode",
+                "kt_bb_diff_pct_gbm_vs_joint",
+                "kt_bb_diff_pct_gbm40_vs_gbm",
+                "f_bb_diff_pct_gbm_vs_joint",
+                "f_bb_diff_pct_gbm40_vs_gbm",
+            ]
+        ]
+    )
 
 
 if __name__ == "__main__":

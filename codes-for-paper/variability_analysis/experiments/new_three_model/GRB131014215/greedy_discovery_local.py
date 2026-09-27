@@ -19,6 +19,7 @@ P0/fitted-parameter file read for this burst) -- the fix is algorithmic, not inf
   4. If accepted, the fitted pulse is evaluated and subtracted over the FULL T90 window (not just
      the local sub-window -- Norris tails extend beyond it), then the next candidate is processed.
 """
+
 import sys
 from pathlib import Path
 
@@ -79,14 +80,18 @@ def main():
     print(f"window: {WINDOW} ({t_w.size} bins, dt={dt:.4f})")
 
     peak_idx, props = find_peaks(
-        y_w, height=FIND_PEAKS_MIN_HEIGHT_SIGMA * np.median(sigma_w), distance=max(1, int(FIND_PEAKS_MIN_DISTANCE_S / dt))
+        y_w,
+        height=FIND_PEAKS_MIN_HEIGHT_SIGMA * np.median(sigma_w),
+        distance=max(1, int(FIND_PEAKS_MIN_DISTANCE_S / dt)),
     )
     candidate_times = t_w[peak_idx].tolist()
     candidate_heights = y_w[peak_idx].tolist()
     order = np.argsort(candidate_heights)[::-1]  # tallest first
     candidate_times_ordered = [candidate_times[i] for i in order]
-    print(f"find_peaks located {len(candidate_times)} candidate locations (>{FIND_PEAKS_MIN_HEIGHT_SIGMA} sigma, "
-          f">={FIND_PEAKS_MIN_DISTANCE_S}s apart): {[f'{t:.3f}' for t in sorted(candidate_times)]}")
+    print(
+        f"find_peaks located {len(candidate_times)} candidate locations (>{FIND_PEAKS_MIN_HEIGHT_SIGMA} sigma, "
+        f">={FIND_PEAKS_MIN_DISTANCE_S}s apart): {[f'{t:.3f}' for t in sorted(candidate_times)]}"
+    )
 
     residual = y_w.copy()
     accepted = []
@@ -126,9 +131,11 @@ def main():
             print(f"-> audit failed ({e}); treating as unreliable")
             reliability_ok = False
 
-        print(f"fit: A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}  "
-              f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f}  "
-              f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f}  r0={reported.r0:.4g} ({selection.classification.shape})")
+        print(
+            f"fit: A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}  "
+            f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f}  "
+            f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f}  r0={reported.r0:.4g} ({selection.classification.shape})"
+        )
         print(f"delta_chi2={delta_chi2:.2f}  amplitude_sigma={a_sigma:.2f}  reliability_ok={reliability_ok}")
 
         significance_ok = delta_chi2 > MIN_DELTA_CHI2 and a_sigma > MIN_AMPLITUDE_SIGMA
@@ -160,7 +167,21 @@ def main():
     if len(df):
         df = df.sort_values("t_peak_s").reset_index(drop=True)
         df.insert(0, "pulse_index", range(1, len(df) + 1))
-        print(df[["pulse_index", "t_peak_s", "t_peak_err_s", "t_v_s", "t_v_err_s", "amplitude", "shape", "delta_chi2", "amplitude_sigma"]].to_string(index=False))
+        print(
+            df[
+                [
+                    "pulse_index",
+                    "t_peak_s",
+                    "t_peak_err_s",
+                    "t_v_s",
+                    "t_v_err_s",
+                    "amplitude",
+                    "shape",
+                    "delta_chi2",
+                    "amplitude_sigma",
+                ]
+            ].to_string(index=False)
+        )
         csv_path = HERE / "GRB131014215_blind_discovery_local.csv"
         df.to_csv(csv_path, index=False)
         print(f"\nwrote {csv_path.name}")
@@ -170,7 +191,12 @@ def main():
             model = make_pulse3(row["r0"])
             y_total_fit += model(t_w, row["amplitude"], row["t_peak_s"], row["t_v_s"])
         paths = plot_fit_overlay(
-            t_w, y_w, y_total_fit, out_dir=str(HERE), label="GRB131014215_blind_discovery_local", sigma=sigma_w,
+            t_w,
+            y_w,
+            y_total_fit,
+            out_dir=str(HERE),
+            label="GRB131014215_blind_discovery_local",
+            sigma=sigma_w,
             extra_title=f"{len(accepted)} pulses found blind (localized), T90-only window",
         )
         print(f"wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")

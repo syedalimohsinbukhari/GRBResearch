@@ -11,20 +11,34 @@ decay-side half-width alone, but their symmetrized combination.
 """
 
 import numpy as np
+from pymultifit import Params_, OneDArray
 from pymultifit.fitters.backend import BaseFitter
 
 from grb_research.grb_calculations import get_rng
 from grb_research.grb_constants import N_SAMPLES
 
-SEED = 12345
+EXP_ARG_CLIP = 50.0  # exp(50) ~ 5e21, far above any real light-curve rate; prevents
+# overflow when the optimizer probes extreme tau values during a fit (BUG-26). Same
+# value and same fix as experiments/new_three_model/pulse3.py's norris_raw().
 
 
 def norris_pulse(x: np.ndarray, params) -> np.ndarray:
-    """Single Norris pulse: A * exp(2*sqrt(tau1/tau2)) * exp(-tau1/(t-ts) - (t-ts)/tau2), t > ts, else 0."""
+    """Single Norris pulse: A * exp(2*sqrt(tau1/tau2) - tau1/(t-ts) - (t-ts)/tau2), t > ts, else 0.
+
+    Combines the exponent into one argument (clipped to EXP_ARG_CLIP before exp()), not the
+    factored A*exp(2*mu)*exp(-tau1/x)*exp(-x/tau2) -- that form's leading exp(2*mu) overflows for
+    mu=sqrt(tau1/tau2) > ~355, which a fit's optimizer can reach probing extreme tau (BUG-26).
+    Bit-identical to the old factored form for any mu that doesn't already overflow it (verified
+    to floating-point noise, ~1e-14, on ordinary parameter values) -- this only changes behavior
+    in the overflow regime, from NaN/inf to a large-but-finite, correctly-decaying value.
+    """
     amplitude, t_s, tau1, tau2 = params
     dt = x - t_s
     safe_dt = np.where(dt > 0, dt, 1.0)  # placeholder to avoid division by zero; masked out below
-    value = amplitude * np.exp(2 * np.sqrt(tau1 / tau2)) * np.exp(-tau1 / safe_dt - safe_dt / tau2)
+    mu = np.sqrt(tau1 / tau2)
+    arg = 2 * mu - tau1 / safe_dt - safe_dt / tau2
+    arg = np.minimum(arg, EXP_ARG_CLIP)
+    value = amplitude * np.exp(arg)
     return np.where(dt > 0, value, 0.0)
 
 
@@ -42,7 +56,7 @@ def tv_value(tau1, tau2):
 class NorrisFitter(BaseFitter):
     """Fits a sum of N Norris (2005) pulses to background-subtracted count-rate data."""
 
-    def __init__(self, x_values, y_values, max_iterations: int = 5000):
+    def __init__(self, x_values: OneDArray, y_values: OneDArray, max_iterations: int = 1000):
         super().__init__(x_values=x_values, y_values=y_values, max_iterations=max_iterations)
         self.n_par = 4  # amplitude, t_s, tau1, tau2
 
@@ -53,20 +67,24 @@ class NorrisFitter(BaseFitter):
         return lb, ub
 
     @staticmethod
-    def fitter(x, params) -> np.ndarray:
+    def fitter(x, params: Params_) -> np.ndarray:
         return norris_pulse(x, params)
 
 
-def tv_mc_summary(fitter: NorrisFitter, pulse_index: int, seed: int = SEED, n_samples: int = N_SAMPLES):
+def tv_mc_summary(fitter: NorrisFitter, pulse_index: int, seed: int, n_samples: int = N_SAMPLES):
     """MC-propagate t_v and its 16/50/84 percentiles for one fitted pulse (1-indexed, matching pymultifit's own convention).
 
     Draws from the full fit covariance's 4x4 sub-block for this pulse, discards draws with
     non-positive tau1/tau2 (unphysical), and reports the fraction kept.
+
+    `seed` is required, not defaulted, per SEEDING.md's "never a bare literal" convention -- every
+    caller must supply its own seed_from_name(__file__)-derived value rather than silently falling
+    back to a shared constant (this module used to default to a hardcoded SEED=12345 here; BUG-25).
     """
     n_par = fitter.n_par
     start = (pulse_index - 1) * n_par
-    mean = fitter.params[start : start + n_par]
-    cov = fitter.covariance[start : start + n_par, start : start + n_par]
+    mean = fitter.params[start: start + n_par]
+    cov = fitter.covariance[start: start + n_par, start: start + n_par]
 
     rng = get_rng(seed=seed)
     draws = rng.multivariate_normal(mean=mean, cov=cov, size=n_samples)

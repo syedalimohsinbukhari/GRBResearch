@@ -13,24 +13,50 @@ import matplotlib.pyplot as plt
 from pymultifit.fitters.backend import BaseFitter
 
 from _common import (  # noqa: E402 -- sets up sys.path for norris_fit below, must import first
-    T_FULL, Y_RAW_FULL, Y_MAX_CTS_PER_S, FIT_WINDOW, DAT_NAI, GRB_131014, GRB_PAPER_NAME,
-    N_PULSES, P0, MAX_NFEV, T05, T95, PLOT_PAD_S, assign_pulses, photon_summary_for, build_results_df,
-    add_lat_photon_overlay, save_fig
+    T_FULL,
+    Y_RAW_FULL,
+    Y_MAX_CTS_PER_S,
+    FIT_WINDOW,
+    DAT_NAI,
+    GRB_131014,
+    GRB_PAPER_NAME,
+    N_PULSES,
+    P0,
+    MAX_NFEV,
+    T05,
+    T95,
+    PLOT_PAD_S,
+    assign_pulses,
+    photon_summary_for,
+    build_results_df,
+    add_lat_photon_overlay,
+    save_fig,
 )
 
 from norris_fit import NorrisFitter  # noqa: E402
+from grb_research import seed_from_name  # noqa: E402
 
 y_norm = Y_RAW_FULL / Y_MAX_CTS_PER_S
 
 nf: BaseFitter = NorrisFitter(T_FULL, y_norm, max_iterations=MAX_NFEV)
 nf.fit(p0=P0)
 
+# Deterministic, per-script seed -- project convention (SEEDING.md); added 2026-09-26 (BUG-25),
+# this call used to omit seed= entirely, silently falling back to norris_fit.py's own hardcoded
+# SEED=12345 default, which that module no longer has.
+SEED = seed_from_name(__file__)
+
 photon_pulse = assign_pulses(nf.params, N_PULSES)
 photon_summary = photon_summary_for(photon_pulse, N_PULSES)
 
 results_df = build_results_df(
-    method_label="normalized", fit_result=nf, n_pulses=N_PULSES, y_max_cts_per_s=Y_MAX_CTS_PER_S,
-    amplitude_is_physical=False, photon_summary=photon_summary,
+    method_label="normalized",
+    fit_result=nf,
+    n_pulses=N_PULSES,
+    y_max_cts_per_s=Y_MAX_CTS_PER_S,
+    amplitude_is_physical=False,
+    photon_summary=photon_summary,
+    seed=SEED,
 )
 csv_path = Path(__file__).parent / f"norris_fit_results_{GRB_131014.name}_normalized.csv"
 results_df.to_csv(csv_path, index=False)

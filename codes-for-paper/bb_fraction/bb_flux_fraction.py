@@ -174,7 +174,7 @@ def analytic_bb_bolometric_flux(amp_bb, kt_bb):
 
         \int_0^\infty E N(E) dE = A (kT)^4\Gamma(4)\zeta(4) = A \frac{(\pi kT)^4}{15}.
     """
-    return amp_bb * kt_bb ** 4 * np.pi ** 4 / 15.0
+    return amp_bb * kt_bb**4 * np.pi**4 / 15.0
 
 
 # --- Monte Carlo -------------------------------------------------------------

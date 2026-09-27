@@ -3,6 +3,7 @@ brentq and confirm (x_right - x_left)/2 == the width_function()-based t_v -- an 
 root-finding check on norris_raw() that doesn't go through width_function() itself at all, so it
 can't share a transcription bug with pulse3.py's own formula.
 """
+
 import numpy as np
 from scipy.optimize import brentq
 
@@ -54,8 +55,13 @@ def t3_spec_worked_example():
     t_plot = np.linspace(t_s - 0.05, t_peak + 6 * tau2, 2000)
     y_plot = norris_raw(t_plot, 1.0, t_s, tau1, tau2)
     paths = plot_fit_overlay(
-        t_plot, y_plot, y_plot, out_dir=".", label="section7_T3_fwhm",
-        half_max=(x_left, x_right, half), extra_title=f"tau1={tau1}, tau2={tau2}, FWHM/2={got:.6f}",
+        t_plot,
+        y_plot,
+        y_plot,
+        out_dir=".",
+        label="section7_T3_fwhm",
+        half_max=(x_left, x_right, half),
+        extra_title=f"tau1={tau1}, tau2={tau2}, FWHM/2={got:.6f}",
     )
     print(f"     wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")
 
@@ -70,7 +76,9 @@ def t3_matches_width_function_across_r():
         got = half_max_width(tau1, tau2, t_s=-2.0)
         expected = tau2 * width_function(r)
         ok = np.isclose(got, expected, rtol=1e-6)
-        print(f"     tau1={tau1:.4g} tau2={tau2:.4g} (r={r:.4g}): brentq={got!r} width_function={expected!r} -> {'PASS' if ok else 'FAIL'}")
+        print(
+            f"     tau1={tau1:.4g} tau2={tau2:.4g} (r={r:.4g}): brentq={got!r} width_function={expected!r} -> {'PASS' if ok else 'FAIL'}"
+        )
         all_ok &= ok
     return check("brentq FWHM/2 matches width_function()-based t_v for all tested (tau1, tau2)", all_ok)
 

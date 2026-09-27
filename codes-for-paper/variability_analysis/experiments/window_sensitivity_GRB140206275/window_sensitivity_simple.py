@@ -6,6 +6,7 @@ loading, window definitions, and the full diagnostic rationale (unedited, carrie
 SIMPLE_P0 = that model's own narrow-window converged parameters, from
 norris_fit_results_GRB140206275_simple.csv (fitter_GRB140206275_simple.py) -- copied, not re-derived.
 """
+
 from window_sensitivity_common import run_model
 
 SIMPLE_P0 = [

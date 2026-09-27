@@ -1,6 +1,7 @@
 """Validation for bounds_seeding.py against norris_3param_spec.md section 3, and an end-to-end
 smoke test: bounds + seed -> scipy.optimize.curve_fit on a synthetic pulse actually converges.
 """
+
 import sys
 from pathlib import Path
 
@@ -8,7 +9,9 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import get_rng, seed_from_name  # noqa: E402

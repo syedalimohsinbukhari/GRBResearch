@@ -20,6 +20,7 @@ curve) -- the same truncation risk GRB231129C's pulse 6 hit with too narrow a wi
 instructed ("for now"); the true pulse count/shapes here should be re-checked with a properly
 padded window before treating this as final.
 """
+
 import sys
 from pathlib import Path
 
@@ -66,8 +67,10 @@ def main():
     for k in range(1, MAX_CANDIDATES + 1):
         print(f"\n--- candidate {k}: neutral seed on current residual ---")
         idx_peak = int(np.argmax(residual))
-        print(f"argmax(residual) at t={t_w[idx_peak]:.4f}, value={residual[idx_peak]:.1f} "
-              f"({residual[idx_peak]/sigma_w[idx_peak]:.2f} sigma)")
+        print(
+            f"argmax(residual) at t={t_w[idx_peak]:.4f}, value={residual[idx_peak]:.1f} "
+            f"({residual[idx_peak]/sigma_w[idx_peak]:.2f} sigma)"
+        )
 
         selection = select_r0(t_w, residual, sigma=sigma_w, dt=dt)
         reported = finalize_pulse(t_w, residual, selection, sigma=sigma_w, dt=dt)
@@ -81,9 +84,11 @@ def main():
 
         report = run_audit(t_w, residual, selection, reported, rng, sigma=sigma_w, dt=dt)
 
-        print(f"fit: A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}  "
-              f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f}  "
-              f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f}  r0={reported.r0:.4g} ({selection.classification.shape})")
+        print(
+            f"fit: A={reported.amplitude:.1f}+/-{reported.amplitude_err:.1f}  "
+            f"t_peak={reported.t_peak:.4f}+/-{reported.t_peak_err:.4f}  "
+            f"t_v={reported.t_v:.4f}+/-{reported.t_v_err:.4f}  r0={reported.r0:.4g} ({selection.classification.shape})"
+        )
         print(f"delta_chi2={delta_chi2:.2f}  amplitude_sigma={a_sigma:.2f}")
         for item in report.items:
             if item.name in ("no parameter on a box edge", "multi-start reproducibility"):
@@ -113,7 +118,9 @@ def main():
         else:
             reasons = []
             if not significance_ok:
-                reasons.append(f"significance (delta_chi2={delta_chi2:.2f}<{MIN_DELTA_CHI2} or sigma={a_sigma:.2f}<{MIN_AMPLITUDE_SIGMA})")
+                reasons.append(
+                    f"significance (delta_chi2={delta_chi2:.2f}<{MIN_DELTA_CHI2} or sigma={a_sigma:.2f}<{MIN_AMPLITUDE_SIGMA})"
+                )
             if not reliability_ok:
                 reasons.append("reliability (edge-pinned or non-reproducible)")
             print(f"-> REJECTED: fails {' and '.join(reasons)}. Stopping search.")
@@ -125,7 +132,21 @@ def main():
         df.insert(0, "pulse_index", range(1, len(df) + 1))
         df = df.sort_values("t_peak_s").reset_index(drop=True)
         df["pulse_index"] = range(1, len(df) + 1)
-        print(df[["pulse_index", "t_peak_s", "t_peak_err_s", "t_v_s", "t_v_err_s", "amplitude", "shape", "delta_chi2", "amplitude_sigma"]].to_string(index=False))
+        print(
+            df[
+                [
+                    "pulse_index",
+                    "t_peak_s",
+                    "t_peak_err_s",
+                    "t_v_s",
+                    "t_v_err_s",
+                    "amplitude",
+                    "shape",
+                    "delta_chi2",
+                    "amplitude_sigma",
+                ]
+            ].to_string(index=False)
+        )
         csv_path = HERE / "GRB131014215_blind_discovery.csv"
         df.to_csv(csv_path, index=False)
         print(f"\nwrote {csv_path.name}")
@@ -135,7 +156,12 @@ def main():
             model = make_pulse3(row["r0"])
             y_total_fit += model(t_w, row["amplitude"], row["t_peak_s"], row["t_v_s"])
         paths = plot_fit_overlay(
-            t_w, y_w, y_total_fit, out_dir=str(HERE), label="GRB131014215_blind_discovery", sigma=sigma_w,
+            t_w,
+            y_w,
+            y_total_fit,
+            out_dir=str(HERE),
+            label="GRB131014215_blind_discovery",
+            sigma=sigma_w,
             extra_title=f"{len(accepted)} pulses found blind, T90-only window",
         )
         print(f"wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")

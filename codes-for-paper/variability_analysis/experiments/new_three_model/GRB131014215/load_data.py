@@ -7,6 +7,7 @@ Detector list (n9, na, nb) and energy band (10-400 keV) are read directly from w
 exist on disk / this project's universal energy-band convention (used identically for all 4
 archived GRBs' light curves) -- data-selection metadata, not a fitted parameter.
 """
+
 import sys
 from pathlib import Path
 
@@ -32,9 +33,7 @@ def load_light_curve():
     """Background-subtracted, NaI-summed count rate and its per-bin uncertainty -- same
     quadrature-combination treatment as GRB231129C/load_data.py's load_light_curve (independent
     detectors' variances add linearly, not their uncertainties)."""
-    per_detector = [
-        lightcurve_data(str(LC_DIR / f"{d}.dat"), ENERGY_LOW, ENERGY_HIGH, errors=True) for d in DAT_NAI
-    ]
+    per_detector = [lightcurve_data(str(LC_DIR / f"{d}.dat"), ENERGY_LOW, ENERGY_HIGH, errors=True) for d in DAT_NAI]
     t = per_detector[0][0]
     for det, (t_i, _, _, _) in zip(DAT_NAI[1:], per_detector[1:]):
         assert np.array_equal(t, t_i), f"{det}'s time grid differs from {DAT_NAI[0]}'s -- cannot sum"

@@ -51,16 +51,23 @@ import matplotlib.pyplot as plt
 from light_curves import lightcurve_data
 from norris_fit import NorrisFitter, t_peak, tv_mc_summary
 
-from grb_research import update_style
+from grb_research import update_style, seed_from_name
 from grb_research.grb_utils import save_fig
 
 update_style()
+
+# Deterministic, per-script seed -- project convention (SEEDING.md); added 2026-09-26 (BUG-25),
+# every tv_mc_summary() call below used to omit seed= entirely, silently falling back to
+# norris_fit.py's own hardcoded SEED=12345 default, which that module no longer has.
+SEED = seed_from_name(__file__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 LC_DIR = PROJECT_ROOT / "light_curves" / "GRB140206275"
 ENERGY_LOW, ENERGY_HIGH = 10, 400
 
-dat_NaI = sorted(f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
+dat_NaI = sorted(
+    f.split(".")[0] for f in os.listdir(LC_DIR) if f.endswith(".dat") and "n" in f
+)  # order no longer load-bearing -- see BUG-23 fix below; kept sorted for deterministic logging only
 
 # BUG-23 fix (2026-09-23, user decision): sum all of the burst's NaI detectors' background-subtracted
 # count rates raw, with no per-detector normalization -- matching fitter_GRB140206275.py's own fix and the
@@ -82,11 +89,7 @@ y_full = r1 - b1
 # already seen pinned to the wide window's own left edge, -0.96 -> -19.97, in the two-window run).
 T_MIN, T_MAX = float(np.min(t_full)), float(np.max(t_full))
 
-WINDOWS = {
-    "narrow_-1_160": (-1, 160),
-    "wide_-20_300": (-20, 300),
-    "widest_full_range": (T_MIN, T_MAX),
-}
+WINDOWS = {"narrow_-1_160": (-1, 160), "wide_-20_300": (-20, 300), "widest_full_range": (T_MIN, T_MAX)}
 WINDOW_ORDER = ["narrow_-1_160", "wide_-20_300", "widest_full_range"]
 
 
@@ -118,9 +121,9 @@ def run_model(model_name: str, p0: list, also_track: list[int] | None = None) ->
 
         print(f"\n=== {model_name}, window {window_name} ({start}, {stop}), y_max={y_max:.2f} cts/s ===")
         for i in range(n_pulses):
-            A, ts, tau1, tau2 = nf.params[i * 4: (i + 1) * 4]
+            A, ts, tau1, tau2 = nf.params[i * 4 : (i + 1) * 4]
             tp = t_peak(ts, tau1, tau2)
-            mc = tv_mc_summary(nf, pulse_index=i + 1)
+            mc = tv_mc_summary(nf, pulse_index=i + 1, seed=SEED)
             print(
                 f"  pulse {i + 1}: A={A:.4f} ts={ts:9.4f} tau1={tau1:10.4f} tau2={tau2:8.4f}  "
                 f"t_peak={tp:9.4f}  t_v={mc['t_v_s']:.4f} +{mc['t_v_err_upper_s']:.4f} "
@@ -177,12 +180,16 @@ def run_model(model_name: str, p0: list, also_track: list[int] | None = None) ->
     for w in WINDOW_ORDER:
         start, stop = WINDOWS[w]
         row = df[(df["window"] == w) & (df["pulse_index"] == 5)].iloc[0]
-        print(f"  {w:22s} [{start:9.3f}, {stop:9.3f}]  t_s={row.t_s:10.3f}  tau1={row.tau1:10.3f}  kept={row.mc_kept_fraction:.3f}")
+        print(
+            f"  {w:22s} [{start:9.3f}, {stop:9.3f}]  t_s={row.t_s:10.3f}  tau1={row.tau1:10.3f}  kept={row.mc_kept_fraction:.3f}"
+        )
     for pulse_idx in also_track or []:
         print(f"{model_name} pulse {pulse_idx} (for context):")
         for w in WINDOW_ORDER:
             start, stop = WINDOWS[w]
             row = df[(df["window"] == w) & (df["pulse_index"] == pulse_idx)].iloc[0]
-            print(f"  {w:22s} [{start:9.3f}, {stop:9.3f}]  t_s={row.t_s:10.3f}  tau1={row.tau1:10.3f}  kept={row.mc_kept_fraction:.3f}")
+            print(
+                f"  {w:22s} [{start:9.3f}, {stop:9.3f}]  t_s={row.t_s:10.3f}  tau1={row.tau1:10.3f}  kept={row.mc_kept_fraction:.3f}"
+            )
 
     return df

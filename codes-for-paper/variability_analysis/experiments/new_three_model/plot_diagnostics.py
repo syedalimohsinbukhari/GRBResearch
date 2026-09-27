@@ -3,6 +3,7 @@ this project's generated-output convention (same pattern as plot_profile_scan.py
 section 5 -- see that module's docstring). Split out so the tests that exercise sections 4/7/8
 can each save their own artifacts without duplicating the matplotlib/grb_research boilerplate.
 """
+
 import sys
 from pathlib import Path
 
@@ -14,7 +15,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import update_style  # noqa: E402
@@ -49,7 +52,9 @@ def plot_fit_overlay(t_window, y_window, y_fit, out_dir, label, sigma=None, half
     fig_stem = out_dir / f"fit_overlay_{label}"
     save_fig(fig, fig_stem)
 
-    df = pd.DataFrame({"t": t_window, "y_data": y_window, "y_fit": y_fit, "residual": np.asarray(y_window) - np.asarray(y_fit)})
+    df = pd.DataFrame(
+        {"t": t_window, "y_data": y_window, "y_fit": y_fit, "residual": np.asarray(y_window) - np.asarray(y_fit)}
+    )
     if sigma is not None:
         df["sigma"] = sigma
     csv_path = out_dir / f"fit_overlay_{label}.csv"

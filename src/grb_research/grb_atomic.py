@@ -34,14 +34,7 @@ class ParameterSet:
         else:
             return self.parameters[key]
 
-    def get_populated_values(
-        self,
-        cov_matrix,
-        parameter_name=None,
-        size: int = N_SAMPLES,
-        *,
-        rng: np.random.Generator,
-    ):
+    def get_populated_values(self, cov_matrix, parameter_name=None, size: int = N_SAMPLES, *, rng: np.random.Generator):
         """
         Returns a multivariate normal sample from the parameter set with a given covariance matrix.
 

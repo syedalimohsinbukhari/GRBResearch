@@ -9,6 +9,7 @@ n7), same episode bounds and P0. Extended here to also load per-bin uncertaintie
 which GRB231129C/_common.py's own loader does not request -- this folder's pipeline requires real
 sigma at every decision-driving step (see profile_scan.py's _require_sigma, review point 2).
 """
+
 import sys
 from pathlib import Path
 
@@ -32,12 +33,7 @@ DAT_NAI = ("n3", "n6", "n7")  # copied from ../../../GRB231129C/_common.py
 
 # Episode boundaries, copied verbatim from ../../../GRB231129C/_common.py (sourced there from
 # results.json, not eyeballed).
-EPISODE_BOUNDS = {
-    "EX0": (-0.192, 3.136),
-    "TR1": (0.384, 3.136),
-    "TR2": (3.136, 7.296),
-    "EX1": (3.136, 10.048),
-}
+EPISODE_BOUNDS = {"EX0": (-0.192, 3.136), "TR1": (0.384, 3.136), "TR2": (3.136, 7.296), "EX1": (3.136, 10.048)}
 
 # Archived unnormalized 4-param fit results (6 pulses, full range fit_window (-138.496, 475.84)),
 # already on disk from prior production work -- read directly rather than re-copied as literals.
@@ -67,9 +63,7 @@ def load_light_curve():
     uncertainties) linearly, matching how this project's data_rate_error is documented to behave
     (light_curves.py's own docstring/comment).
     """
-    per_detector = [
-        lightcurve_data(str(LC_DIR / f"{d}.dat"), ENERGY_LOW, ENERGY_HIGH, errors=True) for d in DAT_NAI
-    ]
+    per_detector = [lightcurve_data(str(LC_DIR / f"{d}.dat"), ENERGY_LOW, ENERGY_HIGH, errors=True) for d in DAT_NAI]
     t = per_detector[0][0]
     for det, (t_i, _, _, _) in zip(DAT_NAI[1:], per_detector[1:]):
         assert np.array_equal(t, t_i), f"{det}'s time grid differs from {DAT_NAI[0]}'s -- cannot sum"

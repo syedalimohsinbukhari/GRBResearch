@@ -20,16 +20,14 @@ reusing fit_comparison.py's functions directly (import, not copy).
 
 Does not modify fit_comparison.py, grb140206b_window_scan.py, or anything outside this folder.
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from fit_comparison import (
-    BURSTS, LC_DIR, HERE,
-    summed_nai_curve, fit_normalized, fit_unnormalized_xscale, total_model,
-)
+from fit_comparison import BURSTS, LC_DIR, HERE, summed_nai_curve, fit_normalized, fit_unnormalized_xscale, total_model
 from norris_fit import t_peak, tv_value
 from grb_research import update_style, LINE_WIDTH
 from grb_research.grb_utils import save_fig
@@ -78,27 +76,45 @@ def main():
     print(f"SSE ratio (unnorm/norm): {sse_raw / sse_norm:.4f}")
 
     rows = []
-    print(f"\n{'pulse':>5}  {'A_norm':>8}  {'A_cts/s (n)':>12}  {'t_s (n)':>9}  {'tau1 (n)':>10}  {'tau2 (n)':>10}  "
-          f"{'A_cts/s (u)':>12}  {'t_s (u)':>9}  {'tau1 (u)':>10}  {'tau2 (u)':>10}  {'t_peak (n)':>10}  {'t_peak (u)':>10}  {'t_v (n)':>8}  {'t_v (u)':>8}")
+    print(
+        f"\n{'pulse':>5}  {'A_norm':>8}  {'A_cts/s (n)':>12}  {'t_s (n)':>9}  {'tau1 (n)':>10}  {'tau2 (n)':>10}  "
+        f"{'A_cts/s (u)':>12}  {'t_s (u)':>9}  {'tau1 (u)':>10}  {'tau2 (u)':>10}  {'t_peak (n)':>10}  {'t_peak (u)':>10}  {'t_v (n)':>8}  {'t_v (u)':>8}"
+    )
     for i in range(N_PULSES):
-        A_n, ts_n, tau1_n, tau2_n = params_norm[i * 4:(i + 1) * 4]
-        A_r, ts_r, tau1_r, tau2_r = params_raw[i * 4:(i + 1) * 4]
+        A_n, ts_n, tau1_n, tau2_n = params_norm[i * 4 : (i + 1) * 4]
+        A_r, ts_r, tau1_r, tau2_r = params_raw[i * 4 : (i + 1) * 4]
         tp_n, tp_r = t_peak(ts_n, tau1_n, tau2_n), t_peak(ts_r, tau1_r, tau2_r)
         tv_n, tv_r = tv_value(tau1_n, tau2_n), tv_value(tau1_r, tau2_r)
-        print(f"{i + 1:5d}  {A_n:8.4f}  {A_n * y_max:12.4f}  {ts_n:9.4f}  {tau1_n:10.4f}  {tau2_n:10.6f}  "
-              f"{A_r:12.4f}  {ts_r:9.4f}  {tau1_r:10.4f}  {tau2_r:10.6f}  {tp_n:10.4f}  {tp_r:10.4f}  {tv_n:8.4f}  {tv_r:8.4f}")
-        rows.append({
-            "grb_name": PAPER_NAME, "window_min_s": WINDOW[0], "window_max_s": WINDOW[1],
-            "pulse_index": i + 1, "reseeded": (i + 1 == 6), "y_max_cts_per_s": y_max,
-            "normalized_A_norm": A_n, "normalized_A_cts_per_s": A_n * y_max,
-            "normalized_t_s": ts_n, "normalized_tau1": tau1_n, "normalized_tau2": tau2_n,
-            "normalized_t_peak_s": tp_n, "normalized_t_v_s": tv_n,
-            "unnorm_xscale_A_cts_per_s": A_r,
-            "unnorm_xscale_t_s": ts_r, "unnorm_xscale_tau1": tau1_r, "unnorm_xscale_tau2": tau2_r,
-            "unnorm_xscale_t_peak_s": tp_r, "unnorm_xscale_t_v_s": tv_r,
-            "sse_normalized_rescaled": sse_norm, "sse_unnorm_xscale": sse_raw,
-            "sse_ratio_unnorm_over_norm": sse_raw / sse_norm,
-        })
+        print(
+            f"{i + 1:5d}  {A_n:8.4f}  {A_n * y_max:12.4f}  {ts_n:9.4f}  {tau1_n:10.4f}  {tau2_n:10.6f}  "
+            f"{A_r:12.4f}  {ts_r:9.4f}  {tau1_r:10.4f}  {tau2_r:10.6f}  {tp_n:10.4f}  {tp_r:10.4f}  {tv_n:8.4f}  {tv_r:8.4f}"
+        )
+        rows.append(
+            {
+                "grb_name": PAPER_NAME,
+                "window_min_s": WINDOW[0],
+                "window_max_s": WINDOW[1],
+                "pulse_index": i + 1,
+                "reseeded": (i + 1 == 6),
+                "y_max_cts_per_s": y_max,
+                "normalized_A_norm": A_n,
+                "normalized_A_cts_per_s": A_n * y_max,
+                "normalized_t_s": ts_n,
+                "normalized_tau1": tau1_n,
+                "normalized_tau2": tau2_n,
+                "normalized_t_peak_s": tp_n,
+                "normalized_t_v_s": tv_n,
+                "unnorm_xscale_A_cts_per_s": A_r,
+                "unnorm_xscale_t_s": ts_r,
+                "unnorm_xscale_tau1": tau1_r,
+                "unnorm_xscale_tau2": tau2_r,
+                "unnorm_xscale_t_peak_s": tp_r,
+                "unnorm_xscale_t_v_s": tv_r,
+                "sse_normalized_rescaled": sse_norm,
+                "sse_unnorm_xscale": sse_raw,
+                "sse_ratio_unnorm_over_norm": sse_raw / sse_norm,
+            }
+        )
 
     df = pd.DataFrame(rows)
     csv_path = HERE / "grb140206b_fullrange_pulse6_reseed_results.csv"
@@ -107,8 +123,13 @@ def main():
 
     update_style()
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(t, y_raw, color="0.6", lw=LINE_WIDTH * 0.6,
-            label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted, full range")
+    ax.plot(
+        t,
+        y_raw,
+        color="0.6",
+        lw=LINE_WIDTH * 0.6,
+        label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted, full range",
+    )
     ax.plot(t, model_norm_raw, color="tab:blue", lw=LINE_WIDTH, label="Normalized fit total")
     ax.plot(t, model_raw, color="tab:red", ls="--", lw=LINE_WIDTH, label="Unnormalized fit total (explicit x_scale)")
     ax.set_xlabel("Time since trigger [s]")

@@ -14,6 +14,7 @@ still wants to be sub-2-bin-wide here, that's the light curve's floor, not a fit
 Reuses run_joint_fit.py's already-tested joint machinery directly (fit_joint, the three audit
 checks, plot_joint_overlay) rather than reimplementing it.
 """
+
 import sys
 from pathlib import Path
 
@@ -68,8 +69,10 @@ def main():
     pulse_index_list = prior["pulse_index"].tolist() + [7]
     n_pulses = 7
 
-    print(f"pulses: {pulse_index_list} (pulse 7 = candidate, seed A={CANDIDATE_SEED[0]:.1f}, "
-          f"t_peak={CANDIDATE_SEED[1]:.4f}, t_v={CANDIDATE_SEED[2]:.4f}, r0={CANDIDATE_R0:.3g})")
+    print(
+        f"pulses: {pulse_index_list} (pulse 7 = candidate, seed A={CANDIDATE_SEED[0]:.1f}, "
+        f"t_peak={CANDIDATE_SEED[1]:.4f}, t_v={CANDIDATE_SEED[2]:.4f}, r0={CANDIDATE_R0:.3g})"
+    )
 
     print("\n--- Joint 7-pulse fit ---")
     model7, popt7, pcov7, chi2_7 = fit_joint(t_window, y_window, sigma_window, r0_list_7, p0_flat_7, dt)
@@ -82,8 +85,10 @@ def main():
     p0_flat_6 = flatten_seed(list(zip(prior_results["amplitude"], prior_results["t_peak_s"], prior_results["t_v_s"])))
     model6, popt6, pcov6, chi2_6 = fit_joint(t_window, y_window, sigma_window, r0_list_6_check, p0_flat_6, dt)
     print(f"chi2_6pulse (18 free params) = {chi2_6:.4f}")
-    print(f"delta_chi2 (6pulse - 7pulse) = {chi2_6 - chi2_7:.4f} for 3 added params "
-          f"(compare to the isolated single-pulse test's delta_chi2=7.592)")
+    print(
+        f"delta_chi2 (6pulse - 7pulse) = {chi2_6 - chi2_7:.4f} for 3 added params "
+        f"(compare to the isolated single-pulse test's delta_chi2=7.592)"
+    )
 
     print("\n--- Pulse 7 (candidate) in the joint context ---")
     a7, tp7, tv7 = params7[-1]
@@ -95,9 +100,11 @@ def main():
     for idx, pulse_num in [(1, 2), (2, 3)]:  # position 1 = pulse 2, position 2 = pulse 3 in the sorted list
         a6, tp6, tv6 = unflatten_params(popt6, 6)[idx]
         a7_, tp7_, tv7_ = params7[idx]
-        print(f"  pulse {pulse_num}: 6-pulse A={a6:.1f} t_peak={tp6:.4f} t_v={tv6:.4f}  |  "
-              f"7-pulse A={a7_:.1f} t_peak={tp7_:.4f} t_v={tv7_:.4f}  |  "
-              f"delta A={a7_-a6:+.1f} delta t_peak={tp7_-tp6:+.5f} delta t_v={tv7_-tv6:+.5f}")
+        print(
+            f"  pulse {pulse_num}: 6-pulse A={a6:.1f} t_peak={tp6:.4f} t_v={tv6:.4f}  |  "
+            f"7-pulse A={a7_:.1f} t_peak={tp7_:.4f} t_v={tv7_:.4f}  |  "
+            f"delta A={a7_-a6:+.1f} delta t_peak={tp7_-tp6:+.5f} delta t_v={tv7_-tv6:+.5f}"
+        )
 
     print("\n--- Audit (joint analogs of section 8), 7-pulse fit ---")
     from joint_pulse3 import joint_bounds
@@ -117,15 +124,23 @@ def main():
     print(f"window-widening invariance (x1.5, x2.0): {'PASS' if widen_ok else 'FAIL'}")
     for factor, params in widen_results.items():
         a_w, tp_w, tv_w = params[-1]
-        print(f"  x{factor}: pulse 7 -> A={a_w:.1f} t_peak={tp_w:.4f} t_v={tv_w:.4f} "
-              f"(base: A={a7:.1f} t_peak={tp7:.4f} t_v={tv7:.4f})")
+        print(
+            f"  x{factor}: pulse 7 -> A={a_w:.1f} t_peak={tp_w:.4f} t_v={tv_w:.4f} "
+            f"(base: A={a7:.1f} t_peak={tp7:.4f} t_v={tv7:.4f})"
+        )
 
     audit_all_passed = (not pinned) and repro_ok and widen_ok
     print(f"\naudit overall: {'ALL PASS' if audit_all_passed else 'SOME CHECKS FAILED'}")
 
     print("\n--- Plot ---")
     paths = plot_joint_overlay(
-        t_window, y_window, sigma_window, model7, popt7, out_dir=str(HERE), label="GRB231129C_joint_7pulse",
+        t_window,
+        y_window,
+        sigma_window,
+        model7,
+        popt7,
+        out_dir=str(HERE),
+        label="GRB231129C_joint_7pulse",
         pulse_indices=pulse_index_list,
     )
     print(f"wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")

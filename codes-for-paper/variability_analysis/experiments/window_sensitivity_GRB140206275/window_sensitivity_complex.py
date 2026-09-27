@@ -10,6 +10,7 @@ Pulse 7 is tracked alongside pulse 5 (also_track=[7]): pulse 5 here is one of th
 pulses (t_s~23.08, tau1~1.1), a different physical object from SIMPLE's pulse 5; COMPLEX's actual broad
 pedestal is pulse 7, reported for context per the original combined script's convention.
 """
+
 from window_sensitivity_common import run_model
 
 COMPLEX_P0 = [

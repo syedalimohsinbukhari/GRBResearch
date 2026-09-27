@@ -5,13 +5,7 @@ from typing import List, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from grb_research import (
-    EpisodeMarkerResolver,
-    MARKER_SIZE,
-    ModelResampler,
-    break_e_to_e_peak,
-    mc_e_iso_sampler,
-)
+from grb_research import EpisodeMarkerResolver, MARKER_SIZE, ModelResampler, break_e_to_e_peak, mc_e_iso_sampler
 from grb_research.grb_constants import N_SAMPLES, N_GRID
 
 # ---------------------------------------------------------------------------
@@ -140,7 +134,7 @@ def _plot_model_point(
     if axis is not None:
         # scatter's `s` is area (points^2); squaring MARKER_SIZE matches the visual diameter
         # used by markersize= elsewhere (plot/errorbar), per the project-wide marker convention.
-        axis.scatter(p50_ep, p50_ei, marker=marker, s=MARKER_SIZE ** 2, color=color, alpha=alpha, label=label, zorder=3)
+        axis.scatter(p50_ep, p50_ei, marker=marker, s=MARKER_SIZE**2, color=color, alpha=alpha, label=label, zorder=3)
         axis.errorbar(p50_ep, p50_ei, xerr=x_err, ms=0, color=color, alpha=alpha, zorder=2, capsize=5)
 
     return p50_ep, p50_ei, x_err, y_err
@@ -190,11 +184,11 @@ def amati_relationship_dirirsa2019(
     e_i_peak = np.logspace(np.log10(x_lim[0]), np.log10(x_lim[1]), num=num_points)
     x = np.log10(e_i_peak / e_i_peak_norm)
     y = k + m * x
-    sigma_y = np.sqrt(sigma_k ** 2 + x ** 2 * sigma_m ** 2 + sigma_ext ** 2)
+    sigma_y = np.sqrt(sigma_k**2 + x**2 * sigma_m**2 + sigma_ext**2)
 
     if use_average:
         sigma_y = np.mean(sigma_y)
-    e_isotropic = (10 ** y) * e_iso_norm
+    e_isotropic = (10**y) * e_iso_norm
 
     # Normalize to plotting units
     e_i_peak_plot = e_i_peak / EP_NORM

@@ -7,6 +7,7 @@ experiments/window_sensitivity_GRB140206275/window_sensitivity_common.py).
 Split out from profile_scan.py (which stays self-contained, no matplotlib/grb_research import)
 so the core algorithm doesn't carry plotting dependencies.
 """
+
 import sys
 from pathlib import Path
 
@@ -17,7 +18,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import update_style  # noqa: E402

@@ -12,6 +12,7 @@ Uses Q0, the 7-pulse-2 decomposition -- the DEFINITIVE choice for this burst (us
 7 pulses, but with the near-t=0/t=15s pulses swapped) run lives in fitter_unnormalized_p0.py, writing
 to separate *_p0-suffixed output files so both stay on disk.
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,16 +20,34 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from _common import (  # noqa: E402 -- sets up sys.path, must import before norris_fit
-    T_FULL, Y_RAW_FULL, Y_MAX_CTS_PER_S, FIT_WINDOW, DAT_NAI, GRB_140206, GRB_PAPER_NAME,
-    N_PULSES_Q0, Q0, MAX_NFEV, X_SCALE_TS_TAU1, X_SCALE_TAU2, T05, T95, PLOT_PAD_S, FitResult,
-    assign_pulses, photon_summary_for, build_results_df, add_lat_photon_overlay, save_fig,
+    T_FULL,
+    Y_RAW_FULL,
+    Y_MAX_CTS_PER_S,
+    FIT_WINDOW,
+    DAT_NAI,
+    GRB_140206,
+    GRB_PAPER_NAME,
+    N_PULSES_Q0,
+    Q0,
+    MAX_NFEV,
+    X_SCALE_TS_TAU1,
+    X_SCALE_TAU2,
+    T05,
+    T95,
+    PLOT_PAD_S,
+    FitResult,
+    assign_pulses,
+    photon_summary_for,
+    build_results_df,
+    add_lat_photon_overlay,
+    save_fig,
 )
 from norris_fit import norris_pulse  # noqa: E402
-from grb_research import LINE_WIDTH  # noqa: E402
+from grb_research import LINE_WIDTH, seed_from_name  # noqa: E402
 
 
 def total_model(t, params, n_pulses):
-    return sum(norris_pulse(t, params[i * 4:(i + 1) * 4]) for i in range(n_pulses))
+    return sum(norris_pulse(t, params[i * 4 : (i + 1) * 4]) for i in range(n_pulses))
 
 
 N_PULSES = N_PULSES_Q0
@@ -57,12 +76,22 @@ except np.linalg.LinAlgError:
 
 fit_result = FitResult(params=res.x, covariance=covariance)
 
+# Deterministic, per-script seed -- project convention (SEEDING.md); added 2026-09-26 (BUG-25),
+# this call used to omit seed= entirely, silently falling back to norris_fit.py's own hardcoded
+# SEED=12345 default, which that module no longer has.
+SEED = seed_from_name(__file__)
+
 photon_pulse = assign_pulses(fit_result.params, N_PULSES)
 photon_summary = photon_summary_for(photon_pulse, N_PULSES)
 
 results_df = build_results_df(
-    method_label="unnormalized_xscale", fit_result=fit_result, n_pulses=N_PULSES,
-    y_max_cts_per_s=Y_MAX_CTS_PER_S, amplitude_is_physical=True, photon_summary=photon_summary,
+    method_label="unnormalized_xscale",
+    fit_result=fit_result,
+    n_pulses=N_PULSES,
+    y_max_cts_per_s=Y_MAX_CTS_PER_S,
+    amplitude_is_physical=True,
+    photon_summary=photon_summary,
+    seed=SEED,
 )
 csv_path = Path(__file__).parent / f"norris_fit_results_{GRB_140206.name}_unnormalized.csv"
 results_df.to_csv(csv_path, index=False)
@@ -72,21 +101,34 @@ print(f"fit window: {FIT_WINDOW} (full x.min()/x.max())")
 # --- Plot: data + total fit + individual pulses, all in physical counts/s -- built by hand (no
 # NorrisFitter/BaseFitter.plot_fit() here), same convention as GRB080916C/fitter_unnormalized.py.
 fig, ax = plt.subplots(figsize=(13, 6.5))
-ax.plot(T_FULL, Y_RAW_FULL, color="0.6", lw=LINE_WIDTH * 0.6,
-        label=f"10-400 keV NaI ({'+'.join(DAT_NAI)}, summed)\nBackground Subtracted")
+ax.plot(
+    T_FULL,
+    Y_RAW_FULL,
+    color="0.6",
+    lw=LINE_WIDTH * 0.6,
+    label=f"10-400 keV NaI ({'+'.join(DAT_NAI)}, summed)\nBackground Subtracted",
+)
 model_total = total_model(T_FULL, fit_result.params, N_PULSES)
 ax.plot(T_FULL, model_total, color="tab:red", lw=LINE_WIDTH, label="Unnormalized fit (explicit x_scale), total")
 
 shades = plt.cm.Oranges(np.linspace(0.4, 0.85, N_PULSES))
 for i in range(N_PULSES):
-    par = fit_result.params[i * 4:(i + 1) * 4]
+    par = fit_result.params[i * 4 : (i + 1) * 4]
     A, ts, tau1, tau2 = par
-    ax.plot(T_FULL, norris_pulse(T_FULL, par), ls="--", lw=LINE_WIDTH * 0.7, color=shades[i],
-            label=f"Pulse {i + 1} (A={A:.1f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})")
+    ax.plot(
+        T_FULL,
+        norris_pulse(T_FULL, par),
+        ls="--",
+        lw=LINE_WIDTH * 0.7,
+        color=shades[i],
+        label=f"Pulse {i + 1} (A={A:.1f}, t_s={ts:.2f}, tau1={tau1:.2f}, tau2={tau2:.2f})",
+    )
 
 ax.set_xlabel("Time since trigger [s]")
 ax.set_ylabel("Count rate [counts/s]")
-ax.set_title(f"{GRB_PAPER_NAME}: unnormalized (x_scale) fit (COMPLEX, 7-pulse-2 Q0), full range {FIT_WINDOW[0]:.1f}-{FIT_WINDOW[1]:.1f}s")
+ax.set_title(
+    f"{GRB_PAPER_NAME}: unnormalized (x_scale) fit (COMPLEX, 7-pulse-2 Q0), full range {FIT_WINDOW[0]:.1f}-{FIT_WINDOW[1]:.1f}s"
+)
 add_lat_photon_overlay(ax, y_top_data=Y_RAW_FULL.max())
 legend = ax.legend(fontsize="x-small", loc="upper left", bbox_to_anchor=(1.08, 1.0))
 

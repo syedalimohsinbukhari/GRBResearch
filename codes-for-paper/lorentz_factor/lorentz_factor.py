@@ -212,7 +212,7 @@ def compute_tau_hat(alpha_LS, f_1, delta_T_s, z):
     d_L_cm = cosmo.luminosity_distance(z).cgs.value
     d_7Gpc = d_L_cm / (7.0 * 3.0857e27)
 
-    return 2.1e11 * d_7Gpc ** 2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
+    return 2.1e11 * d_7Gpc**2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
 
 
 def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
@@ -244,7 +244,7 @@ def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
     e3 = (alpha_LS - 1) / (alpha_LS + 1)
 
     # 0.511 MeV = m_e c^2, matching the MeV convention used for f_1 and tau_hat above.
-    gamma_min = tau_hat ** e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
+    gamma_min = tau_hat**e1 * (E_max_MeV / 0.511) ** e2 * (1 + z) ** e3
     return gamma_min, tau_hat
 
 

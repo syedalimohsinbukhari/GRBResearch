@@ -22,6 +22,7 @@ Seeds for the joint fit come from ../GRB231129C/GRB231129C_3param_results.csv (p
 read-only reuse of an already-computed, already-validated near-answer -- not a re-derivation, and
 not a dependency this script writes to.
 """
+
 import sys
 from pathlib import Path
 
@@ -40,7 +41,14 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from grb_research import get_rng, seed_from_name  # noqa: E402
 
 from bounds_seeding import median_dt  # noqa: E402
-from joint_pulse3 import flatten_seed, joint_bounds, make_joint_pulse3, pulse_block_cov, residual_excluding, unflatten_params  # noqa: E402
+from joint_pulse3 import (
+    flatten_seed,
+    joint_bounds,
+    make_joint_pulse3,
+    pulse_block_cov,
+    residual_excluding,
+    unflatten_params,
+)  # noqa: E402
 from load_data import EPISODE_BOUNDS, load_archived_pulses, load_light_curve  # noqa: E402
 from plot_joint_fit import plot_joint_overlay  # noqa: E402
 from profile_scan import chi_square, refine_r0_zone  # noqa: E402
@@ -73,8 +81,7 @@ def fit_joint(t_window, y_window, sigma_window, r0_list, p0_flat, dt, maxfev=400
     model = make_joint_pulse3(r0_list)
     lb, ub = joint_bounds(t_window, dt, n)
     popt, pcov = curve_fit(
-        model, t_window, y_window, p0=p0_flat, bounds=(lb, ub),
-        sigma=sigma_window, absolute_sigma=True, maxfev=maxfev,
+        model, t_window, y_window, p0=p0_flat, bounds=(lb, ub), sigma=sigma_window, absolute_sigma=True, maxfev=maxfev
     )
     y_fit = model(t_window, *popt)
     chi2 = chi_square(y_window, y_fit, sigma=sigma_window)
@@ -97,7 +104,9 @@ def check_edge_pinning(popt, lb, ub, n_pulses):
             idx = 3 * i + j
             value, lo, hi = popt[idx], lb[idx], ub[idx]
             near_lo = np.isclose(value, lo, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(lo), 1e-3))
-            near_hi = np.isfinite(hi) and np.isclose(value, hi, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(hi), 1e-3))
+            near_hi = np.isfinite(hi) and np.isclose(
+                value, hi, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(hi), 1e-3)
+            )
             if near_lo or near_hi:
                 pinned.append((i + 1, name, value, lo, hi))
     return pinned
@@ -268,8 +277,10 @@ def run_variant(pulse_indices, label, title):
     repro_ok, repro_spread, repro_chi2_spread = check_multistart_reproducibility(
         t_window, y_window, sigma_window, r0_list, p0_flat, dt, rng
     )
-    print(f"multi-start reproducibility ({N_JITTER_SEEDS} jittered joint refits): "
-          f"{'PASS' if repro_ok else 'FAIL'}, chi2 spread={repro_chi2_spread:.6f}")
+    print(
+        f"multi-start reproducibility ({N_JITTER_SEEDS} jittered joint refits): "
+        f"{'PASS' if repro_ok else 'FAIL'}, chi2 spread={repro_chi2_spread:.6f}"
+    )
 
     widen_ok, widen_results = check_window_widening(t_full, y_full, sigma_full, r0_list, popt, dt)
     print(f"window-widening invariance (x1.5, x2.0): {'PASS' if widen_ok else 'FAIL'}")
@@ -312,8 +323,12 @@ def main():
     )
 
     print(f"\n{'=' * 70}\n=== 6-pulse vs. 5-pulse summary ===\n{'=' * 70}")
-    print(f"6-pulse: chi2_joint={result_6pulse['chi2_joint']:.4f} (18 params), audit={result_6pulse['audit_all_passed']}")
-    print(f"5-pulse: chi2_joint={result_5pulse['chi2_joint']:.4f} (15 params), audit={result_5pulse['audit_all_passed']}")
+    print(
+        f"6-pulse: chi2_joint={result_6pulse['chi2_joint']:.4f} (18 params), audit={result_6pulse['audit_all_passed']}"
+    )
+    print(
+        f"5-pulse: chi2_joint={result_5pulse['chi2_joint']:.4f} (15 params), audit={result_5pulse['audit_all_passed']}"
+    )
     print("(these chi2 are over different data -- 5-pulse's residual is NOT pulse 4's flux -- so this is not a")
     print(" direct nested-model comparison; see PROGRESS.md for how the two variants are actually compared.)")
 

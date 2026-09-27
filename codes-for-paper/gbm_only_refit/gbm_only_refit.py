@@ -62,14 +62,18 @@ from grb_research import (
     find_project_root,
     get_rng,
     seed_from_name,
-    update_style, LEGEND_TITLE_FONT_SIZE,
+    update_style,
+    LEGEND_TITLE_FONT_SIZE,
 )
 from grb_research.grb_constants import (
     LABEL_FONT_SIZE,
     LEGEND_FONT_SIZE,
     LINE_WIDTH,
     MARKER_SIZE,
-    TICK_FONT_SIZE, CAP_SIZE, N_SAMPLES, N_GRID,
+    TICK_FONT_SIZE,
+    CAP_SIZE,
+    N_SAMPLES,
+    N_GRID,
 )
 from grb_research.grb_core import GRB
 from grb_research.grb_enums import GRBModelsCombinations as gmC
@@ -133,7 +137,7 @@ def episode_label(interval):
 
 def analytic_bb_bolometric_flux(amp_bb, kt_bb):
     """All-frequency blackbody energy flux [keV/cm^2/s]. Copied from bb_flux_fraction.py."""
-    return amp_bb * kt_bb ** 4 * np.pi ** 4 / 15.0
+    return amp_bb * kt_bb**4 * np.pi**4 / 15.0
 
 
 def split_energy_flux(model_name, values, energy):
@@ -416,8 +420,7 @@ def make_plot(df, episode_markers, path_stub="gbm_only_refit_kt_comparison"):
 
     ax.set_xticks(x)
     _ff = lambda x: x.replace("_", "+")
-    ax.set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})"
-                        for _, row in plotted.iterrows()])
+    ax.set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})" for _, row in plotted.iterrows()])
     ax.set_ylabel(r"$kT_\mathrm{BB}$ [keV]", fontsize=LABEL_FONT_SIZE)
     ax.tick_params(labelsize=TICK_FONT_SIZE)
 
@@ -506,8 +509,7 @@ def make_delta_cstat_plot(df, episode_markers, path_stub="gbm_only_refit_delta_c
     ax.set_yscale("log")
     ax.set_xticks(x)
     _ff = lambda x: x.replace("_", "+")
-    ax.set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})"
-                        for _, row in plotted.iterrows()])
+    ax.set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})" for _, row in plotted.iterrows()])
     ax.set_ylabel(r"$\Delta C\mathrm{-stat}$ (BASE $\to$ BASE+BB)", fontsize=LABEL_FONT_SIZE)
     ax.tick_params(labelsize=TICK_FONT_SIZE)
 
@@ -600,8 +602,7 @@ def make_fractional_diff_plot(df, episode_markers, path_stub="gbm_only_refit_fra
 
     axes[1].set_xticks(x)
     _ff = lambda x: x.replace("_", "+")
-    axes[1].set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})"
-                             for _, row in plotted.iterrows()])
+    axes[1].set_xticklabels([f"{row['episode']}\n({_ff(row['model_name_joint'])})" for _, row in plotted.iterrows()])
 
     save_fig(fig, path_stub)
 
@@ -634,11 +635,35 @@ def main():
     make_fractional_diff_plot(df, episode_markers)
 
     pd.set_option("display.width", 200)
-    print(df[["episode", "model_name_joint", "model_name_gbm", "models_agree", "kt_bb_keV_joint", "kt_bb_keV_gbm",
-              "kt_consistent_1sigma", "any_bb_step_clears_threshold_gbm", "recorded_winner_is_bb_gbm",
-              "status_consistent_with_threshold_gbm"]])
-    print(df[["episode", "kt_bb_diff_pct", "kt_bb_diff_pct_err_lower", "kt_bb_diff_pct_err_upper",
-              "f_bb_diff_pct", "f_bb_diff_pct_err_lower", "f_bb_diff_pct_err_upper"]])
+    print(
+        df[
+            [
+                "episode",
+                "model_name_joint",
+                "model_name_gbm",
+                "models_agree",
+                "kt_bb_keV_joint",
+                "kt_bb_keV_gbm",
+                "kt_consistent_1sigma",
+                "any_bb_step_clears_threshold_gbm",
+                "recorded_winner_is_bb_gbm",
+                "status_consistent_with_threshold_gbm",
+            ]
+        ]
+    )
+    print(
+        df[
+            [
+                "episode",
+                "kt_bb_diff_pct",
+                "kt_bb_diff_pct_err_lower",
+                "kt_bb_diff_pct_err_upper",
+                "f_bb_diff_pct",
+                "f_bb_diff_pct_err_lower",
+                "f_bb_diff_pct_err_upper",
+            ]
+        ]
+    )
 
 
 if __name__ == "__main__":

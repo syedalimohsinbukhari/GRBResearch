@@ -11,6 +11,7 @@ Self-contained apart from importing the already-validated building blocks one di
 (pulse3.py's make_pulse3/Pulse3Mapping, bounds_seeding.py's pulse3_bounds, profile_scan.py's
 chi_square/refine_r0_zone/_require_sigma) -- no new model math here, only the N-pulse orchestration.
 """
+
 import sys
 from pathlib import Path
 

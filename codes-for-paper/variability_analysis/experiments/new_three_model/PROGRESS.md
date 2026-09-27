@@ -516,12 +516,12 @@ off. Widened once, re-verified window-widening PASS. This is the audit doing exa
 catching a real window-truncation problem, not a method flaw.
 
 **Discovery: GRB231129C has two different archived decompositions, not one.** The ORIGINAL
-production fit (`fitter_GRB231129779.py`, root level) is 5 pulses, window (-1, 10)s. A LATER,
+production fit (`fitter_GRB231129C.py`, root level) is 5 pulses, window (-1, 10)s. A LATER,
 full-range fit (`GRB231129C/_common.py`, ~5 hours after) added a 6th pulse -- its own P0 entry is
 marked `# replaceable` in that source. `GRB231129C/norris_fit_results_GRB231129779_unnormalized.csv`
 (the 6-pulse one) is what this project's entire GRB231129C/ and GRB231129C_joint/ analysis has been
 built on. Also found: `_common.py`'s docstring claim that its P0 was "copied verbatim from
-`fitter_GRB231129779.py`" is false -- the arrays don't match, not even in pulse count. Worth a
+`fitter_GRB231129C.py`" is false -- the arrays don't match, not even in pulse count. Worth a
 `BUGS.md` entry (not filed yet). User confirmed independently (without being told the above) that
 pulse 4 is the one in question -- and our own numbers had already flagged it: pulse 4 showed the
 largest pass1->pass2 movement in `GRB231129C/run_pipeline.py` and the largest pre-widening
@@ -636,7 +636,7 @@ GRB140206275 window-sensitivity diagnostic exists to catch.) `bounds_seeding.py`
 (`run_joint_fit_fullspan.py`, new): refit the 6-pulse joint model over the light curve's ENTIRE
 x-span (`t.min()`/`t.max()` explicitly -- not a literal `-inf`/`inf` mask, same effect against
 real finite timestamps but explicit about what it resolves to, per user preference), i.e. the
-data's own full extent, matching `fitter_GRB231129779.py`'s own `START1=-np.inf, END1=np.inf`
+data's own full extent, matching `fitter_GRB231129C.py`'s own `START1=-np.inf, END1=np.inf`
 convention (the most extreme "widening" possible, not an extrapolation from smaller ones). Plot
 boxed to `[T05-PLOT_PAD_S, T95+PLOT_PAD_S]` = `[-4.616, 12.296]`s (production convention, copied
 into `GRB231129C/load_data.py` from `../../../GRB231129C/_common.py`) -- plot-axis bounding only,
@@ -677,7 +677,7 @@ full 9-script synthetic suite -- ALL PASS. `_is_pinned` now matches `profile_sca
 value-relative form everywhere it's used in this folder.
 
 **Files written:** `run_joint_fit_fullspan.py`, `joint_overlay_GRB231129C_joint_fullspan.{csv,pdf,png}`.
-`GRB231129C/load_data.py` gained `T05`, `T95`, `PLOT_PAD_S` (copied from `_common.py`, same
+`GRB231129C/load_data.py` gained `T05`, `T95`, `plot_pad` (copied from `_common.py`, same
 convention as that module's existing copied constants).
 
 ## Open item: 5 vs. 6 pulses for GRB231129C

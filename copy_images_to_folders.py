@@ -4,7 +4,7 @@ import os
 import pathlib
 import shutil
 
-HOME = os.environ['HOME']
+HOME = os.environ["HOME"]
 
 codes_for_paper = pathlib.Path(f"{HOME}/PycharmProjects/GRBResearchWork/codes-for-paper")
 GRBResearch = pathlib.Path(f"{HOME}/PycharmProjects/GRBResearchWork/GRBResearch")

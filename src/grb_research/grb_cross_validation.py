@@ -18,12 +18,7 @@ from .grb_core import GRB
 from .grb_stability import ModelComparison
 from .safe_good_best import pick_best_single_model
 
-SIMPLE_TO_BB = {
-    "PL": "PL_BB",
-    "CPL": "CPL_BB",
-    "BAND": "BAND_BB",
-    "SBPL": "SBPL_BB",
-}
+SIMPLE_TO_BB = {"PL": "PL_BB", "CPL": "CPL_BB", "BAND": "BAND_BB", "SBPL": "SBPL_BB"}
 DEFAULT_BB_PARAM_NAMES = ["amp_bb", "kt_bb"]
 DEFAULT_ELIGIBLE_STATUSES = {"BEST", "SAFE"}
 DEFAULT_GRB_NAMES = ["080916C", "140206B", "131014A", "231129C"]
@@ -63,10 +58,7 @@ def normalize_grb_name(name: str) -> str:
     return short_to_long.get(name, name)
 
 
-def filter_results_by_grbs(
-    data: dict[str, Any],
-    grb_names: list[str] | tuple[str, ...] | None,
-) -> dict[str, Any]:
+def filter_results_by_grbs(data: dict[str, Any], grb_names: list[str] | tuple[str, ...] | None) -> dict[str, Any]:
     """Filter a results.json-style mapping to the requested GRBs."""
     if grb_names is None:
         return data
@@ -95,10 +87,7 @@ def _status(model_payload: dict[str, Any] | None) -> str | None:
     return str(status).upper() if status is not None else None
 
 
-def _is_eligible_status(
-    model_payload: dict[str, Any] | None,
-    eligible_statuses: set[str],
-) -> bool:
+def _is_eligible_status(model_payload: dict[str, Any] | None, eligible_statuses: set[str]) -> bool:
     return _status(model_payload) in eligible_statuses
 
 
@@ -142,9 +131,7 @@ def _base_record(grb_name: str, interval_name: str) -> dict[str, Any]:
 
 
 def collect_bb_selection_records(
-    data: dict[str, Any],
-    include_marginal: bool = False,
-    bb_param_names: list[str] | None = None,
+    data: dict[str, Any], include_marginal: bool = False, bb_param_names: list[str] | None = None
 ) -> list[dict[str, Any]]:
     """Collect one BB-selection stability record per GRB interval.
 
@@ -236,9 +223,7 @@ def collect_bb_selection_records(
 
 
 def make_stratified_interval_folds(
-    records: list[dict[str, Any]],
-    n_splits: int = 5,
-    seed: int = 123,
+    records: list[dict[str, Any]], n_splits: int = 5, seed: int = 123
 ) -> list[list[int]]:
     """Make deterministic, approximately stratified folds over interval records."""
     if n_splits < 2:
@@ -337,10 +322,7 @@ def _summarize_subset(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def summarize_cross_validation(
-    records: list[dict[str, Any]],
-    folds: list[list[int]],
-    seed: int | None = None,
-    fold_groups: list[str] | None = None,
+    records: list[dict[str, Any]], folds: list[list[int]], seed: int | None = None, fold_groups: list[str] | None = None
 ) -> dict[str, Any]:
     """Summarize fold-level and aggregate BB-selection stability metrics."""
     fold_summaries = []
@@ -348,22 +330,12 @@ def summarize_cross_validation(
         held_out = [records[index] for index in indices]
         train_count = len(records) - len(held_out)
         fold_summary = _summarize_subset(held_out)
-        fold_summary.update(
-            {
-                "fold": fold_number,
-                "train_count": train_count,
-                "held_out_indices": indices,
-            }
-        )
+        fold_summary.update({"fold": fold_number, "train_count": train_count, "held_out_indices": indices})
         if fold_groups is not None:
             fold_summary["held_out_group"] = fold_groups[fold_number - 1]
         fold_summaries.append(fold_summary)
 
-    evaluable_fold_rates = [
-        fold["bb_support_rate"]
-        for fold in fold_summaries
-        if fold["bb_support_rate"] is not None
-    ]
+    evaluable_fold_rates = [fold["bb_support_rate"] for fold in fold_summaries if fold["bb_support_rate"] is not None]
 
     min_evaluable = min((fold["n_evaluable"] for fold in fold_summaries), default=0)
     summary = {
@@ -398,9 +370,7 @@ def _json_safe(value: Any) -> Any:
 
 
 def write_cross_validation_outputs(
-    output_dir: str | Path,
-    summary: dict[str, Any],
-    records: list[dict[str, Any]],
+    output_dir: str | Path, summary: dict[str, Any], records: list[dict[str, Any]]
 ) -> tuple[Path, Path]:
     """Write JSON summary and per-interval CSV records."""
     output_path = Path(output_dir)
@@ -408,10 +378,7 @@ def write_cross_validation_outputs(
 
     summary_path = output_path / "bb_selection_cv_summary.json"
     records_path = output_path / "bb_selection_cv_records.csv"
-    summary["output_files"] = {
-        "summary": str(summary_path),
-        "records": str(records_path),
-    }
+    summary["output_files"] = {"summary": str(summary_path), "records": str(records_path)}
 
     disk_summary = dict(summary)
     disk_summary.pop("records", None)
@@ -455,11 +422,7 @@ def run_bb_selection_cross_validation(
     summary["analysis"] = "interval_kfold"
     summary["grb_names"] = [long_to_short.get(name, name) for name in data]
     summary["grb_keys"] = list(data)
-    summary["leave_one_grb_out"] = summarize_cross_validation(
-        records,
-        logo_folds,
-        fold_groups=logo_groups,
-    )
+    summary["leave_one_grb_out"] = summarize_cross_validation(records, logo_folds, fold_groups=logo_groups)
     summary["records"] = records
 
     if output_dir is not None:
@@ -483,7 +446,8 @@ def print_summary(summary: dict[str, Any]) -> None:
     logo_overall = logo.get("overall", {})
     print(f"BB-selection {summary['n_splits']}-fold interval cross-validation")
     print(
-        f"records: {overall['n_records']} total, {overall['n_evaluable']} evaluable, {overall['n_rejected']} rejected")
+        f"records: {overall['n_records']} total, {overall['n_evaluable']} evaluable, {overall['n_rejected']} rejected"
+    )
     print(f"overall BB support rate: {_format_rate(overall['bb_support_rate'])}")
     print(
         f"delta_cstat: mean={_format_stat(overall['mean_delta_cstat'])} "
@@ -519,16 +483,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--folds", type=int, default=5, help="Number of interval-level k-fold folds")
     parser.add_argument("--seed", type=int, default=123, help="Deterministic fold seed")
     parser.add_argument("--output-dir", default=None, help="Directory for JSON/CSV outputs")
+    parser.add_argument("--grbs", nargs="+", default=DEFAULT_GRB_NAMES, help="Short or long GRB names to evaluate")
     parser.add_argument(
-        "--grbs",
-        nargs="+",
-        default=DEFAULT_GRB_NAMES,
-        help="Short or long GRB names to evaluate",
-    )
-    parser.add_argument(
-        "--include-marginal",
-        action="store_true",
-        help="Treat MARGINAL models as eligible in addition to BEST/SAFE",
+        "--include-marginal", action="store_true", help="Treat MARGINAL models as eligible in addition to BEST/SAFE"
     )
     return parser
 

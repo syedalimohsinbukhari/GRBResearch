@@ -5,6 +5,7 @@ Self-contained -- does not import norris_fit.py or anything outside this file, p
 "Everything below is self-contained" instruction. Section 6 (../check_tv_consistency.py) already
 confirmed the pipeline's tv_value() matches width_function() below, so no rebuild was needed there.
 """
+
 import numpy as np
 
 LN2 = np.log(2)

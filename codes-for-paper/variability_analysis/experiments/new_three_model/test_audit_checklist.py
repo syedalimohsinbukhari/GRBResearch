@@ -6,11 +6,14 @@ fails one of these on real data is the signal something upstream needs attention
 Dataset from synthetic_datasets.audit_source, seeded via this project's seed_from_name
 convention (not a literal int).
 """
+
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import get_rng, seed_from_name  # noqa: E402
@@ -36,7 +39,9 @@ def main():
 
     selection = select_r0(t_window, y_window, sigma=sigma, dt=dt)
     reported = finalize_pulse(t_window, y_window, selection, sigma=sigma, dt=dt)
-    print(f"     r0_chosen={reported.r0:.4g}  A={reported.amplitude:.4f}  t_peak={reported.t_peak:.4f}  t_v={reported.t_v:.4f}")
+    print(
+        f"     r0_chosen={reported.r0:.4g}  A={reported.amplitude:.4f}  t_peak={reported.t_peak:.4f}  t_v={reported.t_v:.4f}"
+    )
 
     report = run_audit(
         t_window,

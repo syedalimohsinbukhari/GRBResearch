@@ -47,13 +47,13 @@ BOUND_TOLERANCE_S = 1e-6
 def parse_key_value_file(file_path: Path) -> dict[str, str]:
     """Parse comma-separated key/value records from a file."""
     data = {}
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            if ', ' in line:
-                key, value = line.split(', ', 1)
+            if ", " in line:
+                key, value = line.split(", ", 1)
                 data[key.strip()] = value.strip()
     return data
 
@@ -64,7 +64,7 @@ def parse_interval_from_directory_name(dir_name: str) -> tuple[str, str]:
     Convert leading 'm' to '-'.
     Returns (start, end) as strings preserving original precision.
     """
-    match = re.match(r'^Ep\w*__([m\-]?[\d.]+)_([\d.]+)$', dir_name)
+    match = re.match(r"^Ep\w*__([m\-]?[\d.]+)_([\d.]+)$", dir_name)
     if not match:
         raise ValueError(f"Malformed directory name: {dir_name}")
 
@@ -72,8 +72,8 @@ def parse_interval_from_directory_name(dir_name: str) -> tuple[str, str]:
     end_str = match.group(2)
 
     # Convert m prefix to minus sign
-    if start_str.startswith('m'):
-        start_str = '-' + start_str[1:]
+    if start_str.startswith("m"):
+        start_str = "-" + start_str[1:]
 
     return start_str, end_str
 
@@ -83,8 +83,8 @@ def find_companion_files(epoch_dir: Path) -> tuple[Path, Path]:
     Find the analysis and fit result files in the epoch directory.
     Raises error if missing or duplicate files are found.
     """
-    analysis_files = list(epoch_dir.glob('*_analysis_result_*.txt'))
-    fit_files = list(epoch_dir.glob('*_fit_results_*.txt'))
+    analysis_files = list(epoch_dir.glob("*_analysis_result_*.txt"))
+    fit_files = list(epoch_dir.glob("*_fit_results_*.txt"))
 
     if len(analysis_files) == 0:
         raise FileNotFoundError(f"Missing analysis file in {epoch_dir}")
@@ -108,30 +108,30 @@ def process_epoch(epoch_dir: Path) -> dict[str, Any]:
     analysis_data = parse_key_value_file(analysis_file)
     fit_data = parse_key_value_file(fit_file)
 
-    required_analysis = ['# of Events', '# of P > 0.9', 'P > 0.9 Max (E) MeV', 'Arrival Time (s)', 'TS']
+    required_analysis = ["# of Events", "# of P > 0.9", "P > 0.9 Max (E) MeV", "Arrival Time (s)", "TS"]
     for field in required_analysis:
         if field not in analysis_data:
             raise ValueError(f"Missing required field '{field}' in {analysis_file}")
 
-    required_fit = ['Index', 'Index Error', 'Flux (0.1 - 100.0) GeV', 'Flux Error (0.1 - 100.0) GeV']
+    required_fit = ["Index", "Index Error", "Flux (0.1 - 100.0) GeV", "Flux Error (0.1 - 100.0) GeV"]
     for field in required_fit:
         if field not in fit_data:
             raise ValueError(f"Missing required field '{field}' in {fit_file}")
 
     return {
-        'start': start_str,
-        'end': end_str,
-        't_start_s': float(start_str),
-        't_stop_s': float(end_str),
-        'n_events': int(analysis_data['# of Events']),
-        'n_events_high_prob': int(analysis_data['# of P > 0.9']),
-        'e_max_MeV': float(analysis_data['P > 0.9 Max (E) MeV']),
-        't_arr_s': float(analysis_data['Arrival Time (s)']),
-        'ts': float(analysis_data['TS']),
-        'photon_index': float(fit_data['Index']),
-        'photon_index_err': float(fit_data['Index Error']),
-        'flux_0p1_100_GeV_ph_cm2_s': float(fit_data['Flux (0.1 - 100.0) GeV']),
-        'flux_err_0p1_100_GeV_ph_cm2_s': float(fit_data['Flux Error (0.1 - 100.0) GeV']),
+        "start": start_str,
+        "end": end_str,
+        "t_start_s": float(start_str),
+        "t_stop_s": float(end_str),
+        "n_events": int(analysis_data["# of Events"]),
+        "n_events_high_prob": int(analysis_data["# of P > 0.9"]),
+        "e_max_MeV": float(analysis_data["P > 0.9 Max (E) MeV"]),
+        "t_arr_s": float(analysis_data["Arrival Time (s)"]),
+        "ts": float(analysis_data["TS"]),
+        "photon_index": float(fit_data["Index"]),
+        "photon_index_err": float(fit_data["Index Error"]),
+        "flux_0p1_100_GeV_ph_cm2_s": float(fit_data["Flux (0.1 - 100.0) GeV"]),
+        "flux_err_0p1_100_GeV_ph_cm2_s": float(fit_data["Flux Error (0.1 - 100.0) GeV"]),
     }
 
 
@@ -181,29 +181,41 @@ def main():
         if not grb_dir.is_dir():
             raise FileNotFoundError(f"Missing GRB directory: {grb_dir}")
 
-        epoch_dirs = [d for d in grb_dir.iterdir() if d.is_dir() and d.name.startswith('Ep')]
+        epoch_dirs = [d for d in grb_dir.iterdir() if d.is_dir() and d.name.startswith("Ep")]
         if not epoch_dirs:
             raise ValueError(f"No epoch directories found in {grb_dir}")
 
         for epoch_dir in epoch_dirs:
             data = process_epoch(epoch_dir)
-            data['grb_name'] = grb_name
-            data['grb_trigger_id'] = trigger_id
-            data['episode'] = lookup_label(labels[trigger_id], data['t_start_s'], data['t_stop_s'], epoch_dir)
+            data["grb_name"] = grb_name
+            data["grb_trigger_id"] = trigger_id
+            data["episode"] = lookup_label(labels[trigger_id], data["t_start_s"], data["t_stop_s"], epoch_dir)
             rows.append(data)
         print(f"{dir_name}: {len(epoch_dirs)} episodes")
 
-    columns = ['grb_name', 'grb_trigger_id', 'episode', 't_start_s', 't_stop_s',
-               'n_events', 'n_events_high_prob', 'e_max_MeV', 't_arr_s', 'ts',
-               'photon_index', 'photon_index_err',
-               'flux_0p1_100_GeV_ph_cm2_s', 'flux_err_0p1_100_GeV_ph_cm2_s']
+    columns = [
+        "grb_name",
+        "grb_trigger_id",
+        "episode",
+        "t_start_s",
+        "t_stop_s",
+        "n_events",
+        "n_events_high_prob",
+        "e_max_MeV",
+        "t_arr_s",
+        "ts",
+        "photon_index",
+        "photon_index_err",
+        "flux_0p1_100_GeV_ph_cm2_s",
+        "flux_err_0p1_100_GeV_ph_cm2_s",
+    ]
     frame = pd.DataFrame(rows)[columns]
-    frame = frame.sort_values(['grb_name', 't_start_s', 't_stop_s']).reset_index(drop=True)
+    frame = frame.sort_values(["grb_name", "t_start_s", "t_stop_s"]).reset_index(drop=True)
 
     out_path = script_dir / "lat_photons.csv"
     frame.to_csv(out_path, index=False)
     print(f"\nSaved: {out_path}  ({len(frame)} rows)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

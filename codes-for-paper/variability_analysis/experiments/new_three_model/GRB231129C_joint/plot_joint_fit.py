@@ -3,6 +3,7 @@ overlaid -- what plot_diagnostics.plot_fit_overlay (one pulse at a time) can't s
 generated-output convention as the rest of this project (update_style() + save_fig(), CSV via
 pandas) -- see ../plot_diagnostics.py's module docstring for the convention itself.
 """
+
 import sys
 from pathlib import Path
 
@@ -14,7 +15,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[4]  # GRB231129C_joint -> new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    4
+]  # GRB231129C_joint -> new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import update_style  # noqa: E402
@@ -39,10 +42,21 @@ def plot_joint_overlay(t_window, y_window, sigma_window, model, popt, out_dir, l
     y_total = model(t_window, *popt)
 
     fig, ax = plt.subplots(figsize=(8.5, 5.0))
-    ax.errorbar(t_window, y_window, yerr=sigma_window, fmt=".", ms=2, alpha=0.25, color="tab:gray", label="data", zorder=1)
+    ax.errorbar(
+        t_window, y_window, yerr=sigma_window, fmt=".", ms=2, alpha=0.25, color="tab:gray", label="data", zorder=1
+    )
     for i, (amplitude, t_peak, t_v) in enumerate(params):
         y_i = model.pulse_model(i, t_window, amplitude, t_peak, t_v)
-        ax.plot(t_window, y_i, "--", lw=1.0, color=_COLORS[i % len(_COLORS)], label=f"pulse {pulse_indices[i]}", zorder=2, alpha=0.8)
+        ax.plot(
+            t_window,
+            y_i,
+            "--",
+            lw=1.0,
+            color=_COLORS[i % len(_COLORS)],
+            label=f"pulse {pulse_indices[i]}",
+            zorder=2,
+            alpha=0.8,
+        )
     ax.plot(t_window, y_total, "-", lw=1.6, color="tab:red", label="joint total", zorder=3)
 
     ax.set_xlabel("t [s]")

@@ -23,6 +23,7 @@ thresholds answering different questions.
 Builds on pulse3.py (Pulse3Mapping) and profile_scan.py (R0SelectionResult, fit_single_r0,
 refine_r0_zone).
 """
+
 from dataclasses import dataclass
 
 import numpy as np

@@ -1,5 +1,18 @@
 # Variability timescale (t_v) via manually-seeded joint Norris fit — GRB131014A
 
+**Filenames below are historical, 2026-09-26 restructure note.** The four per-burst top-level scripts
+this file's history refers to as `fitter.py`, `fitter_GRB080916C.py`, `fitter_CLAUDE_GRB131014215.py`
+and `fitter_GRB140206275_simple.py` (plus the SIMPLE-model outputs) no longer exist under those names.
+They were consolidated into a shared `shared_utilities.py` module plus one canonical script per burst,
+named after the burst's paper name: `fitter_GRB080916C.py` (rewritten, not the same file the history
+below describes), `fitter_GRB131014A.py`, `fitter_GRB140206B.py`, `fitter_GRB231129C.py` — each writing
+`norris_fit_results_<paper name>.csv`/`norris_fitted_<paper name>.png/.pdf` (e.g.
+`norris_fit_results_GRB080916C.csv`), not the light-curve-directory-named files described in most of
+this document. The per-burst `GRB<light-curve-name>/` subfolders (`GRB080916009/`, `GRB131014215/`,
+`GRB140206275/`, `GRB231129779/` — the separate normalized-vs-unnormalized full-range comparison track)
+are unaffected by this rename. Everything else in this file describes the state as it was found/built at
+the time, per this project's append-don't-rewrite convention -- not updated retroactively for the rename.
+
 Companion to `GRBResearchWork/PHASE5_TV_PLAN.md`, which documented the earlier automated
 (MEPSA/scipy peak-detection + per-window local fit) pipeline for this same Phase 5 goal. That pipeline's
 source files (`variability_timescale/norris_fit.py`, `variability_timescale.py`, etc.) have since been
@@ -8,7 +21,7 @@ This folder is a **separate, manually-driven track**, worked one GRB at a time s
 2026-09-07 after the automated pipeline stalled on GRB080916C's TR2 (zero MEPSA detections even with
 padding, because TR2's true shape is one broad, smoothly-declining pulse with no local excess for a spike
 detector to find — see the MEPSA-fallback discussion in this session's history). GRB140206B
-(`fitter_GRB140206275.py` + a `_simple` variant) and GRB231129C (`fitter_GRB231129779.py`) were fit in
+(`fitter_GRB140206B.py` + a `_simple` variant) and GRB231129C (`fitter_GRB231129C.py`) were fit in
 this same manual style in a later session (2026-09-15/16), and GRB080916C (`fitter.py`) followed
 in a session on 2026-09-16/17, originally as an 8-pulse fit (`norris1`-`norris6` plus a `norris2-1`/
 `norris2-2` split of `norris2`'s tail) — **reverted 2026-09-22, user decision**, back to the standard
@@ -63,13 +76,13 @@ now reflects the summed-detector fit, not the pre-fix single-detector one.**
 
 - **GRB231129C**: converged cleanly, existing 5-pulse seed unchanged. `mc_kept_fraction` improved for every
   pulse (e.g. 0.35→0.72, 0.94→0.99) — a genuine S/N gain from combining detectors here, not dilution.
-- **GRB140206B**: both the SIMPLE/COMPLEX pair (`fitter_GRB140206275.py`) and the `_simple.py` variant
+- **GRB140206B**: both the SIMPLE/COMPLEX pair (`fitter_GRB140206B.py`) and the `_simple.py` variant
   converged cleanly, existing seeds unchanged.
 - **GRB131014A**: initially failed (`RuntimeError: Optimal parameters not found`) with both the original
   seed and one reconverged from the old single-detector fit. Diagnosed as a pure iteration-budget issue —
   both seeds land on the identical solution once `NorrisFitter`'s default `max_iterations=5000` is raised to
   20000 (the summed 3-detector curve peaks at ~130,030 cts/s vs. the single-detector curve's ~44,084, needing
-  more optimizer steps to settle). Fixed with `max_iterations=20000` in `fitter_CLAUDE_GRB131014215.py`
+  more optimizer steps to settle). Fixed with `max_iterations=20000` in `fitter_GRB131014A.py`
   (also applied to `fitter.py` as a precaution). Converged parameters match the old single-detector fit
   closely (`t_peak`s agree to <0.01s), confirming this was purely a budget issue, not a different optimum.
 - **GRB080916C**: converged, but pulse 7 (`t_s≈20`, inside TR3, the pulse added in the 2026-09-22 7-pulse
@@ -118,7 +131,7 @@ changes the fit result. Full writeup, method, and results in that folder's `comp
   $t\approx23$s region and destabilizes two other pulses instead) fixes both pulses 6 and 7 simultaneously,
   with SSE matching the original-seed fit (not an artificially lower one bought with a worse
   decomposition). This is recorded in `comparison.md` as a **diagnosed, recommended configuration for
-  GRB140206B — not yet applied to `fitter_GRB140206275.py`/`_simple.py`**, both of which still use their
+  GRB140206B — not yet applied to `fitter_GRB140206B.py`/`_simple.py`**, both of which still use their
   original `(-1, 160)` window and converge cleanly there. Pulse 5 remains a known, pre-existing (not newly
   introduced) weak point at the full-range window, unresolved.
 - **Paper-facing follow-up, superseded 2026-09-24 — see the new section below.** `full_range_all_bursts_check.py`
@@ -195,7 +208,7 @@ out of alignment even when the (explicitly-set) major ticks match.
   single-method, single-window production fit; see the GRB131014A "Known limitations" section further
   down). Two different *methods* landing on two different answers here is the same underlying degeneracy
   showing up again, not a new discrepancy introduced by the normalized/unnormalized split.
-- **GRB140206B**: COMPLEX (7-pulse) model only — the decomposition `fitter_GRB140206275.py` itself uses
+- **GRB140206B**: COMPLEX (7-pulse) model only — the decomposition `fitter_GRB140206B.py` itself uses
   for its main per-episode results. Fit at the **true** full `x.min()/x.max()` range, deliberately, not
   the `(-20, 300)` partial widening `experiments/normalized_vs_unnormalized_fit/fit_comparison.py` used
   for this burst specifically (that partial widening existed only to avoid pulse 7's window-edge pinning
@@ -231,7 +244,7 @@ out of alignment even when the (explicitly-set) major ticks match.
 - **GRB231129C**: folder built (`_common.py` + both drivers), **not run to completion in this track**.
   Superseded mid-session: the user found GRB231129C's light curve/detector set had changed significantly
   (more NaI detectors than previously accounted for) and is handling that burst's refit manually, directly
-  in production `fitter_GRB231129779.py` (working-tree edits as of this writeup: `START1/END1` widened to
+  in production `fitter_GRB231129C.py` (working-tree edits as of this writeup: `START1/END1` widened to
   `(-inf, inf)`; `P0` replaced with converged parameters read off the `window_sensitivity_GRB231129779`
   widest-window run) rather than through the `GRB231129C/` folder. **As of this writeup that file is
   mid-interactive-edit** (`nf.dry_run(); plt.show()`, no `nf.fit()` call active) — not a finished result.
@@ -274,9 +287,9 @@ GRB140206B, the documented/correct detector is not the alphabetically-first one 
 detector set, so `sorted()` would keep them broken (131014A) or leave them broken (140206B) without
 actually fixing anything, and applying it to GRB231129C would break a burst that is currently fine. The
 correct fix is to hardcode each burst's documented detector name explicitly, not to sort. **Affects 6
-files, not yet touched:** `fitter_GRB140206275.py`, `fitter_GRB140206275_simple.py`,
-`fitter_GRB231129779.py`, and the three matching `experiments/window_sensitivity_GRB*/window_sensitivity.py`
-copies (`fitter_CLAUDE_GRB131014215.py` and GRB131014A's own `experiments/window_sensitivity_GRB131014215/`
+files, not yet touched:** `fitter_GRB140206B.py`, `fitter_GRB140206275_simple.py`,
+`fitter_GRB231129C.py`, and the three matching `experiments/window_sensitivity_GRB*/window_sensitivity.py`
+copies (`fitter_GRB131014A.py` and GRB131014A's own `experiments/window_sensitivity_GRB131014215/`
 copy have the same unsorted pattern too, confirmed by inspection, though GRB131014A's case is already
 covered by the table above). GRB080916C's own `sorted()` fix should also be revisited to an explicit pin,
 since it is currently correct by coincidence rather than by design.
@@ -284,7 +297,7 @@ since it is currently correct by coincidence rather than by design.
 ## What the code computes
 
 Same Norris (2005) pulse and $t_v$ definition as `variability_timescale/norris_fit.py` (Bukhari et al. 2022,
-Adv. Space Res., eq. 9/10) — this folder's `fitter.py`/`fitter_CLAUDE_GRB131014215.py` import that module directly rather
+Adv. Space Res., eq. 9/10) — this folder's `fitter.py`/`fitter_GRB131014A.py` import that module directly rather
 than redefining it. $t_v = (\tau_2/2)\sqrt{(\ln2+2\sqrt{\tau_1/\tau_2})^2-4\tau_1/\tau_2}$, the FWHM/2 of the
 fitted pulse.
 
@@ -302,7 +315,7 @@ one fixed window, `[-1, 10]` s since trigger, of the 10–400 keV NaI background
   automated pipeline further.
 - **Amplitude/shape decoupling.** The fit runs on the light curve normalized to peak=1 (for numerical
   conditioning — feeding raw counts/s directly into $p_0$ made the optimizer behave badly), and $A$ is
-  rescaled back to physical counts/s *after* fitting via the recorded `Y_MAX_CTS_PER_S`, exact since $A$ is
+  rescaled back to physical counts/s *after* fitting via the recorded `max_y_cps`, exact since $A$ is
   purely multiplicative in the Norris formula. **Claude decision**, prompted directly by the user's own
   observation that pre-scaling $p_0$'s amplitude by $y_\text{max}$ "screws the fitter over" — confirmed the
   root cause is optimizer conditioning, not a flaw in the rescale itself.
@@ -352,7 +365,7 @@ one fixed window, `[-1, 10]` s since trigger, of the 10–400 keV NaI background
 - **Photon table cross-checked against `LAT_analysis/014__GRB131014215/` and `lorentz_results.csv`**: the
   1232.92 MeV (TR1/EX0), 1021.24 MeV (TR2), 1193.12 MeV (EX1) "defining" photons already used elsewhere in
   the project appear at the same arrival times in this window's full photon list, confirming
-  `GRB131014215_lat.fits` (copied here from `light_curves/GRB131014215/lat.fits`, not re-derived) and the
+  `GRB131014A_lat.fits` (copied here from `light_curves/GRB131014215/lat.fits`, not re-derived) and the
   hardcoded `T0_MET_S = 403420143.2` (read from
   `LAT_analysis/014__GRB131014215/Ep1__0.960_2.432/GRB131014A_fit_results_0.96_2.432.txt`'s own `T_0` line)
   are correct: the FITS file's own GTI (403420144.16–403420147.36) equals `T0_MET_S+0.96` to `T0_MET_S+4.16`,
@@ -466,7 +479,7 @@ appear to anchor the pedestal in place — splitting that region leaves the opti
 broad component absorb ambiguous flux, so pulse 7's own $t_s$/$\tau_1$ stay far better constrained than
 SIMPLE's equivalent pulse. This is a concrete, quantified reason to prefer COMPLEX's decomposition if the
 pedestal's $t_s$/$t_v$ ever matters downstream, beyond the photon-anchoring argument already in
-`fitter_GRB140206275.py`'s own docstring — and it directly answers that docstring's own open question:
+`fitter_GRB140206B.py`'s own docstring — and it directly answers that docstring's own open question:
 COMPLEX pulses 4/5/6's already-mediocre `mc_kept_fraction` (0.47–0.65) does not get worse under widening,
 so the photon-anchored 3-way split is a legitimate resolution-vs-stability tradeoff, not a symptom of a
 wrong pulse count or a window artifact.
@@ -510,8 +523,8 @@ machine (`iqra-siddique`) earlier in this same session — see the note above �
 mid-session; `fitter.py` has now been rerun and `norris_fit_results_GRB080916009.csv` (7 rows, one per
 pulse) reflects the 7-pulse fit as of 2026-09-22. Also added in the same session: a LAT-photon overlay
 (twin y-axis, red hollow circles, only $E>1$ GeV) on `fitter.py`'s final plot, per user request, matching
-`fitter_GRB231129779.py`'s convention; the LAT FITS file was copied locally
-(`GRB080916009_lat.fits`, from `light_curves/GRB080916009/lat.fits`) rather than referenced live, same
+`fitter_GRB231129C.py`'s convention; the LAT FITS file was copied locally
+(`GRB080916C_lat.fits`, from `light_curves/GRB080916009/lat.fits`) rather than referenced live, same
 "copy rather than fight `sys.path`" convention as that file. `T0_MET_S = 243216766.62`, read from
 `LAT_analysis/018__GRB080916009/Ep1A__m0.128_4.864/GRB080916C_fit_results_-0.128_4.864.txt`'s own `T_0`
 line and cross-checked against the FITS file's own GTI (1.280–64.257s matches the T90 window exactly),
@@ -529,7 +542,7 @@ bursts** — same scope boundary as the cross-burst single-detector issue above.
 **Photon-to-pulse assignment: nearest-preceding-onset (temporal-proximity), not dominant-flux — user
 decision, 2026-09-22.** `fitter.py` now assigns each $E>1$ GeV photon to whichever pulse has the largest
 $t_s \le$ the photon's arrival time, same rule and same `assign_pulse()` implementation as
-`fitter_CLAUDE_GRB131014215.py` (GRB131014A), not the dominant-flux rule used for GRB231129C/GRB140206B.
+`fitter_GRB131014A.py` (GRB131014A), not the dominant-flux rule used for GRB231129C/GRB140206B.
 **Why, for this burst specifically:** the two nearest $E>1$ GeV photons to norris3's peak (5.869s) arrive
 at 6.072s and 6.857s — only 0.20s/0.99s after it, and inside TR2 (norris3's own episode). The same two
 photons sit 3.43s/4.21s after norris2's peak (2.646s, in TR1), yet dominant-flux would still assign them
@@ -687,12 +700,12 @@ GRB131014A (documented above):
   (currently set up for GRB140206B, not GRB131014A — see below); not touched by Claude past the two
   changes explicitly requested for the GRB131014A stage (episode-boundary `axvline`s, fixing a broken
   `savefig` path).
-- `fitter_CLAUDE_GRB131014215.py` — Claude's copy, used for the amplitude-rescale, physical-unit plot, LAT-photon overlay,
+- `fitter_GRB131014A.py` — Claude's copy, used for the amplitude-rescale, physical-unit plot, LAT-photon overlay,
   and photon-to-pulse assignment work documented above. Diverges from `fitter.py` from that point on.
-- `GRB131014215_lat.fits` — copied from `light_curves/GRB131014215/lat.fits`; the FITS-reading convention
+- `GRB131014A_lat.fits` — copied from `light_curves/GRB131014215/lat.fits`; the FITS-reading convention
   (`fits.open(...)[1].data`, per-source probability column named after the source) is copied from
   `light_curves/make_lightcurve.py`, not re-derived.
-- `norris_fit_results_GRB131014215.csv` — one row per (pulse, episode) match, produced by `fitter_CLAUDE_GRB131014215.py`.
+- `norris_fit_results_GRB131014215.csv` — one row per (pulse, episode) match, produced by `fitter_GRB131014A.py`.
 - `norris_fitted_GRB131014215.png/.pdf` — the decorated plot (physical units, episode boundaries, LAT
   photon overlay on twin axis).
 - `experiments/window_sensitivity_GRB131014215/` — the window-widening pulse-count diagnostic applied to
@@ -706,31 +719,31 @@ computes" / "Every judgement call" / "Results" sections — see the note at the 
 inventory below is complete, though, so it's clear what each artifact is and how it was produced.
 
 GRB140206B — two live candidate decompositions, kept side by side rather than one being picked as final
-(see `fitter_GRB140206275.py`'s own docstring, and the window-widening section above for the diagnostic
+(see `fitter_GRB140206B.py`'s own docstring, and the window-widening section above for the diagnostic
 that independently supports COMPLEX for the pedestal pulse specifically):
-- `fitter_GRB140206275.py` — the **COMPLEX** model: 7 pulses, splitting the $t\approx23$–$28$s region into
+- `fitter_GRB140206B.py` — the **COMPLEX** model: 7 pulses, splitting the $t\approx23$–$28$s region into
   three (pulses 4/5/6) specifically to give the 753.11 MeV photon at $t=23.998$s (TR3's own $\Gamma_\text{min}$-defining
   photon, already in `lorentz_results.csv`) its own dedicated peak (pulse 5) instead of leaving it buried in
   a single broad pulse's tail. Fits over `[-1, 160]`s (all seven episodes, through TR6's 154.240s end).
   Uses **dominant-flux photon assignment** (`assign_pulse` picks whichever pulse has the largest
   model-predicted flux at the photon's arrival time), not GRB131014A's nearest-preceding-onset rule — see
-  `fitter_GRB231129779.py` for why that rule was replaced. Also fits the **SIMPLE** model inline (for the
+  `fitter_GRB231129C.py` for why that rule was replaced. Also fits the **SIMPLE** model inline (for the
   diagnostic comparison below) but only writes COMPLEX's results as this file's main results CSV/plot.
 - `fitter_GRB140206275_simple.py` — the **SIMPLE** model: 5 pulses, treating that same $t\approx23$–$28$s
   region as one broad pulse (pulse 4) instead of splitting it. More numerically stable there (`kept≈1.0` vs
   COMPLEX's 0.54–0.67 across pulses 4/5/6) but doesn't resolve TR3's photon into its own peak — the
   stability-vs-photon-resolution tradeoff is why both files are kept rather than one being deleted. Same
   dominant-flux photon assignment as the COMPLEX file.
-- `GRB140206275_lat.fits` — copied from
+- `GRB140206B_lat.fits` — copied from
   `light_curves/GRB140206275/GRB140206Bfiltered_gti_gtsrcprob_7.488_154.176.fits`; `T0_MET_S = 413361375.84`
   read from `LAT_analysis/007__GRB140206275/Ep1__7.488_11.072/*_fit_results_*.txt`'s own `T_0` line.
-- `norris_fit_results_GRB140206275.csv` — COMPLEX model's one-row-per-(pulse, episode) results, produced by
-  `fitter_GRB140206275.py`.
+- `norris_fit_results_GRB140206275.csv` — COMPLEX model's one-row-per- (pulse, episode) results, produced by
+  `fitter_GRB140206B.py`.
 - `norris_fit_results_GRB140206275_simple.csv` — SIMPLE model's equivalent, produced by
   `fitter_GRB140206275_simple.py`.
 - `norris_fit_diagnostics_GRB140206275.csv` — SIMPLE-vs-COMPLEX comparison, one row per SIMPLE pulse matched
   to its nearest-$t_\text{peak}$ COMPLEX counterpart (`t_peak_offset_s` column), produced by
-  `fitter_GRB140206275.py`. This is where the stability tradeoff above is quantified: SIMPLE pulse 4
+  `fitter_GRB140206B.py`. This is where the stability tradeoff above is quantified: SIMPLE pulse 4
   (`kept=0.9998`) matches COMPLEX pulse 4 (`kept=0.6727`, `t_peak_offset≈0.34`s), and SIMPLE pulse 5 (the
   broad pedestal, `kept=0.6093`) matches COMPLEX pulse 7 (`kept=0.623`, `t_peak_offset≈0.19`s) — the same
   SIMPLE-pulse-5 / COMPLEX-pulse-7 pedestal pairing independently identified by the window-widening
@@ -745,19 +758,19 @@ that independently supports COMPLEX for the pedestal pulse specifically):
 - `norris_fitted_GRB140206275_simple.png/.pdf` — SIMPLE model's equivalent final plot.
 
 GRB231129C:
-- `fitter_GRB231129779.py` — the 5-pulse fit (this is already the *corrected* pulse count — see the
+- `fitter_GRB231129C.py` — the 5-pulse fit (this is already the *corrected* pulse count — see the
   "What it found for GRB231129C" paragraph above; a 4-pulse version was tried first and its `mc_kept_fraction`
   collapse under window-widening is what led to adding this 5th pulse). Fits over `[-1, 10]`s. Introduces
   **dominant-flux photon assignment** (later reused by both GRB140206B scripts above): the earlier
   nearest-preceding-`t_s` rule (used for GRB131014A) broke down specifically on this burst, where a fast
   pulse turning on just before a slower, still-dominant earlier pulse peaks would steal that earlier pulse's
   photons purely because its `t_s` was more recent, even though it barely contributed flux yet.
-- `GRB231129779_lat.fits` — copied from
+- `GRB231129C_lat.fits` — copied from
   `light_curves/GRB231129779/GRB231129C_filtered_gti_gtsrcprob_0.384_7.296.fits`; `T0_MET_S = 722977823.114`
   read from `LAT_analysis/GRB231129C/Ep1__0.384_3.136/*_fit_results_*.txt`'s own `T_0` line, cross-checked
   against the FITS file's own GTI the same way as GRB131014A's `T0_MET_S` was (see Validation above).
 - `norris_fit_results_GRB231129779.csv` — one row per (pulse, episode) match, produced by
-  `fitter_GRB231129779.py`.
+  `fitter_GRB231129C.py`.
 - `norris_fit_GRB231129779.png` (narrow window, `[-1,10]`s) and `norris_fit_GRB231129779__bkp.png` (wide
   window, `[-10,20]`s) — **the user's own original manual before/after comparison** (2026-09-07, 03:02–03:13,
   predating the final `norris_fit_results_GRB231129779.csv`/`norris_fitted_GRB231129779.png` at ~05:14 by
@@ -765,7 +778,7 @@ GRB231129C:
   noticed the fit moved visibly between these two plots, which motivated building
   `experiments/window_sensitivity_GRB231129779/window_sensitivity.py` as a controlled, quantified version of
   the same comparison (per that script's own docstring). Not reproducible from the current
-  `fitter_GRB231129779.py` (which only saves to `norris_fitted_{name}`) — kept as the original artifact, not
+  `fitter_GRB231129C.py` (which only saves to `norris_fitted_{name}`) — kept as the original artifact, not
   regenerated.
 - `norris_fitted_GRB231129779.png/.pdf` — the decorated final plot.
 

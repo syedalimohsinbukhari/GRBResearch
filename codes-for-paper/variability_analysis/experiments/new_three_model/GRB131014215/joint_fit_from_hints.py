@@ -18,6 +18,7 @@ Method, mirroring GRB231129C_joint's already-validated approach:
      the window is the natural follow-up once this fit is validated, not done here per "stay
      inside T90 duration (for now)").
 """
+
 import sys
 from pathlib import Path
 
@@ -37,7 +38,14 @@ from grb_research import get_rng, seed_from_name  # noqa: E402
 
 from audit_checklist import run_audit  # noqa: E402
 from bounds_seeding import median_dt  # noqa: E402
-from joint_pulse3 import flatten_seed, joint_bounds, make_joint_pulse3, pulse_block_cov, residual_excluding, unflatten_params  # noqa: E402
+from joint_pulse3 import (
+    flatten_seed,
+    joint_bounds,
+    make_joint_pulse3,
+    pulse_block_cov,
+    residual_excluding,
+    unflatten_params,
+)  # noqa: E402
 from load_data import load_light_curve  # noqa: E402
 from plot_diagnostics import plot_fit_overlay  # noqa: E402
 from plot_joint_fit import plot_joint_overlay  # noqa: E402
@@ -71,7 +79,9 @@ def check_edge_pinning(popt, lb, ub, n_pulses):
             idx = 3 * i + j
             value, lo, hi = popt[idx], lb[idx], ub[idx]
             near_lo = np.isclose(value, lo, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(lo), 1e-3))
-            near_hi = np.isfinite(hi) and np.isclose(value, hi, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(hi), 1e-3))
+            near_hi = np.isfinite(hi) and np.isclose(
+                value, hi, rtol=EDGE_REL_TOL, atol=EDGE_REL_TOL * max(abs(hi), 1e-3)
+            )
             if near_lo or near_hi:
                 pinned.append((i + 1, name, value, lo, hi))
     return pinned
@@ -92,8 +102,14 @@ def check_multistart_reproducibility(t_window, y_window, sigma_window, r0_list, 
             tv = tv0 * (1 + rng.uniform(-0.1, 0.1))
             jittered.extend((a, tp, tv))
         popt_j, _ = curve_fit(
-            model, t_window, y_window, p0=tuple(jittered), bounds=(lb, ub),
-            sigma=sigma_window, absolute_sigma=True, maxfev=40000,
+            model,
+            t_window,
+            y_window,
+            p0=tuple(jittered),
+            bounds=(lb, ub),
+            sigma=sigma_window,
+            absolute_sigma=True,
+            maxfev=40000,
         )
         y_fit_j = model(t_window, *popt_j)
         chi2_j = chi_square(y_window, y_fit_j, sigma=sigma_window)
@@ -138,8 +154,10 @@ def main():
         t_l, y_l, sigma_l = t_w[lmask], y_w[lmask], sigma_w[lmask]
         selection = select_r0(t_l, y_l, sigma=sigma_l, dt=dt)
         reported = finalize_pulse(t_l, y_l, selection, sigma=sigma_l, dt=dt)
-        print(f"  hint t={t_c:.2f} -> window [{lo:.3f},{hi:.3f}]: r0={reported.r0:.4g} ({selection.classification.shape}) "
-              f"A={reported.amplitude:.1f} t_peak={reported.t_peak:.4f} t_v={reported.t_v:.4f}")
+        print(
+            f"  hint t={t_c:.2f} -> window [{lo:.3f},{hi:.3f}]: r0={reported.r0:.4g} ({selection.classification.shape}) "
+            f"A={reported.amplitude:.1f} t_peak={reported.t_peak:.4f} t_v={reported.t_v:.4f}"
+        )
         r0_list.append(reported.r0)
         p0_list.append((reported.amplitude, reported.t_peak, reported.t_v))
 
@@ -148,12 +166,16 @@ def main():
     n_pulses = len(HINT_CENTERS)
     lb, ub = joint_bounds(t_w, dt, n_pulses)
     model = make_joint_pulse3(r0_list)
-    popt, pcov = curve_fit(model, t_w, y_w, p0=p0_flat, bounds=(lb, ub), sigma=sigma_w, absolute_sigma=True, maxfev=40000)
+    popt, pcov = curve_fit(
+        model, t_w, y_w, p0=p0_flat, bounds=(lb, ub), sigma=sigma_w, absolute_sigma=True, maxfev=40000
+    )
     params = unflatten_params(popt, n_pulses)
     y_fit_total = model(t_w, *popt)
     chi2_joint = chi_square(y_w, y_fit_total, sigma=sigma_w)
-    print(f"chi2_joint ({3*n_pulses} free params, {t_w.size} bins) = {chi2_joint:.4f}  "
-          f"(reduced chi2 ~ {chi2_joint/(t_w.size-3*n_pulses):.3f})")
+    print(
+        f"chi2_joint ({3*n_pulses} free params, {t_w.size} bins) = {chi2_joint:.4f}  "
+        f"(reduced chi2 ~ {chi2_joint/(t_w.size-3*n_pulses):.3f})"
+    )
 
     print("\n--- Per-pulse results ---")
     rows = []
@@ -169,8 +191,10 @@ def main():
         tp_err = float(np.hypot(tp_err_stat, tp_err_sys))
         tv_err = float(np.hypot(tv_err_stat, tv_err_sys))
 
-        print(f"  pulse {i+1} (hint {HINT_CENTERS[i]:.2f}): r0={r0:.4g}  A={amplitude:.1f}+/-{a_err:.1f}  "
-              f"t_peak={t_peak:.4f}+/-{tp_err:.4f}  t_v={t_v:.4f}+/-{tv_err:.4f}")
+        print(
+            f"  pulse {i+1} (hint {HINT_CENTERS[i]:.2f}): r0={r0:.4g}  A={amplitude:.1f}+/-{a_err:.1f}  "
+            f"t_peak={t_peak:.4f}+/-{tp_err:.4f}  t_v={t_v:.4f}+/-{tv_err:.4f}"
+        )
         rows.append(
             {
                 "pulse_index": i + 1,
@@ -194,21 +218,33 @@ def main():
     pinned = check_edge_pinning(popt, lb, ub, n_pulses)
     print(f"edge pinning: {'none' if not pinned else pinned}")
     rng = get_rng(seed=SEED)
-    repro_ok, repro_spread, repro_chi2_spread = check_multistart_reproducibility(t_w, y_w, sigma_w, r0_list, p0_flat, dt, rng)
+    repro_ok, repro_spread, repro_chi2_spread = check_multistart_reproducibility(
+        t_w, y_w, sigma_w, r0_list, p0_flat, dt, rng
+    )
     print(f"multi-start reproducibility: {'PASS' if repro_ok else 'FAIL'}, chi2 spread={repro_chi2_spread:.6f}")
-    print("window-widening: deferred -- T90's own right edge already flagged as truncating real decay flux "
-          "(see PROGRESS.md); widening is the natural follow-up, not done here per 'stay inside T90 (for now)'.")
+    print(
+        "window-widening: deferred -- T90's own right edge already flagged as truncating real decay flux "
+        "(see PROGRESS.md); widening is the natural follow-up, not done here per 'stay inside T90 (for now)'."
+    )
 
     print("\n--- Plot ---")
     paths = plot_joint_overlay(
-        t_w, y_w, sigma_w, model, popt, out_dir=str(HERE), label="GRB131014215_joint_from_hints",
+        t_w,
+        y_w,
+        sigma_w,
+        model,
+        popt,
+        out_dir=str(HERE),
+        label="GRB131014215_joint_from_hints",
         pulse_indices=list(range(1, n_pulses + 1)),
     )
     print(f"wrote {paths['csv'].name}, {paths['pdf'].name}, {paths['png'].name}")
 
     print(f"\n=== Recovered {n_pulses} pulses from 5 rough hint centers (vs. hint: 5 currently fitted) ===")
-    print(f"edge_pinning={'none' if not pinned else 'YES'}  reproducibility={'PASS' if repro_ok else 'FAIL'}  "
-          f"reduced_chi2~{chi2_joint/(t_w.size-3*n_pulses):.3f}")
+    print(
+        f"edge_pinning={'none' if not pinned else 'YES'}  reproducibility={'PASS' if repro_ok else 'FAIL'}  "
+        f"reduced_chi2~{chi2_joint/(t_w.size-3*n_pulses):.3f}"
+    )
 
 
 if __name__ == "__main__":

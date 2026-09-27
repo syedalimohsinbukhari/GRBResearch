@@ -22,10 +22,7 @@ HERE = Path(__file__).parent
 WORK_ROOT = HERE.parent
 PAPER_ROOT = WORK_ROOT.parent / "GRBResearchPaper"
 
-REGISTRIES = [
-    ("figure", HERE / "figure_registry.yaml"),
-    ("table", HERE / "table_registry.yaml"),
-]
+REGISTRIES = [("figure", HERE / "figure_registry.yaml"), ("table", HERE / "table_registry.yaml")]
 
 
 def sync_one(kind: str, registry_path: Path) -> tuple[int, int]:

@@ -13,8 +13,17 @@ from amati_helpers import (
     EP_NORM,
     EI_NORM,
 )
-from grb_research import ModelSet, find_project_root, get_rng, prepare_grbs, seed_from_name, update_style, \
-    LABEL_FONT_SIZE, LEGEND_FONT_SIZE, LEGEND_TITLE_FONT_SIZE
+from grb_research import (
+    ModelSet,
+    find_project_root,
+    get_rng,
+    prepare_grbs,
+    seed_from_name,
+    update_style,
+    LABEL_FONT_SIZE,
+    LEGEND_FONT_SIZE,
+    LEGEND_TITLE_FONT_SIZE,
+)
 from grb_research.grb_utils import save_fig
 
 # ---------------------------------------------------------------------------
@@ -74,8 +83,7 @@ for i, a in enumerate([ax[0]]):
         axis=a,
     )
 
-    a.legend(loc="best", title=f"GRB{grb_list[i]}",
-             fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE)
+    a.legend(loc="best", title=f"GRB{grb_list[i]}", fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE)
 
     ep_total.append(_[0])
     ei_total.append(_[1])
@@ -101,13 +109,14 @@ for idx, m_ in enumerate(grb_best[1:]):
             axis=ax[idx + 1],
         )
 
-    ax[idx + 1].legend(loc="best", title=f"GRB{grb_list[idx + 1]}",
-             fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE)
+    ax[idx + 1].legend(
+        loc="best", title=f"GRB{grb_list[idx + 1]}", fontsize=LEGEND_FONT_SIZE, title_fontsize=LEGEND_TITLE_FONT_SIZE
+    )
 
 ep_total = list(chain.from_iterable(ep_total))
 ei_total = list(chain.from_iterable(ei_total))
 ep_label = list(chain.from_iterable(ep_label))
-ep_label = [i.split('$')[0] for i in ep_label]
+ep_label = [i.split("$")[0] for i in ep_label]
 model_list = list(chain.from_iterable(model_list))
 g_name = list(chain.from_iterable(g_name))
 ep_err_total = list(chain.from_iterable(ep_err_total))

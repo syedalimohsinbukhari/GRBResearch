@@ -5,6 +5,7 @@ T2 (f(r) properties) from section 7, plus the overflow-safety and API-consistenc
 calls for. T3-T5 (FWHM/2 via brentq, synthetic degeneracy fit, chi^2 profile) need an optimizer and
 belong with the section-3/5 fitting code, not this wrapper.
 """
+
 import numpy as np
 
 from pulse3 import (
@@ -91,7 +92,9 @@ def api_consistency():
     y_c = pulse4(t, a, t_peak, t_v, r0)
 
     ok1 = check("pulse3(...) == make_pulse3(r0)(...)", np.array_equal(y_a, y_b))
-    ok2 = check("pulse3(...) == pulse4(..., r=r0) (same point, both parametrizations)", np.allclose(y_a, y_c, rtol=1e-10))
+    ok2 = check(
+        "pulse3(...) == pulse4(..., r=r0) (same point, both parametrizations)", np.allclose(y_a, y_c, rtol=1e-10)
+    )
     ok3 = check("make_pulse3(r0).mapping.r0 == r0", model.mapping.r0 == r0)
     return ok1 and ok2 and ok3
 

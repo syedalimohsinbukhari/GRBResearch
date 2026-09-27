@@ -5,6 +5,7 @@ committing to the 3-param fit.
 Builds on pulse3.py (sections 1-2: model) and bounds_seeding.py (section 3: bounds/seed).
 Self-contained otherwise -- does not import norris_fit.py.
 """
+
 import warnings
 from dataclasses import dataclass
 
@@ -114,8 +115,7 @@ def profile_scan(t_window, y_window, r0_grid=None, sigma=None, dt=None, backgrou
         r0_grid = DEFAULT_R0_GRID
     r0_grid = np.asarray(r0_grid, dtype=float)
     results = [
-        fit_single_r0(t_window, y_window, r0, sigma=sigma, dt=dt, background_rate=background_rate)
-        for r0 in r0_grid
+        fit_single_r0(t_window, y_window, r0, sigma=sigma, dt=dt, background_rate=background_rate) for r0 in r0_grid
     ]
     return ProfileScan(r0_grid=r0_grid, results=results)
 
@@ -199,7 +199,9 @@ def refine_r0_zone(
     is a byproduct of reusing classify_profile, not itself meaningful at this tolerance).
     """
     r0_grid = np.geomspace(r0_center / span_factor, r0_center * span_factor, n_points)
-    refined_scan = profile_scan(t_window, y_window, r0_grid=r0_grid, sigma=sigma, dt=dt, background_rate=background_rate)
+    refined_scan = profile_scan(
+        t_window, y_window, r0_grid=r0_grid, sigma=sigma, dt=dt, background_rate=background_rate
+    )
     refined_classification = classify_profile(refined_scan, flat_tol=delta_chi2_tol, min_span=np.inf)
     return refined_scan, refined_classification
 
@@ -351,7 +353,13 @@ def select_r0(
     scan = profile_scan(t_window, y_window, r0_grid=r0_grid, sigma=sigma, dt=dt, background_rate=background_rate)
     classification = classify_profile(scan)
     fit4 = fit_4param_multistart(
-        t_window, y_window, r0_seeds=r0_seeds_4param, sigma=sigma, dt=dt, background_rate=background_rate, r_bounds=r_bounds
+        t_window,
+        y_window,
+        r0_seeds=r0_seeds_4param,
+        sigma=sigma,
+        dt=dt,
+        background_rate=background_rate,
+        r_bounds=r_bounds,
     )
     delta = delta_chi2_report(classification, fit4, r_bounds=r_bounds)
 
@@ -391,5 +399,10 @@ def select_r0(
         )
 
     return R0SelectionResult(
-        scan=scan, classification=classification, fit4=fit4, delta_chi2=delta, r0_chosen=r0_chosen, r0_choice_reason=reason
+        scan=scan,
+        classification=classification,
+        fit4=fit4,
+        delta_chi2=delta,
+        r0_chosen=r0_chosen,
+        r0_choice_reason=reason,
     )

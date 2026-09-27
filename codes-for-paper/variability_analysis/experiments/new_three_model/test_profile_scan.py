@@ -6,6 +6,7 @@ partway up the rise (spec's T4 setup -> asymmetry unconstrained -> FLAT bottom).
 Also exercises plot_profile_scan.py so this run leaves real CSV/PDF/PNG outputs in this folder,
 per this project's generated-output convention.
 """
+
 from plot_profile_scan import save_profile_scan_outputs
 from profile_scan import select_r0
 from synthetic_datasets import flat_scenario, sharp_scenario

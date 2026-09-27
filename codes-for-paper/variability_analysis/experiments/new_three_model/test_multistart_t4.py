@@ -19,13 +19,16 @@ severe_truncation_scenario), seeded via this project's seed_from_name convention
 (src/grb_research/SEEDING.md) rather than a literal int -- shared with test_profile_sanity_t5.py
 so T4 and T5 ("the chi2 profile ... on the T4 simulation") use the identical noise realization.
 """
+
 import sys
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import get_rng, seed_from_name  # noqa: E402
@@ -46,7 +49,9 @@ def t4_3param_reproducibility():
     t_window, y_window, sigma, dt = moderate_truncation_scenario()  # shared with T5's "moderate" case
     rng = get_rng(seed=seed_from_name(__file__))
 
-    r0_probe = np.array([DEFAULT_R0_GRID[0], DEFAULT_R0_GRID[6], DEFAULT_R0_GRID[12], DEFAULT_R0_GRID[18], DEFAULT_R0_GRID[-1]])
+    r0_probe = np.array(
+        [DEFAULT_R0_GRID[0], DEFAULT_R0_GRID[6], DEFAULT_R0_GRID[12], DEFAULT_R0_GRID[18], DEFAULT_R0_GRID[-1]]
+    )
     all_ok = True
     for r0 in r0_probe:
         seeds = jittered_seeds(t_window, y_window, n=5, dt=dt, rng=rng)
@@ -87,7 +92,9 @@ def t4_4param_degeneracy_contrast():
     results = fit_4param_all_seeds(t_window, y_window, r0_seeds=r_seeds, sigma=sigma, dt=dt, r_bounds=r_bounds)
     print(f"     {len(results)}/{len(r_seeds)} seeds converged")
     for r in results:
-        print(f"       seed_r={r['r_seed']:10.3g} -> fit r={r['r']:12.5g} t_peak={r['t_peak']:.4f} t_v={r['t_v']:.4f} chi2={r['chi2']:.3f}")
+        print(
+            f"       seed_r={r['r_seed']:10.3g} -> fit r={r['r']:12.5g} t_peak={r['t_peak']:.4f} t_v={r['t_v']:.4f} chi2={r['chi2']:.3f}"
+        )
 
     r_vals = np.array([r["r"] for r in results])
     t_peak_vals = np.array([r["t_peak"] for r in results])
@@ -108,8 +115,13 @@ def t4_4param_degeneracy_contrast():
     # *possible* outcome, but the same underlying pathology -- a confident, seed-independent,
     # badly wrong free-r estimate, which is exactly what the 3-param profile-scan machinery
     # (section 5) is built to catch instead of silently trusting.
-    ok1 = check("the free-r fit converges reproducibly across all seeds (fractional scatter < 1%)", r_scatter_rel < 0.01)
-    ok2 = check(f"...to a value ({r_vals[0]:.3g}) at least 3x off from the true r ({r_true})", abs(np.log10(r_vals[0] / r_true)) > np.log10(3))
+    ok1 = check(
+        "the free-r fit converges reproducibly across all seeds (fractional scatter < 1%)", r_scatter_rel < 0.01
+    )
+    ok2 = check(
+        f"...to a value ({r_vals[0]:.3g}) at least 3x off from the true r ({r_true})",
+        abs(np.log10(r_vals[0] / r_true)) > np.log10(3),
+    )
     ok3 = check("t_peak stays tight across seeds despite r's wrong convergence (< 0.05 s)", t_peak_scatter < 0.05)
     return ok1 and ok2 and ok3
 

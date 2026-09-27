@@ -11,13 +11,16 @@ else in the codebase. Here, each dataset's seed is derived once from a fixed log
 (`seed_from_name(f"{__file__}::<dataset>")`), so any caller, in any process, gets a bit-identical
 dataset -- reproducible by construction, not by coincidence of two files agreeing on a number.
 """
+
 import sys
 from pathlib import Path
 
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-PROJECT_ROOT = HERE.parents[3]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
+PROJECT_ROOT = HERE.parents[
+    3
+]  # new_three_model -> experiments -> variability_analysis -> codes-for-paper -> GRBResearchWork
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from grb_research import get_rng, seed_from_name  # noqa: E402

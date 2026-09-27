@@ -1,13 +1,7 @@
 """Created on May 26 20:25:58 2026"""
 
 from grb_research import EpisodeMarkerResolver, EpisodeTypes, TimeInterval, update_style
-from grb_research.grb_constants import (
-    ANNOTATION_FONT_SIZE,
-    CAP_SIZE,
-    LEGEND_FONT_SIZE,
-    LINE_WIDTH,
-    MARKER_SIZE,
-)
+from grb_research.grb_constants import ANNOTATION_FONT_SIZE, CAP_SIZE, LEGEND_FONT_SIZE, LINE_WIDTH, MARKER_SIZE
 from grb_research.grb_utils import save_fig
 
 """
@@ -101,4 +95,4 @@ for idx2, grb in enumerate(grbs):
 [i.set_xlabel(r"Flux (ph cm$^{-2}$ s$^{-1}$)") for i in ax_flat[2:]]
 [i.set_ylabel(r"Energy flux (erg cm$^{-2}$ s$^{-1}$)") for i in ax_flat[::2]]
 
-save_fig(fig, 'flux_vs_energy_flux')
+save_fig(fig, "flux_vs_energy_flux")

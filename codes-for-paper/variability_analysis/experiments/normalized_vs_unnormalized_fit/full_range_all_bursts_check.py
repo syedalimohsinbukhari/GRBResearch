@@ -16,6 +16,7 @@ unreseeded P0 again would just reproduce a known failure, not answer the paper-f
 Does not modify any fitter_*.py. Reads each burst's *current* production norris_fit_results_*.csv as the
 comparison baseline (not re-derived from memory).
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -59,13 +60,7 @@ BURSTS = {
     "GRB131014215": dict(
         paper_name="GRB131014A",
         prod_window=(-1, 10),
-        p0=[
-            (0.115, -0.9, 1, 1),
-            (0.2, -0.8, 1, 1),
-            (0.9, 1.19, 1, 1),
-            (0.4, 2.4, 1, 1),
-            (0.3, 2.71, 1, 1),
-        ],
+        p0=[(0.115, -0.9, 1, 1), (0.2, -0.8, 1, 1), (0.9, 1.19, 1, 1), (0.4, 2.4, 1, 1), (0.3, 2.71, 1, 1)],
         prod_csv="norris_fit_results_GRB131014215.csv",
     ),
     "GRB140206275": dict(
@@ -88,13 +83,7 @@ BURSTS = {
     "GRB231129779": dict(
         paper_name="GRB231129C",
         prod_window=(-1, 10),
-        p0=[
-            (0.6, -0.2, 1, 1),
-            (0.3, 0.08, 1, 1),
-            (0.6, 2, 0.5, 0.5),
-            (0.6, 4, 0.5, 0.5),
-            (0.3, 4.2, 2, 1),
-        ],
+        p0=[(0.6, -0.2, 1, 1), (0.3, 0.08, 1, 1), (0.6, 2, 0.5, 0.5), (0.6, 4, 0.5, 0.5), (0.3, 4.2, 2, 1)],
         prod_csv="norris_fit_results_GRB231129779.csv",
     ),
 }
@@ -120,12 +109,20 @@ def main():
         model = total_model(t, params, n_pulses) * y_max
         sse = float(np.sum((model - y_raw) ** 2))
 
-        prod_df = pd.read_csv(VARIABILITY_DIR / cfg["prod_csv"]).drop_duplicates(subset=["pulse_index"]).set_index("pulse_index")
+        prod_df = (
+            pd.read_csv(VARIABILITY_DIR / cfg["prod_csv"])
+            .drop_duplicates(subset=["pulse_index"])
+            .set_index("pulse_index")
+        )
 
-        print(f"\n=== {cfg['paper_name']} ({grb_dir}) -- full range {full_window} vs production {cfg['prod_window']} ===")
-        print(f"{'pulse':>5}  {'t_peak(full)':>12}  {'t_peak(prod)':>12}  {'%diff':>7}  {'t_v(full)':>10}  {'t_v(prod)':>10}  {'%diff':>7}  {'flag':>6}")
+        print(
+            f"\n=== {cfg['paper_name']} ({grb_dir}) -- full range {full_window} vs production {cfg['prod_window']} ==="
+        )
+        print(
+            f"{'pulse':>5}  {'t_peak(full)':>12}  {'t_peak(prod)':>12}  {'%diff':>7}  {'t_v(full)':>10}  {'t_v(prod)':>10}  {'%diff':>7}  {'flag':>6}"
+        )
         for i in range(n_pulses):
-            A, ts, tau1, tau2 = params[i * 4:(i + 1) * 4]
+            A, ts, tau1, tau2 = params[i * 4 : (i + 1) * 4]
             tp_full, tv_full = t_peak(ts, tau1, tau2), tv_value(tau1, tau2)
             pulse_idx = i + 1
             if pulse_idx not in prod_df.index:
@@ -136,18 +133,32 @@ def main():
             tp_pct = pct_diff(tp_full, tp_prod)
             tv_pct = pct_diff(tv_full, tv_prod)
             flag = "FLAG" if max(tp_pct, tv_pct) > THRESHOLD_PCT else "ok"
-            print(f"{pulse_idx:5d}  {tp_full:12.4f}  {tp_prod:12.4f}  {tp_pct:6.2f}%  {tv_full:10.4f}  {tv_prod:10.4f}  {tv_pct:6.2f}%  {flag:>6}")
-            all_rows.append({
-                "grb_name": cfg["paper_name"], "grb_dir": grb_dir, "pulse_index": pulse_idx,
-                "full_window_min_s": full_window[0], "full_window_max_s": full_window[1],
-                "prod_window_min_s": cfg["prod_window"][0], "prod_window_max_s": cfg["prod_window"][1],
-                "full_A_cts_per_s": A * y_max, "full_t_s": ts, "full_tau1": tau1, "full_tau2": tau2,
-                "full_t_peak_s": tp_full, "full_t_v_s": tv_full,
-                "prod_t_peak_s": tp_prod, "prod_t_v_s": tv_prod,
-                "t_peak_pct_diff": tp_pct, "t_v_pct_diff": tv_pct,
-                "flag_gt_5pct": max(tp_pct, tv_pct) > THRESHOLD_PCT,
-                "sse_full_range": sse,
-            })
+            print(
+                f"{pulse_idx:5d}  {tp_full:12.4f}  {tp_prod:12.4f}  {tp_pct:6.2f}%  {tv_full:10.4f}  {tv_prod:10.4f}  {tv_pct:6.2f}%  {flag:>6}"
+            )
+            all_rows.append(
+                {
+                    "grb_name": cfg["paper_name"],
+                    "grb_dir": grb_dir,
+                    "pulse_index": pulse_idx,
+                    "full_window_min_s": full_window[0],
+                    "full_window_max_s": full_window[1],
+                    "prod_window_min_s": cfg["prod_window"][0],
+                    "prod_window_max_s": cfg["prod_window"][1],
+                    "full_A_cts_per_s": A * y_max,
+                    "full_t_s": ts,
+                    "full_tau1": tau1,
+                    "full_tau2": tau2,
+                    "full_t_peak_s": tp_full,
+                    "full_t_v_s": tv_full,
+                    "prod_t_peak_s": tp_prod,
+                    "prod_t_v_s": tv_prod,
+                    "t_peak_pct_diff": tp_pct,
+                    "t_v_pct_diff": tv_pct,
+                    "flag_gt_5pct": max(tp_pct, tv_pct) > THRESHOLD_PCT,
+                    "sse_full_range": sse,
+                }
+            )
 
         # --- Plot: fit computed on the full x.min()/x.max() range (above), but the AXIS is bounded to
         # T05-25s .. T95+25s -- plot legibility only, does not change what was fitted.
@@ -155,10 +166,20 @@ def main():
         xlim = (t05 - PLOT_PAD_S, t95 + PLOT_PAD_S)
         update_style()
         fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(t, y_raw, color="0.6", lw=LINE_WIDTH * 0.6,
-                label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted")
-        ax.plot(t, model, color="tab:blue", lw=LINE_WIDTH,
-                label=f"Normalized fit total (fitted on full range {full_window[0]:.1f}, {full_window[1]:.1f}s)")
+        ax.plot(
+            t,
+            y_raw,
+            color="0.6",
+            lw=LINE_WIDTH * 0.6,
+            label=f"10-400 keV NaI ({'+'.join(dat_nai)}, summed)\nBackground subtracted",
+        )
+        ax.plot(
+            t,
+            model,
+            color="tab:blue",
+            lw=LINE_WIDTH,
+            label=f"Normalized fit total (fitted on full range {full_window[0]:.1f}, {full_window[1]:.1f}s)",
+        )
         ax.axvline(t05, color="0.3", ls=":", lw=1, label=f"T05={t05:.3f}s")
         ax.axvline(t95, color="0.3", ls="--", lw=1, label=f"T95={t95:.3f}s")
         ax.set_xlim(*xlim)

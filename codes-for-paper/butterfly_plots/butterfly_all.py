@@ -24,10 +24,6 @@ is_ex = [sum(i) for i in is_ex]
 
 rng = get_rng(seed=seed_from_name(__file__))
 
-plot_all_models(best_models=grb_best,
-                grb_name=grb_name,
-                n_rows=2,
-                n_cols=2,
-                save=True,
-                rng=rng,
-                fig_size=FIGURE_SIZE_4x4)
+plot_all_models(
+    best_models=grb_best, grb_name=grb_name, n_rows=2, n_cols=2, save=True, rng=rng, fig_size=FIGURE_SIZE_4x4
+)

@@ -10,6 +10,7 @@ itself, only on the window.
 
 Does not modify fit_comparison.py or anything outside this folder.
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,8 +18,15 @@ import numpy as np
 import pandas as pd
 
 from fit_comparison import (
-    BURSTS, ENERGY_LOW, ENERGY_HIGH, LC_DIR, HERE,
-    summed_nai_curve, fit_normalized, fit_unnormalized_xscale, total_model,
+    BURSTS,
+    ENERGY_LOW,
+    ENERGY_HIGH,
+    LC_DIR,
+    HERE,
+    summed_nai_curve,
+    fit_normalized,
+    fit_unnormalized_xscale,
+    total_model,
 )
 from norris_fit import t_peak, tv_value
 from grb_research import update_style, LINE_WIDTH
@@ -32,11 +40,7 @@ CFG = BURSTS[GRB_DIR_NAME]
 _t_full, _, _ = summed_nai_curve(LC_DIR / GRB_DIR_NAME, (-np.inf, np.inf))
 T_MIN, T_MAX = float(_t_full.min()), float(_t_full.max())
 
-WINDOWS = {
-    "narrow_-1_160": (-1, 160),
-    "wide_-20_300": (-20, 300),
-    "full_x.min()_x.max()": (T_MIN, T_MAX),
-}
+WINDOWS = {"narrow_-1_160": (-1, 160), "wide_-20_300": (-20, 300), "full_x.min()_x.max()": (T_MIN, T_MAX)}
 
 
 def run_window(window_label: str, window: tuple):
@@ -55,20 +59,33 @@ def run_window(window_label: str, window: tuple):
 
     rows = []
     for i in range(n_pulses):
-        A_n, ts_n, tau1_n, tau2_n = params_norm[i * 4:(i + 1) * 4]
-        A_r, ts_r, tau1_r, tau2_r = params_raw[i * 4:(i + 1) * 4]
-        rows.append({
-            "window": window_label, "window_min_s": window[0], "window_max_s": window[1],
-            "pulse_index": i + 1, "y_max_cts_per_s": y_max,
-            "normalized_A_norm": A_n, "normalized_A_cts_per_s": A_n * y_max,
-            "normalized_t_s": ts_n, "normalized_tau1": tau1_n, "normalized_tau2": tau2_n,
-            "normalized_t_peak_s": t_peak(ts_n, tau1_n, tau2_n), "normalized_t_v_s": tv_value(tau1_n, tau2_n),
-            "unnorm_xscale_A_cts_per_s": A_r,
-            "unnorm_xscale_t_s": ts_r, "unnorm_xscale_tau1": tau1_r, "unnorm_xscale_tau2": tau2_r,
-            "unnorm_xscale_t_peak_s": t_peak(ts_r, tau1_r, tau2_r), "unnorm_xscale_t_v_s": tv_value(tau1_r, tau2_r),
-            "sse_normalized_rescaled": sse_norm, "sse_unnorm_xscale": sse_raw,
-            "sse_ratio_unnorm_over_norm": sse_raw / sse_norm,
-        })
+        A_n, ts_n, tau1_n, tau2_n = params_norm[i * 4 : (i + 1) * 4]
+        A_r, ts_r, tau1_r, tau2_r = params_raw[i * 4 : (i + 1) * 4]
+        rows.append(
+            {
+                "window": window_label,
+                "window_min_s": window[0],
+                "window_max_s": window[1],
+                "pulse_index": i + 1,
+                "y_max_cts_per_s": y_max,
+                "normalized_A_norm": A_n,
+                "normalized_A_cts_per_s": A_n * y_max,
+                "normalized_t_s": ts_n,
+                "normalized_tau1": tau1_n,
+                "normalized_tau2": tau2_n,
+                "normalized_t_peak_s": t_peak(ts_n, tau1_n, tau2_n),
+                "normalized_t_v_s": tv_value(tau1_n, tau2_n),
+                "unnorm_xscale_A_cts_per_s": A_r,
+                "unnorm_xscale_t_s": ts_r,
+                "unnorm_xscale_tau1": tau1_r,
+                "unnorm_xscale_tau2": tau2_r,
+                "unnorm_xscale_t_peak_s": t_peak(ts_r, tau1_r, tau2_r),
+                "unnorm_xscale_t_v_s": tv_value(tau1_r, tau2_r),
+                "sse_normalized_rescaled": sse_norm,
+                "sse_unnorm_xscale": sse_raw,
+                "sse_ratio_unnorm_over_norm": sse_raw / sse_norm,
+            }
+        )
     return pd.DataFrame(rows), (t, y_raw, model_norm_raw, model_raw)
 
 
@@ -82,13 +99,17 @@ def main():
         curves[label] = curve
         print(f"  SSE ratio (unnorm_xscale / normalized): {df['sse_ratio_unnorm_over_norm'].iloc[0]:.4f}")
         p6 = df[df.pulse_index == 6].iloc[0]
-        print(f"  pulse 6: t_s_norm={p6.normalized_t_s:.3f}  t_s_unnorm={p6.unnorm_xscale_t_s:.3f}"
-              f"  t_peak_norm={p6.normalized_t_peak_s:.3f}  t_peak_unnorm={p6.unnorm_xscale_t_peak_s:.3f}"
-              f"  t_v_norm={p6.normalized_t_v_s:.3f}  t_v_unnorm={p6.unnorm_xscale_t_v_s:.3f}")
+        print(
+            f"  pulse 6: t_s_norm={p6.normalized_t_s:.3f}  t_s_unnorm={p6.unnorm_xscale_t_s:.3f}"
+            f"  t_peak_norm={p6.normalized_t_peak_s:.3f}  t_peak_unnorm={p6.unnorm_xscale_t_peak_s:.3f}"
+            f"  t_v_norm={p6.normalized_t_v_s:.3f}  t_v_unnorm={p6.unnorm_xscale_t_v_s:.3f}"
+        )
         p7 = df[df.pulse_index == 7].iloc[0]
-        print(f"  pulse 7: t_s_norm={p7.normalized_t_s:.3f}  t_s_unnorm={p7.unnorm_xscale_t_s:.3f}"
-              f"  t_peak_norm={p7.normalized_t_peak_s:.3f}  t_peak_unnorm={p7.unnorm_xscale_t_peak_s:.3f}"
-              f"  t_v_norm={p7.normalized_t_v_s:.3f}  t_v_unnorm={p7.unnorm_xscale_t_v_s:.3f}")
+        print(
+            f"  pulse 7: t_s_norm={p7.normalized_t_s:.3f}  t_s_unnorm={p7.unnorm_xscale_t_s:.3f}"
+            f"  t_peak_norm={p7.normalized_t_peak_s:.3f}  t_peak_unnorm={p7.unnorm_xscale_t_peak_s:.3f}"
+            f"  t_v_norm={p7.normalized_t_v_s:.3f}  t_v_unnorm={p7.unnorm_xscale_t_v_s:.3f}"
+        )
 
     combined = pd.concat(all_rows, ignore_index=True)
     csv_path = HERE / "grb140206b_window_scan_results.csv"
@@ -101,8 +122,13 @@ def main():
     update_style()
     fig, ax = plt.subplots(figsize=(12, 6))
     t_full, y_full, _ = summed_nai_curve(LC_DIR / GRB_DIR_NAME, (T_MIN - 1, T_MAX + 1))
-    ax.plot(t_full, y_full, color="0.75", lw=LINE_WIDTH * 0.5,
-            label=f"10-400 keV NaI ({'+'.join(sorted(f.stem for f in (LC_DIR / GRB_DIR_NAME).glob('*.dat') if 'n' in f.stem))}, summed)\nBackground subtracted")
+    ax.plot(
+        t_full,
+        y_full,
+        color="0.75",
+        lw=LINE_WIDTH * 0.5,
+        label=f"10-400 keV NaI ({'+'.join(sorted(f.stem for f in (LC_DIR / GRB_DIR_NAME).glob('*.dat') if 'n' in f.stem))}, summed)\nBackground subtracted",
+    )
     colors = {"narrow_-1_160": "tab:blue", "wide_-20_300": "tab:orange", "full_x.min()_x.max()": "tab:green"}
     for label in WINDOWS:
         t_w, y_w, model_norm_w, model_raw_w = curves[label]

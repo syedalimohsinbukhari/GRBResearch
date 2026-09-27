@@ -7,6 +7,7 @@ test_multistart_t4.py -- the moderately-truncated one (T4a) and the more severel
 from synthetic_datasets.py, seeded via this project's seed_from_name convention (not a literal
 int), specifically so T4 and T5 share the identical noise realization by construction.
 """
+
 from plot_profile_scan import save_profile_scan_outputs
 from profile_scan import select_r0
 from synthetic_datasets import moderate_truncation_scenario, severe_truncation_scenario
@@ -23,10 +24,14 @@ def t5_on_dataset(name, t_window, y_window, sigma, dt, delta_chi2_tol=1.0):
     c = result.classification
     d = result.delta_chi2
     print(f"     shape={c.shape}  flat_zone={c.flat_zone}  span=x{c.flat_zone_span:.2f}")
-    print(f"     chi2_3param(best r0)={d['chi2_3param']:.4f}  chi2_4param(best)={d['chi2_4param']:.4f}  delta_chi2={d['delta_chi2']:.4f}  r_pinned={d['r_pinned']}")
+    print(
+        f"     chi2_3param(best r0)={d['chi2_3param']:.4f}  chi2_4param(best)={d['chi2_4param']:.4f}  delta_chi2={d['delta_chi2']:.4f}  r_pinned={d['r_pinned']}"
+    )
 
     paths = save_profile_scan_outputs(result, out_dir=".", label=f"section7_T5_{name.split()[0]}")
-    print(f"     wrote {paths['grid_csv'].name}, {paths['summary_csv'].name}, {paths['fig_pdf'].name}, {paths['fig_png'].name}")
+    print(
+        f"     wrote {paths['grid_csv'].name}, {paths['summary_csv'].name}, {paths['fig_pdf'].name}, {paths['fig_png'].name}"
+    )
 
     ok1 = check(f"[{name}] classified as flat-bottomed", c.shape == "flat")
     ok2 = check(f"[{name}] |delta_chi2| within ~{delta_chi2_tol}", abs(d["delta_chi2"]) <= delta_chi2_tol)

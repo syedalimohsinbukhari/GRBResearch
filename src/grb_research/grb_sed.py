@@ -100,7 +100,7 @@ class SpectralModels:
         idx = 0
         for name in components:
             func_name, n_pars = self.SINGLE_COMPONENTS[name]
-            pars = values[idx: idx + n_pars]
+            pars = values[idx : idx + n_pars]
             idx += n_pars
 
             spectra.append(func_name(pars))
@@ -129,7 +129,7 @@ class SpectralModels:
             return e_ * spectrum
 
         elif self.model_type in ["nuFnu", "nfn"]:
-            return e_ ** 2 * spectrum
+            return e_**2 * spectrum
 
         else:
             raise LookupError(

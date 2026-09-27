@@ -29,13 +29,13 @@ f, ax = make_lightcurves(
     stop=t_95,
     nai_detector_list=dat_NaI,
     bgo_detector_list=dat_BGO,
-    lat_gtrspgen=f"{cwd}/{path_}/{fit}"
+    lat_gtrspgen=f"{cwd}/{path_}/{fit}",
 )
 
 times = [0.704, 2.304, 3.648, 4.480, 5.120, 15.296, 18.432, 80, 117.056]
 
 # ax[0].axhline(0, color='r', ls='--', zorder=100)
-colors = ["r", "g", "gold", "b", "maroon", "cyan", 'tab:orange', 'tab:blue', 'tab:green', 'tab:red', 'tab:purple']
+colors = ["r", "g", "gold", "b", "maroon", "cyan", "tab:orange", "tab:blue", "tab:green", "tab:red", "tab:purple"]
 
 for ax_i in ax:
     for index, ((start, end), color) in enumerate(zip(zip(times[:-1], times[1:]), colors)):
