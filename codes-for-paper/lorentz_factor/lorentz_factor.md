@@ -219,6 +219,11 @@ A Norris fit would replace that upper bound with a measurement. Since $\Gamma_\t
 | `lorentz_factor_limit_b.py` | Limit B computation, CSV and LaTeX table (§8) |
 | `lorentz_results_limit_b.csv` | one row per episode with LAT coverage (Limit B) |
 | `lorentz_table_limit_b.tex` | generated paper table (Limit B) |
+| `lorentz_factor_unknown_z.py` | Limit A redshift sweep for the three no-redshift bursts, plus the shared `run_sweep()` (§13) |
+| `lorentz_factor_limit_b_unknown_z.py` | Limit B redshift sweep, own seed; imports `run_sweep()` (§13) |
+| `generate_lorentz_table_unknown_z.py` | renders either sweep table from its CSV (`A` / `B` argument) |
+| `lorentz_results_unknown_z.csv`, `lorentz_results_limit_b_unknown_z.csv` | one row per no-redshift-burst episode, Gamma columns per swept $z$ |
+| `lorentz_table_unknown_z.tex`, `lorentz_table_limit_b_unknown_z.tex` | generated paper tables, Limits A / B at $z=1,3,5,7$ |
 | `gamma_comparison_plot.py` | comparison figure: Limit A, Limit B, thermal $\Gamma$ (§8.6) |
 | `gamma_comparison.png` / `.pdf` | the figure itself, also copied to `GRBResearchPaper/images/section5/` |
 | `lorentz_factor.md` | this file |
@@ -484,3 +489,49 @@ show all three series (thermal, Limit A, Limit B), no gaps or crashes.
 Same boundary as §11: `GRBResearchWork`-only. `GRBResearchPaper` is untouched (confirmed via
 `git status`) — the paper's Figure 9/Table 3/prose still reflect the pre-cut 8-episode data until
 this is reviewed and integrated deliberately.
+
+---
+
+## 13. Redshift sweep for the three no-redshift bursts — **added 2026-10-01**
+
+Limits A and B were pinned to `REDSHIFTS`, so GRB131014A, GRB140206B and GRB231129C never appeared in any Lorentz table.
+Mirroring the Amati unknown-$z$ table, both limits are now evaluated at assumed $z=1,3,5,7$ and given their own tables
+(`tab:lorentz_unknown_z`, `tab:lorentz_limit_b_unknown_z`).
+
+### 13.1 Decisions (user, 2026-10-01)
+
+- **Limit B gets its own second table**, as for GRB080916C, rather than extra columns in one wide table.
+- **Every LAT episode is kept**, with no photon-energy floor and no TS cut (the §12 floor is GRB080916C-only). Episodes with
+  TS < 25 carry a $\ddagger$ in the Limit A table (Limit B does not use the photon, so no flag there). Cutting would have left
+  GRB140206B nearly empty.
+- **Missing values are shown as "-"**, not an ellipsis. Only GRB140206B TR6 has none: it is a CPL fit, so it has no
+  high-energy index and the Lithwick & Sari expression cannot be evaluated.
+- **Separate seeds for the two limits**, for consistency with GRB080916C (§8). A first version drew both limits from one
+  shared draw set under one seed; the user asked for that to be split.
+
+### 13.2 Implementation
+
+- One draw set per episode, reused across the four redshifts, so the $z$ columns of a row are correlated (same as the Amati
+  sweep). $z$ enters only through $d_L$ in $\hat\tau$ and the $(1+z)$ factors; nothing is refit. $t_v$ follows the usual
+  precedence (Norris if it passes the quality gate, else duration), and its uncertainty is resampled as in §11.
+- `run_sweep(limit, rng, seed)` in `lorentz_factor_unknown_z.py` is shared; each script supplies its own `rng`/`seed`, so the
+  two limits use independent draws. Seeds: Limit A 1051076921, Limit B 3962326526.
+- Output rows: 18 (5 + 8 + 5), of which 17 have limits.
+
+### 13.3 Results
+
+From $z=1$ to $z=7$ Limit A grows by $\approx3.5$–$3.7\times$ in every episode ($\Gamma_{\min}\approx46$–$341$ to $162$–$1225$);
+Limit B by $\approx3.4$–$3.6\times$. Limit A is the larger bound in every episode at every swept $z$. These are illustrations of
+the $z$ dependence, not measured limits.
+
+### 13.4 Registries and the Norris fitters
+
+`seed_registry.yaml`, `table_registry.yaml` and `runner_registry.yaml` were updated. The three no-redshift Norris fitters
+(`fitter_GRB131014A/140206B/231129C.py`) moved from `unused` to `active` in the seed registry, since their $t_v$ now feeds a
+paper table.
+
+### 13.5 Scope
+
+Paper prose and the two `\input` lines are in `section-5-data-analysis.tex`; a LaTeX build was left to the user and has not
+been run for these tables. `gamma_comparison` is unchanged (still GRB080916C only); comparing these limits against the
+thermal $\Gamma$ at the fiducial $z=2$ is a possible follow-up.

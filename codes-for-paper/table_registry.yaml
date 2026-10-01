@@ -42,6 +42,12 @@ active:
     lorentz_table_limit_b:
         source: codes-for-paper/lorentz_factor/lorentz_table_limit_b.tex
         dest: tex_files/generated/lorentz_table_limit_b.tex
+    lorentz_table_unknown_z:
+        source: codes-for-paper/lorentz_factor/lorentz_table_unknown_z.tex
+        dest: tex_files/generated/lorentz_table_unknown_z.tex
+    lorentz_table_limit_b_unknown_z:
+        source: codes-for-paper/lorentz_factor/lorentz_table_limit_b_unknown_z.tex
+        dest: tex_files/generated/lorentz_table_limit_b_unknown_z.tex
     photospheric_table:
         source: codes-for-paper/photospheric_radius/photospheric_table.tex
         dest: tex_files/generated/photospheric_table.tex

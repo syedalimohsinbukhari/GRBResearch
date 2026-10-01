@@ -606,3 +606,36 @@ Status: **CONFIRMED** (2026-09-03, source + build-artifact check)
 (legend legibility, figure rendering) confirmed directly by the user against their completed rebuild.
 
 Status: **CONFIRMED** (2026-09-04, source + user visual confirmation)
+
+---
+
+### 2026-10-01 — Amati caption/prose edit, and Lorentz-factor redshift-sweep tables (`tab:lorentz_unknown_z`, `tab:lorentz_limit_b_unknown_z`)
+
+**What changed** (all in `GRBResearchPaper/tex_files/section-5-data-analysis.tex` unless noted):
+
+- `fig:amati_relationship` caption rewritten (four panels; GRB080916C at $z=4.35$, the other three at $z=1,3,5,7$ with a
+  dashed locus; TR/EX named; typo "internals" fixed; `\cite` -> `\citet`). The GRB140206B EX0/TR1/TR6 statement was
+  moved out of the caption into the prose right after "...with the exception of GRB140206B".
+- New paragraph after `fig:gamma_comparison` describing the Lorentz-factor $z$ sweep, followed by `\input` of two new
+  generated tables: `tex_files/generated/lorentz_table_unknown_z.tex` and `lorentz_table_limit_b_unknown_z.tex`
+  (synced from `codes-for-paper/lorentz_factor/`). `tex_files/generated/seed_table.tex` regenerated (two new rows for
+  the sweep scripts, three Norris fitters now `active`).
+
+**What to check:**
+
+1. Both new tables compile and fit the column width (`resizebox` inside `threeparttable`); Table A has 8 columns, B has 7.
+2. `\ddagger` and `\dagger` footnotes appear in Table A (TS < 25 rows: GRB140206B TR5, GRB231129C EX0/TR1) and only
+   `\dagger` and the "$-$" note in Table B; the "-" cells are only GRB140206B TR6.
+3. `\cref{tab:seed_table}` and `\citep{Lithwick2001}` in the new captions/prose resolve; no undefined references.
+4. Numbers in the new paragraph match the tables: Limit A rises ~3.5-3.7x from $z=1$ to $z=7$ ($\Gamma_{\min}\approx46$-341
+   to 162-1225); Limit B ~3.4-3.6x (25-143 to 84-496). Re-checked against the final CSVs after the seed split: these
+   are best-fit point values, so they did not change (only the error bars depend on the seed).
+5. Line ~221 ("For the rest, we evaluate the limit separately...") sits above `tab:lorentz`, which still only lists
+   GRB080916C; decide whether it should point at the new tables.
+6. The Amati caption reads well at column width and the new prose sentence about GRB140206B (TR6 "most discrepant") is
+   what you want.
+
+**Why:** the LaTeX build was deliberately left to the user (not run), so nothing above has been checked against a build.
+
+Status: **PENDING**
+

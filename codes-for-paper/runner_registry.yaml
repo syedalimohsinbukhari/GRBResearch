@@ -17,11 +17,11 @@ scripts:
             Norris-pulse joint fit -> norris_fit_results_GRB080916C.csv (measured t_v, feeds
             lorentz_factor.py/lorentz_factor_limit_b.py below -- must run before both)
     -   path: variability_analysis/fitter_GRB131014A.py
-        note: Norris-pulse joint fit, GRB131014A (no redshift, not in the current draft; kept for a complete rebuild)
+        note: Norris-pulse joint fit, GRB131014A (no redshift; measured t_v feeds lorentz_factor_unknown_z.py -- must run before it)
     -   path: variability_analysis/fitter_GRB140206B.py
-        note: Norris-pulse joint fit, GRB140206B (no redshift, not in the current draft; kept for a complete rebuild)
+        note: Norris-pulse joint fit, GRB140206B (no redshift; measured t_v feeds lorentz_factor_unknown_z.py -- must run before it)
     -   path: variability_analysis/fitter_GRB231129C.py
-        note: Norris-pulse joint fit, GRB231129C (no redshift, not in the current draft; kept for a complete rebuild)
+        note: Norris-pulse joint fit, GRB231129C (no redshift; measured t_v feeds lorentz_factor_unknown_z.py -- must run before it)
     -   path: lorentz_factor/lorentz_factor.py
         note: >-
             Lorentz factor Limit A; reads fitter_GRB*.py's norris_fit_results_GRB*.csv for
@@ -34,6 +34,18 @@ scripts:
             Lorentz factor Limit B (independent seed from Limit A by design; no run-order
             dependency on it, but same norris_fit_results_GRB*.csv dependency as Limit A above).
             Also self-chains into generate_lorentz_table_limit_b.py via subprocess.
+    -   path: lorentz_factor/lorentz_factor_unknown_z.py
+        note: >-
+            Lorentz factor Limit A swept over assumed z = 1, 3, 5, 7 for the three no-redshift bursts
+            (same norris_fit_results_GRB*.csv dependency as above). Writes lorentz_results_unknown_z.csv
+            and self-chains into generate_lorentz_table_unknown_z.py (arg A) via subprocess. Also defines
+            run_sweep(), which the Limit B script below imports.
+    -   path: lorentz_factor/lorentz_factor_limit_b_unknown_z.py
+        note: >-
+            Lorentz factor Limit B swept over the same z values (independent seed from the Limit A sweep by
+            design; imports run_sweep() from lorentz_factor_unknown_z.py, so no run-order dependency on it).
+            Writes lorentz_results_limit_b_unknown_z.csv and self-chains into
+            generate_lorentz_table_unknown_z.py (arg B).
     -   path: gamma_min_reconciliation/reconcile_tv.py
         note: >-
             Prints the literature-Gamma_min t_v reconciliation cited in section-6-discussion.tex (reads

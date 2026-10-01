@@ -36,6 +36,14 @@ active:
         script: lorentz_factor/lorentz_factor_limit_b.py
         item: "Lorentz factor, Limit B"
         cref: "\\cref{fig:gamma_comparison,tab:lorentz_limit_b}"
+    lorentz_unknown_z_limit_a:
+        script: lorentz_factor/lorentz_factor_unknown_z.py
+        item: "Lorentz factor, Limit A, redshift sweep"
+        cref: "\\cref{tab:lorentz_unknown_z}"
+    lorentz_unknown_z_limit_b:
+        script: lorentz_factor/lorentz_factor_limit_b_unknown_z.py
+        item: "Lorentz factor, Limit B, redshift sweep"
+        cref: "\\cref{tab:lorentz_limit_b_unknown_z}"
     photospheric_radius:
         script: photospheric_radius/pe_er_photosphere.py
         item: "Photospheric radius / thermal $\\Gamma$"
@@ -56,24 +64,23 @@ active:
         script: variability_analysis/fitter_GRB080916C.py
         item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB080916C"
         cref: "\\cref{tab:lorentz,tab:lorentz_limit_b}"
+    norris_pulse_fit_tv_131014A:
+        script: variability_analysis/fitter_GRB131014A.py
+        item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB131014A"
+        cref: "\\cref{tab:lorentz_unknown_z,tab:lorentz_limit_b_unknown_z}"
+    norris_pulse_fit_tv_140206B:
+        script: variability_analysis/fitter_GRB140206B.py
+        item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB140206B"
+        cref: "\\cref{tab:lorentz_unknown_z,tab:lorentz_limit_b_unknown_z}"
+    norris_pulse_fit_tv_231129C:
+        script: variability_analysis/fitter_GRB231129C.py
+        item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB231129C"
+        cref: "\\cref{tab:lorentz_unknown_z,tab:lorentz_limit_b_unknown_z}"
 
 unused:
     kt_epeak_correlation:
         script: model_parameters/epeak_vs_kt.py
         note: "not referenced by any figure or table in the current draft"
-    norris_pulse_fit_tv_131014A:
-        script: variability_analysis/fitter_GRB131014A.py
-        note: >-
-            real MC-seeded pipeline script (per-pulse t_v with MC-propagated uncertainty,
-            committed to norris_fit_results_GRB131014A.csv), but this burst has no measured
-            redshift, so it never reaches Table 3/tab:lorentz_limit_b (both drop rows with
-            z=None) -- not referenced by any figure or table in the current draft
-    norris_pulse_fit_tv_140206B:
-        script: variability_analysis/fitter_GRB140206B.py
-        note: "same as norris_pulse_fit_tv_131014A above -- no redshift, not in the current draft"
-    norris_pulse_fit_tv_231129C:
-        script: variability_analysis/fitter_GRB231129C.py
-        note: "same as norris_pulse_fit_tv_131014A above -- no redshift, not in the current draft"
 
 dormant:
     norris_pulse_fit_tv_legacy:

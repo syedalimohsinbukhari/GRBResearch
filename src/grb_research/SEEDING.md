@@ -82,6 +82,10 @@ differs per script.
 - `codes-for-paper/lorentz_factor/lorentz_factor_limit_b.py` (independent seed from Limit A —
   deliberately decorrelated; the bit-identical `tau_hat` cross-check between the two does not
   depend on a shared seed, only on both sharing the same closed-form `compute_tau_hat`)
+- `codes-for-paper/lorentz_factor/lorentz_factor_unknown_z.py` and
+  `codes-for-paper/lorentz_factor/lorentz_factor_limit_b_unknown_z.py` (the Limit A / Limit B redshift
+  sweeps for the three no-redshift bursts; separate seeds, same decorrelation as the pair above, with the
+  second script importing the first's `run_sweep()` but passing its own `rng`)
 - `codes-for-paper/gbm_only_refit/gbm_only_refit.py`
 - `codes-for-paper/bb_fraction/bb_flux_fraction.py`
 - `codes-for-paper/photospheric_radius/pe_er_photosphere.py`
