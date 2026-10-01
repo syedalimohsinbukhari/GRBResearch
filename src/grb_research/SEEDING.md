@@ -138,7 +138,7 @@ This got a live test 2026-09-03: `bb_fraction/bb_flux_fraction.py`'s episode loo
 parallelized exactly this way (`rng.bit_generator.seed_seq.spawn(n_jobs)`, one child per
 worker), and verified deterministic across genuine separate-process reruns. It was reverted
 shortly after — not for a correctness problem, but because the win wasn't there in practice
-(see `SEED_PLAN-implementation.md`'s "Performance investigation" section): the real fix for
+(see `HISTORIC_SEEDING.md`'s §SEED_PLAN-implementation.md, "Performance investigation" section): the real fix for
 that script's slowness was an unrelated `N_GRID` reduction. The spawn-per-worker pattern itself
 worked as designed and remains the right approach if sampling-level parallelism is ever needed
 again.

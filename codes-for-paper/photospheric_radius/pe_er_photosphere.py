@@ -63,6 +63,7 @@ from grb_research import (
     GRBPlotStyle,
     component_energy_fluxes,
     draw_model_samples,
+    episode_order,
     find_project_root,
     get_rng,
     prepare_grbs,
@@ -309,16 +310,6 @@ def collect_results():
             )
 
     return rows
-
-
-def episode_order(label):
-    """Sort key putting episodes in temporal order: T90, EX0, TR1..TRn, EX1."""
-    fixed = {"T90": 0, "EX0": 1, "EX1": 90}
-    if label in fixed:
-        return fixed[label]
-    if label.startswith("TR"):
-        return 10 + int(label[2:])
-    return 99
 
 
 def episode_label(interval):

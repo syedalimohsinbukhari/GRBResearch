@@ -49,7 +49,7 @@ relationship and with `results.json`; if the fix didn't actually render, that sp
 a published table.
 
 **CONFIRMED by user (2026-09-06)** — checked against the rendered PDF. This also closes Issue 1 in
-`GRBResearch_Issues_List.md` (the reviewer-flagged phantom "bin 2" for GRB231129C was exactly this transcription error).
+`HISTORIC_PAPER_REVIEW.md` (§GRBResearch_Issues_List.md) (the reviewer-flagged phantom "bin 2" for GRB231129C was exactly this transcription error).
 
 Status: **CONFIRMED**
 
@@ -62,7 +62,7 @@ amati_linear} (§"Amati relationship").
 
 - Old text: $E_\text{0,p} = 300$ keV, $m = 0.5$, $k = 0$, cited to `\citep{Amati2006, Nava2012}` — self-inconsistent
   with the immediately preceding sentence ("Following Fana Dirirsa (2019)...") and matching no real source. This was
-  Issue 2 in `GRBResearch_Issues_List.md`.
+  Issue 2 in `HISTORIC_PAPER_REVIEW.md` (§GRBResearch_Issues_List.md).
 - New text: $E_\text{0,p} = 950$ keV, $m = 1.16 \pm 0.37$, $k = 1.67 \pm 0.16$, cited to `\citep{FanaDirirsa2019}` —
   verified directly against Fana Dirirsa et al. (2019), Table 3 "F10" row (their own 25-GRB *Fermi*-LAT
   sample, $E_\text{iso}$ computed over 1 keV–$10^4$ keV, matching this paper's own $S_\text{bol}$ integration band), and
@@ -437,7 +437,7 @@ ambiguous sentence expanded into two: the Fermitools origin of the supplementary
 reason BASE+PL is not tested as an independent branch (it's not nested with BASE+BB, so a direct likelihood-ratio
 comparison between them isn't well-defined; a PL component is instead only added as a nested extension on top of an
 accepted BASE+BB). Kept deliberately brief per the user's instruction — no project history (an earlier, pre-repo
-symmetric-grid exploration) in the paper text; that stays in `review-resolution.md`/`HANDOFF.md` only.
+symmetric-grid exploration) in the paper text; that stays in `HISTORIC_PAPER_REVIEW.md` (§review-resolution.md)/`HANDOFF.md` only.
 
 **What to check:** §4 "Joint Analysis" opening paragraph — confirm the two-sentence version reads clearly and matches
 the already-existing stepwise-procedure text a few lines below it (§4.2 "BEST models": BASE→BASE+BB at Δk=2,
@@ -445,11 +445,11 @@ BASE→BASE+BB+PL at Δk=4, then the stepwise BASE+BB→BASE+BB+PL at Δk=2) wit
 
 **Discrepancy found (2026-09-03, source-checked), then resolved same day:** the actual sentence at
 `section-4-joint-analysis-results.tex` line 10 is one sentence, not the two-sentence Fermitools-origin expansion this
-entry originally described. Checking `review-resolution.md` item #5 (missed on first pass) shows this was already fully
+entry originally described. Checking `HISTORIC_PAPER_REVIEW.md` (§review-resolution.md) item #5 (missed on first pass) shows this was already fully
 investigated and decided on **2026-09-01**: the two-sentence version was found not to have survived into the file (cause
 undetermined — possibly a manual edit), and the user explicitly chose to close it as-is rather than restore the fuller
 wording, because the complete explanation made the paragraph "quite complex." The reasoning itself is preserved in
-`review-resolution.md` #5, items 1–4, and reconfirmed directly by the user on 2026-09-04: (1) the supplementary PL
+`HISTORIC_PAPER_REVIEW.md` (§review-resolution.md) #5, items 1–4, and reconfirmed directly by the user on 2026-09-04: (1) the supplementary PL
 term's origin is `fermitools`' own LAT-band power-law characterization, used to make LAT data RMFIT-compatible; (2)
 BASE+PL was deliberately never tested as an independent branch — BASE+PL and BASE+BB both add 2 dof to BASE along
 different, non-hierarchical branches, so they aren't directly comparable via a likelihood-ratio test the way
@@ -460,7 +460,7 @@ the paper text carry the full reasoning.
 **Why:** Content and scope both resolved — this was never a live gap, just a VERIFY.md entry written without checking
 the prior decision already on record.
 
-Status: **CONFIRMED** (2026-09-04 — decision already final as of 2026-09-01, per `review-resolution.md` #5; no
+Status: **CONFIRMED** (2026-09-04 — decision already final as of 2026-09-01, per `HISTORIC_PAPER_REVIEW.md` (§review-resolution.md) #5; no
 paper-text change needed)
 
 ---
@@ -511,7 +511,7 @@ paper-text change needed)
 only a small 4-row table whose content is already source-confirmed).
 
 **Also observed, resolved 2026-09-03:** the appendix-block discrepancy flagged here has been investigated and closed —
-see `review-resolution.md` item #1, now updated to CLOSED. The appendix was intentionally re-activated by you directly
+see `HISTORIC_PAPER_REVIEW.md` (§review-resolution.md) item #1, now updated to CLOSED. The appendix was intentionally re-activated by you directly
 in commit `464a747` (2026-09-01), not left commented out; it has since grown (the seeding-table section was added on top
 of it 2026-09-03).
 

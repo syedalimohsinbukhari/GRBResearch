@@ -3,7 +3,7 @@ Three-Way Refit Comparison for GRB131014A (Joint / GBM-only / GBM-only, NaI >= 4
 ========================================================================================
 
 Extends the two-way GBM-only robustness check (`gbm_only_refit.py`, weakness #6 in
-`review-resolution.md`) with a third fit variant that answers weakness #7
+`HISTORIC_PAPER_REVIEW.md` §review-resolution.md) with a third fit variant that answers weakness #7
 ("No instrumental-artifact / low-energy threshold robustness test"): the user re-ran the
 GBM-only RMFIT fit for all five GRB131014A episodes with the NaI lower-energy bound raised
 from the standard threshold to 40 keV (NaI band 40-900 keV), specifically to check whether

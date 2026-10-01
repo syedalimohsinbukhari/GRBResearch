@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from generate_lorentz_table import TEX_NAMES, fmt, fmt_t_v
+from generate_lorentz_table import TEX_NAMES, episode_order, fmt, fmt_t_v
 
 HERE = Path(__file__).parent
 RESULTS_CSV = HERE / "lorentz_results_limit_b.csv"
@@ -51,6 +51,8 @@ def build_latex_table(results):
     -- the CSV keeps every row regardless, this is a table-only presentation choice.
     """
     results = [r for r in results if r["z"] is not None]
+    # See generate_lorentz_table.py::build_latex_table()'s identical sort for why.
+    results = sorted(results, key=lambda r: (r["GRB"], episode_order(r["episode"])))
     seed = int(results[0]["seed"])
 
     rows = ""

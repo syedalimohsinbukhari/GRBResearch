@@ -33,10 +33,10 @@ enters either calculation.
 over a narrower band than the paper's own stated sample-selection criterion — "High GBM fluence,
 ensuring well-constrained spectral fits across the full 8 keV–40 MeV energy range"
 (`section-1-introduction.tex`). Found while building a fluence table to substantiate that
-criterion (`grb_paper_weaknesses_and_fixes.md` Priority 3, "bright framing with no fluence
+criterion (`HISTORIC_PAPER_REVIEW.md` §grb_paper_weaknesses_and_fixes.md, Priority 3, "bright framing with no fluence
 table"): the table would have shown numbers for the wrong band. Fixed by passing
 `log_energy_range=(log10(8), log10(40000))` explicitly, matching the criterion's own stated
-range. See `review-resolution.md` Priority 3 item 8.
+range. See `HISTORIC_PAPER_REVIEW.md` §review-resolution.md, Priority 3 item 8.
 
 ### 2.2 No redshift/cosmology columns — *Claude, consequence of the definition*
 

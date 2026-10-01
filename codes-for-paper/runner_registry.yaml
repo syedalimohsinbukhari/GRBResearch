@@ -12,10 +12,28 @@ scripts:
         note: GBM fluence CSV
     -   path: fluence/csv_to_latex.py
         note: GBM fluence table (reads grb_fluence.py's CSV)
+    -   path: variability_analysis/fitter_GRB080916C.py
+        note: >-
+            Norris-pulse joint fit -> norris_fit_results_GRB080916C.csv (measured t_v, feeds
+            lorentz_factor.py/lorentz_factor_limit_b.py below -- must run before both)
+    -   path: variability_analysis/fitter_GRB131014A.py
+        note: Norris-pulse joint fit, GRB131014A (no redshift, not in the current draft; kept for a complete rebuild)
+    -   path: variability_analysis/fitter_GRB140206B.py
+        note: Norris-pulse joint fit, GRB140206B (no redshift, not in the current draft; kept for a complete rebuild)
+    -   path: variability_analysis/fitter_GRB231129C.py
+        note: Norris-pulse joint fit, GRB231129C (no redshift, not in the current draft; kept for a complete rebuild)
     -   path: lorentz_factor/lorentz_factor.py
-        note: Lorentz factor Limit A (writes its own table inline, no separate csv_to_latex.py)
+        note: >-
+            Lorentz factor Limit A; reads fitter_GRB*.py's norris_fit_results_GRB*.csv for
+            measured t_v (falls back to episode duration otherwise). Writes lorentz_results.csv,
+            then shells out to generate_lorentz_table.py itself (subprocess) to render
+            lorentz_table.tex -- that generator is not a separate runner_all.py step, unlike the
+            fluence/bb_fraction/photospheric_radius csv_to_latex.py scripts above, which are.
     -   path: lorentz_factor/lorentz_factor_limit_b.py
-        note: Lorentz factor Limit B (independent seed from Limit A by design; no run-order dependency on it)
+        note: >-
+            Lorentz factor Limit B (independent seed from Limit A by design; no run-order
+            dependency on it, but same norris_fit_results_GRB*.csv dependency as Limit A above).
+            Also self-chains into generate_lorentz_table_limit_b.py via subprocess.
     -   path: gamma_min_reconciliation/reconcile_tv.py
         note: >-
             Prints the literature-Gamma_min t_v reconciliation cited in section-6-discussion.tex (reads
@@ -40,9 +58,14 @@ scripts:
     -   path: model_parameters/high_index.py
         note: High-energy spectral index distribution (no MC/N_GRID; included for a complete rebuild)
     -   path: amati_relationship/amati_relationship.py
-        note: Amati relation CSV
+        note: Amati relation CSV (writes amati_relationship.csv and amati_relationship_unknown_z.csv)
     -   path: amati_relationship/csv_to_latex.py
-        note: Amati relation table (reads amati_relationship.py's CSV)
+        note: Amati relation table, GRB080916C (reads amati_relationship.py's amati_relationship.csv)
+    -   path: amati_relationship/csv_to_latex_unknown_z.py
+        note: >-
+            Amati relation table, the three no-redshift bursts (reads amati_relationship.py's
+            amati_relationship_unknown_z.csv) -- separate table from csv_to_latex.py above since
+            these bursts need one Eiso column per swept z, not one Ep/Eiso point per episode
     -   path: butterfly_plots/butterfly_all.py
         note: Butterfly SEDs
     -   path: all-safe-unsafe/all-safe-unsafe.py

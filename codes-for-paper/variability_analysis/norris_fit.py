@@ -1,24 +1,15 @@
-"""Norris (2005) pulse fitter, built on pymultifit's BaseFitter N-fit mechanism.
-
-t_v is defined per Bukhari et al. (2022, Adv. Space Res.) eq. (10):
-
-    t_v = (tau2/2) * sqrt[(ln(2) + 2*sqrt(tau1/tau2))^2 - 4*tau1/tau2]
-
-attributed there to Norris et al. (2005), and described as "the half width of the pulse at
-half maximum" -- verified numerically (see variability_timescale.md) to equal FWHM/2 of the
-fitted pulse, which for an asymmetric pulse (tau1 != tau2) is neither the rise-side nor the
-decay-side half-width alone, but their symmetrized combination.
-"""
+"""Created on Sep 16 04:14:56 2026."""
 
 import numpy as np
+from pymultifit import OneDArray, Params_
 from pymultifit.fitters.backend import BaseFitter
-
-EXP_ARG_CLIP = 50.0  # exp(50) ~ 5e21, far above any real light-curve rate; prevents
-# overflow when the optimizer probes extreme tau values during a fit (BUG-26). Same
-# value and same fix as experiments/new_three_model/pulse3.py's norris_raw().
 
 from grb_research.grb_calculations import get_rng
 from grb_research.grb_constants import N_SAMPLES
+
+# prevents overflow when the optimizer probes extreme tau values during a fit (BUG-26).
+# Same value and same fix as experiments/new_three_model/pulse3.py's norris_raw().
+EXP_ARG_CLIP = 50.0
 
 
 def norris_pulse(x: np.ndarray, params) -> np.ndarray:
@@ -55,7 +46,7 @@ def tv_value(tau1, tau2):
 class NorrisFitter(BaseFitter):
     """Fits a sum of N Norris (2005) pulses to background-subtracted count-rate data."""
 
-    def __init__(self, x_values, y_values, max_iterations: int = 5000):
+    def __init__(self, x_values: OneDArray, y_values: OneDArray, max_iterations: int = 1000):
         super().__init__(x_values=x_values, y_values=y_values, max_iterations=max_iterations)
         self.n_par = 4  # amplitude, t_s, tau1, tau2
 
@@ -66,7 +57,7 @@ class NorrisFitter(BaseFitter):
         return lb, ub
 
     @staticmethod
-    def fitter(x, params) -> np.ndarray:
+    def fitter(x, params: Params_) -> np.ndarray:
         return norris_pulse(x, params)
 
 
@@ -82,8 +73,8 @@ def tv_mc_summary(fitter: NorrisFitter, pulse_index: int, seed: int, n_samples: 
     """
     n_par = fitter.n_par
     start = (pulse_index - 1) * n_par
-    mean = fitter.params[start : start + n_par]
-    cov = fitter.covariance[start : start + n_par, start : start + n_par]
+    mean = fitter.params[start: start + n_par]
+    cov = fitter.covariance[start: start + n_par, start: start + n_par]
 
     rng = get_rng(seed=seed)
     draws = rng.multivariate_normal(mean=mean, cov=cov, size=n_samples)

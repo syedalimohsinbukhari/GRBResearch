@@ -723,6 +723,28 @@ def save_value_error_as_parquet(
     df.to_parquet(Path.cwd() / filename, index=False)
 
 
+def episode_order(label: str) -> int:
+    """Sort key putting episode labels in temporal reading order: T90, EX0, TR1..TRn, EX1.
+
+    EX1 is always last regardless of its actual time bounds -- it commonly overlaps or even
+    outlasts the final TRn interval (e.g. GRB080916C's EX1 runs 59.520-67.904s, fully enclosing
+    TR5's 59.52-64.256s), but by convention it is discussed as the closing post-burst excess
+    window, after every time-resolved interval, not interleaved among them by raw start time.
+
+    Previously duplicated independently in gamma_comparison_plot.py and pe_er_photosphere.py
+    (verified identical); centralized here so every table/plot that lists episodes sorts them
+    the same way, rather than falling back to whatever order the source data happened to store
+    them in (get_all_best_models() is not guaranteed chronological -- this is what let
+    amati_relationship.py's episode table print EX1 before TR5).
+    """
+    fixed = {"T90": 0, "EX0": 1, "EX1": 90}
+    if label in fixed:
+        return fixed[label]
+    if label.startswith("TR"):
+        return 10 + int(label[2:])
+    return 99
+
+
 class EpisodeMarkerResolver:
     """Maps an episode interval to a matplotlib marker and colour.
 

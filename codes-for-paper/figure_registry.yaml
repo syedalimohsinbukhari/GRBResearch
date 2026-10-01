@@ -69,6 +69,6 @@ unused:
         note: "not referenced by any figure in the current draft -- matches seed_registry.yaml's kt_epeak_correlation"
     gbm_only_refit_fractional_diff:
         source: codes-for-paper/gbm_only_refit/gbm_only_refit_fractional_diff.png
-        note: "the one MC-derived plot this script produces; not referenced by any figure in the current draft (see SEED_PLAN-implementation.md)"
+        note: "the one MC-derived plot this script produces; not referenced by any figure in the current draft (see md_file_refs/HISTORIC_SEEDING.md, SEED_PLAN-implementation.md section)"
 
 no_known_source: { }

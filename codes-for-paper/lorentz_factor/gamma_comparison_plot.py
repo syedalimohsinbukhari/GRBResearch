@@ -20,7 +20,7 @@ import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from grb_research import EpisodeMarkerResolver, find_project_root, prepare_grbs, update_style, TICK_FONT_SIZE
+from grb_research import EpisodeMarkerResolver, episode_order, find_project_root, prepare_grbs, update_style, TICK_FONT_SIZE
 from grb_research.grb_constants import (
     LABEL_FONT_SIZE,
     LEGEND_FONT_SIZE,
@@ -55,16 +55,6 @@ METHOD_LABELS = {
 # own MARKER_EDGE_WIDTH exactly, for visual consistency across the paper's figures.
 MARKER_EDGE_WIDTH = 1.4
 T90_MARKER = "o"  # matches pe_er_photosphere.py's GRB080916C marker (T90_MARKERS[0])
-
-
-def episode_order(label):
-    """Sort key putting episodes in temporal order: T90, EX0, TR1..TRn, EX1."""
-    fixed = {"T90": 0, "EX0": 1, "EX1": 90}
-    if label in fixed:
-        return fixed[label]
-    if label.startswith("TR"):
-        return 10 + int(label[2:])
-    return 99
 
 
 def is_bb_model(model_name):

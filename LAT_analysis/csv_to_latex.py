@@ -34,7 +34,7 @@ TS_SECURE_DETECTION = 25.0
 # not a genuine measurement -- three different episodes (across two bursts) land within 0.0007 of
 # -6.00 (actual fitted values -5.999986, -5.999931, -5.999390), which is only plausible as a hard
 # boundary, not three independent fits converging to the same physical value.
-# Flagged 2026-09-04 (quick-fixes-mid-priority.md item: "Table 8 mein pinned indices").
+# Flagged 2026-09-04 (HISTORIC_PAPER_REVIEW.md, §quick-fixes-mid-priority.md item: "Table 8 mein pinned indices").
 PINNED_INDEX_VALUE = -6.00
 PINNED_INDEX_TOL = 1e-2
 

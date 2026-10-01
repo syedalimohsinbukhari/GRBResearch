@@ -1,5 +1,4 @@
-"""
-Minimum Lorentz Factor Calculator
+"""Minimum Lorentz factor Calculator
 ===================================
 Computes Gamma_min using the gamma-gamma opacity method.
 
@@ -8,8 +7,7 @@ Reference: Lithwick & Sari (2001), ApJ, 555, 540
 
 Formula (Lithwick & Sari 2001, Limit A, Table 1 with redshift corrections):
 
-    tau_hat = 2.1e11 * [(d_L/7Gpc)^2 * (0.511)^(-alpha+1) * f_1]
-              / [(delta_T/0.1s) * (alpha-1)]
+    tau_hat = 2.1e11 * [(d_L/7Gpc)^2 * (0.511)^(-alpha+1) * f_1] / [(delta_T/0.1s) * (alpha-1)]
 
     Gamma_min = tau_hat^(1/(2a+2))
                 * (E_max/0.511)^((a-1)/(2a+2))
@@ -23,27 +21,29 @@ Formula (Lithwick & Sari 2001, Limit A, Table 1 with redshift corrections):
         z        = redshift
         d_L      = luminosity distance [cm]
 
-Spectral parameters are read from ``results.json`` through the ``grb_research``
-class API (``prepare_grbs`` -> ``GRB`` -> ``Model``) rather than being restated
-here, so this script cannot drift out of sync with the fitted-model database.
-Only quantities that do not live in ``results.json`` — the LAT photon
-properties and the redshifts — are tabulated below.
+Spectral parameters are read from ``results.json`` through the ``grb_research`` class API
+(``prepare_grbs`` -> ``GRB`` -> ``Model``) rather than being restated here, so this script cannot drift out of sync
+with the fitted-model database.
+Only quantities that do not live in ``results.json`` — the LAT photon properties and the redshifts — are tabulated below.
 
 delta_T (t_v) precedence, per episode (see ``variability_timescale()``):
-    1. a literature override, if one is entered in ``VARIABILITY_TIMESCALE``;
-    2. a measured value from the Norris-pulse fits in
-       ``codes-for-paper/variability_analysis/`` (Phase 5), if one exists for
-       that episode and passes the ``MC_KEPT_FRACTION_MIN`` quality gate --
-       see ``load_norris_tv()`` and ``lorentz_factor.md``;
-    3. otherwise the episode's own duration, an upper bound on the true t_v
-       (conservative by construction, the original convention).
+    1. A literature override, if one is entered in ``VARIABILITY_TIMESCALE``;
+    2. A measured value from the Norris-pulse fits in ``codes-for-paper/variability_analysis/`` (Phase 5), if one exists
+       for that episode and passes the ``MC_KEPT_FRACTION_MIN`` quality gate -- see ``load_norris_tv()`` and
+       ``lorentz_factor.md``;
+    3. Otherwise the episode's own duration, an upper bound on the true t_v (conservative by construction, the original
+       convention).
 
 Outputs:
-    lorentz_results.csv   — all computed values
-    lorentz_table.tex     — LaTeX table for paper
+    - lorentz_results.csv   — all computed values
+    - lorentz_table.tex     — LaTeX table for paper, rendered by generate_lorentz_table.py
 """
 
 from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -311,7 +311,7 @@ def compute_tau_hat(alpha_LS, f_1, delta_T_s, z):
     d_L_cm = cosmo.luminosity_distance(z).cgs.value
     d_7Gpc = d_L_cm / (7.0 * 3.0857e27)
 
-    return 2.1e11 * d_7Gpc**2 * (0.511) ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
+    return 2.1e11 * d_7Gpc**2 * 0.511 ** (-alpha_LS + 1) * f_1 / ((delta_T_s / 0.1) * (alpha_LS - 1))
 
 
 def compute_gamma_min(alpha_LS, f_1, E_max_MeV, delta_T_s, z):
@@ -501,113 +501,7 @@ def main():
     df.drop(columns=["tex_name"]).to_csv("lorentz_results.csv", index=False)
     print("\nSaved: lorentz_results.csv")
 
-    with open("lorentz_table.tex", "w") as handle:
-        handle.write(build_latex_table(results))
-    print("Saved: lorentz_table.tex")
-
-
-def fmt(val, fmt_str):
-    """Format a value for a math-mode table cell, or an unset marker if it is None."""
-    return r"\ldots" if val is None else f"${format(val, fmt_str)}$"
-
-
-# t_v source -> table marker. "literature" carries none today (VARIABILITY_TIMESCALE is empty),
-# but is included so a future entry there doesn't need this map touched again.
-T_V_SOURCE_MARKER = {"duration": r"\dagger", "norris": r"\ast", "literature": ""}
-
-
-def fmt_t_v(r):
-    """Format the t_v cell: a bare value with its source marker, or value +- error for a measured one.
-
-    Per-cell, not per-column -- t_v_source now varies row to row (duration vs. a measured Norris
-    value, see load_norris_tv()), so a single header dagger can no longer describe every row.
-    """
-    if r["t_v_s"] is None:
-        return r"\ldots"
-
-    marker = T_V_SOURCE_MARKER[r["t_v_source"]]
-    if r["t_v_source"] == "norris":
-        return f"${r['t_v_s']:.3f}^{{+{r['t_v_err_upper_s']:.3f}}}_{{-{r['t_v_err_lower_s']:.3f}}}\\,{marker}$"
-    return f"${r['t_v_s']:.3f}" + (f"\\,{marker}" if marker else "") + "$"
-
-
-def build_latex_table(results):
-    """Render the per-episode Gamma_min table.
-
-    Bursts without a redshift never yield a Gamma_min (z enters d_L in tau_hat), so
-    they are dropped from the table entirely rather than shown as all-ellipsis rows
-    -- the CSV keeps every row regardless, this is a table-only presentation choice.
-    """
-    results = [r for r in results if r["z"] is not None]
-
-    rows = ""
-    current = None
-    for r in results:
-        if r["GRB"] != current:
-            if current is not None:
-                rows += "    \\midrule\n"
-            rows += f"    \\multicolumn{{7}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
-            current = r["GRB"]
-
-        gamma = None if r["Gamma_min"] is None else round(r["Gamma_min"])
-        # Markers go inside the math group, not appended as a second one.
-        if gamma is None:
-            gamma_str = r"\ldots"
-        else:
-            gamma_str = f"${gamma}_{{-{r['Gamma_min_err_lower']:.0f}}}^{{+{r['Gamma_min_err_upper']:.0f}}}"
-            if r["low_significance"]:
-                gamma_str += r"\,^{\ddagger}"
-            gamma_str += "$"
-
-        rows += (
-            f"    {r['episode']} & {fmt(r['z'], '.2f')} & {fmt(r['E_max_MeV'] / 1e3, '.2f')} & "
-            f"{fmt(r['t_arr_s'], '.2f')} & {fmt_t_v(r)} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
-        )
-
-    return (
-        "% AUTO-GENERATED by codes-for-paper/lorentz_factor/lorentz_factor.py\n"
-        "% Do not edit by hand — regenerate from results.json instead.\n"
-        r"""\begin{table}[!ht]
-\centering
-\caption{Minimum bulk Lorentz factor $\Gamma_{\min}$ from the gamma-gamma opacity
-condition, evaluated for every episode with \ac{LAT} coverage.
-$E_{\rm GeV}$ is the highest-energy \ac{LAT} photon of that episode,
-$t_{\rm arr}$ its arrival time relative to $T_0$,
-$t_{\rm v}$ the variability timescale,
-$\beta$ the high-energy photon index of the episode's best-fit model,
-and $\Gamma_{\min}$ the derived lower limit~\citep{Lithwick2001}.
-Errors on $\Gamma_{\min}$ are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo
-draws (seed __SEED__) of the spectral parameters (and, for a $\dagger$-free $t_{\rm v}$, of
-$t_{\rm v}$'s own measured uncertainty as well); they are far smaller than the systematic
-uncertainty from the analytic approximation adopted, and should not be read as the total
-uncertainty.
-Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z = 4.35$);
-the other three bursts lack a measured redshift, so $\Gamma_{\min}$ is undetermined for
-them and they are omitted from this table.}
-\label{tab:lorentz}
-\resizebox{\columnwidth}{!}{
-\begin{threeparttable}
-\renewcommand{\arraystretch}{1.25}
-\begin{tabular}{lcccccc}
-\toprule
-Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
-    $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
-\midrule
-"""
-        + rows
-        + r"""\bottomrule
-\end{tabular}
-\begin{tablenotes}
-\footnotesize
-\item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$.
-\item[$\ast$] Measured variability timescale from a joint Norris-pulse fit to the light curve, given with its $1\sigma$ Monte Carlo uncertainty.
-\item[$\ddagger$] \ac{LAT} detection with $\mathrm{TS} < 25$; the highest-energy photon association is not secure.
-\end{tablenotes}
-\end{threeparttable}
-}
-\end{table}
-"""
-    ).replace("__SEED__", str(SEED))
+    subprocess.run([sys.executable, str(Path(__file__).parent / "generate_lorentz_table.py")], check=True)
 
 
 if __name__ == "__main__":

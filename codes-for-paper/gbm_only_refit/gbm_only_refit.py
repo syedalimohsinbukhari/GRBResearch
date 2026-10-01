@@ -2,7 +2,7 @@
 GBM-only Refit Robustness Check for GRB131014A
 ===============================================
 
-Weakness #6 (review-resolution.md) asks whether the blackbody (BB) detections
+Weakness #6 (HISTORIC_PAPER_REVIEW.md, §review-resolution.md) asks whether the blackbody (BB) detections
 in GRB131014A's five episodes could be an artefact of including Fermi-LAT data
 in the joint GBM+LAT fit, given the burst's large (~70 deg) LAT off-axis angle
 for its entire T90. A joint fit cannot rule this out on its own: if LAT

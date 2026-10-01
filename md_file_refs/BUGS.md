@@ -595,7 +595,7 @@ Found 2026-08-31 while extending `bb_flux_fraction.py` for the rest-frame $f_\te
 
 ### BUG-19 — `convert_sbpl_to_band` silently overwrote a caller-supplied `rng` whenever `seed` was also given — **FIXED**
 
-Found 2026-09-03 while auditing every function that accepts both `seed` and `rng` parameters, as part of the RNG-seeding overhaul (`SEED_PLAN.md`). `convert_sbpl_to_band`'s old body opened with `if seed is not None: rng = np.random.default_rng(seed)` — unconditional, with no check for whether `rng` had already been supplied non-`None`. Any caller passing both `seed=` and `rng=` together would silently get the `seed`-derived generator instead of the one they explicitly passed in — the opposite of `get_rng`'s own precedence, where `rng` wins.
+Found 2026-09-03 while auditing every function that accepts both `seed` and `rng` parameters, as part of the RNG-seeding overhaul (`HISTORIC_SEEDING.md`, §SEED_PLAN.md). `convert_sbpl_to_band`'s old body opened with `if seed is not None: rng = np.random.default_rng(seed)` — unconditional, with no check for whether `rng` had already been supplied non-`None`. Any caller passing both `seed=` and `rng=` together would silently get the `seed`-derived generator instead of the one they explicitly passed in — the opposite of `get_rng`'s own precedence, where `rng` wins.
 
 **Impact: none realized.** No caller in the codebase ever passed both arguments together — confirmed by checking every call site before the fix (`model_parameters/utils.py::extract_kt_epeak_from_models`, the only caller, always passed `rng=` alone). A latent precedence bug, not a wrong number in the paper.
 

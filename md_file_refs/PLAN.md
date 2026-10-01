@@ -93,7 +93,7 @@ Checking whether `LAT_analysis/` could replace `lorentz_factor.py`'s hand-transc
 
 ## Phase 4c — Unplanned: RNG/seeding overhaul
 
-*Not in the original plan; reviewer-driven, done 2026-09-02/03 after Phase 4b. Full account in `SEED_PLAN.md` (the plan) and `SEED_PLAN-implementation.md` (what actually landed, item by item, with verification results); the scheme itself is documented in `src/grb_research/SEEDING.md`.*
+*Not in the original plan; reviewer-driven, done 2026-09-02/03 after Phase 4b. Full account now archived in `HISTORIC_SEEDING.md`, §SEED_PLAN.md (the plan) and §SEED_PLAN-implementation.md (what actually landed, item by item, with verification results); the scheme itself is documented in `src/grb_research/SEEDING.md`.*
 
 A paper reviewer flagged that Monte Carlo draws across the codebase reused the same literal seed (`12345`, sometimes `1234`/`42`) independently in many scripts. Investigation found something worse: several scripts rebuilt an identically-seeded generator on *every iteration* of a loop over models/GRBs/episodes — a correctness bug (silently correlated/duplicated draws across iterations meant to be independent), not just a style concern.
 

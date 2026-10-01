@@ -20,8 +20,8 @@ RANDOM_SEED = seed_from_name(__file__)
 # "8 keV--40 MeV" range for the paper's "high GBM fluence" sample-selection
 # criterion (fixed 2026-09-01: this previously silently used the
 # FluxFluenceCalculator default of 10 keV-1 MeV, a narrower band than the
-# criterion it was meant to substantiate -- see review-resolution.md
-# Priority 3 item 8).
+# criterion it was meant to substantiate -- see HISTORIC_PAPER_REVIEW.md
+# (md_file_refs/), §review-resolution.md, Priority 3 item 8).
 E_MIN_KEV = 8.0
 E_MAX_KEV = 40_000.0  # 40 MeV
 LOG_ENERGY_RANGE = (np.log10(E_MIN_KEV), np.log10(E_MAX_KEV))

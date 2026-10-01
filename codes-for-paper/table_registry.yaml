@@ -24,6 +24,9 @@ active:
     amati_relationship_table:
         source: codes-for-paper/amati_relationship/amati_relationship_table.tex
         dest: tex_files/generated/amati_relationship_table.tex
+    amati_relationship_unknown_z_table:
+        source: codes-for-paper/amati_relationship/amati_relationship_unknown_z_table.tex
+        dest: tex_files/generated/amati_relationship_unknown_z_table.tex
     bb_fraction_table:
         source: codes-for-paper/bb_fraction/bb_fraction_table.tex
         dest: tex_files/generated/bb_fraction_table.tex

@@ -300,7 +300,7 @@ def plot_unknown_redshift_grb(
     *,
     rng: np.random.Generator,
     axis=None,
-) -> tuple[list, list, list, list]:
+) -> tuple[list, list, list, list, list, list]:
     """
     Plot a GRB with unknown redshift across several assumed z values.
 
@@ -324,6 +324,19 @@ def plot_unknown_redshift_grb(
         Shared generator, threaded through every model/z-value's MC draws.
     axis : matplotlib Axes
         Target axes object. Required.
+
+    Returns
+    -------
+    ep_all, ei_all :
+        Median E_peak/E_iso per (episode, z) pair, flat, in z_values order per episode.
+    ep_name, model_list :
+        Episode label / model name per entry, same flattening.
+    ep_err_all, ei_err_all :
+        (2, 1)-shaped asymmetric 1-sigma MC error per entry, same flattening as ep_all/ei_all --
+        previously computed by _plot_model_point() for every z draw but discarded here (only used
+        for the errorbar draw on the locus plot); kept now so a table can report whether the MC
+        spread at fixed z is negligible next to the spread the z sweep itself induces, rather than
+        assuming so.
     """
     if axis is None:
         raise ValueError("An axis must be provided.")
@@ -331,6 +344,7 @@ def plot_unknown_redshift_grb(
     resolver = EpisodeMarkerResolver(t90_marker=t90_marker)
 
     ep_all, ei_all = [], []
+    ep_err_all, ei_err_all = [], []
     ep_name = []
     model_list = []
 
@@ -345,7 +359,7 @@ def plot_unknown_redshift_grb(
             # Label only on the first redshift so the legend has one entry per episode, not one per (episode × z).
             label = _episode_label(m) if z_idx == 0 else ""
 
-            ep, ei, _, _ = _plot_model_point(
+            ep, ei, ep_err, ei_err = _plot_model_point(
                 m=m,
                 redshift=z,
                 marker=marker,
@@ -362,10 +376,12 @@ def plot_unknown_redshift_grb(
 
             ep_all.append(ep)
             ei_all.append(ei)
+            ep_err_all.append(ep_err)
+            ei_err_all.append(ei_err)
             model_list.append(m.name)
             ep_name.append(_episode_label(m))
 
         # Connect the z-track for this episode on the correct axis
         axis.plot(ep_track, ei_track, ls="--", color=color, alpha=0.5, zorder=1)
 
-    return ep_all, ei_all, ep_name, model_list
+    return ep_all, ei_all, ep_name, model_list, ep_err_all, ei_err_all
