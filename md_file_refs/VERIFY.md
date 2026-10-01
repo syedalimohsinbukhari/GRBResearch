@@ -623,7 +623,7 @@ Status: **CONFIRMED** (2026-09-04, source + user visual confirmation)
 
 **What to check:**
 
-1. Both new tables compile and fit the column width (`resizebox` inside `threeparttable`); Table A has 8 columns, B has 7.
+1. Both new tables compile and fit the column width (`resizebox` now wraps the whole `threeparttable`, tablenotes included, as of 2026-10-02); Table A has 8 columns, B has 7. The $\dagger$/$\ddagger$ markers are now on the episode names (e.g. `TR5$^{\dagger,\ddagger}$`), not on the values.
 2. `\ddagger` and `\dagger` footnotes appear in Table A (TS < 25 rows: GRB140206B TR5, GRB231129C EX0/TR1) and only
    `\dagger` and the "$-$" note in Table B; the "-" cells are only GRB140206B TR6.
 3. `\cref{tab:seed_table}` and `\citep{Lithwick2001}` in the new captions/prose resolve; no undefined references.
@@ -636,6 +636,49 @@ Status: **CONFIRMED** (2026-09-04, source + user visual confirmation)
    what you want.
 
 **Why:** the LaTeX build was deliberately left to the user (not run), so nothing above has been checked against a build.
+
+Status: **CONFIRMED** (2026-10-02, user reports the paper compiles properly; item 5 resolved by the follow-up edit to line ~221 -- see the entry below; items 1-4 and 6 rest on the user's build check, not on a separate item-by-item read)
+
+---
+
+### 2026-10-02 — Line ~221 rewording, and the thermal-vs-limits redshift figure (`fig:gamma_comparison_unknown_z`)
+
+**What changed:**
+
+- `section-5-data-analysis.tex` line ~221: "For the rest, we evaluate the limit separately..." now says the limit is evaluated for every
+  LAT episode, with an assumed-redshift sweep for the three no-redshift bursts described at the end of the subsection;
+  the next sentence now says `tab:lorentz` lists the episodes of GRB080916C.
+- New `figure*` `fig:gamma_comparison_unknown_z` (`images/section5/gamma_comparison_unknown_z.png`, from
+  `codes-for-paper/lorentz_factor/gamma_comparison_unknown_z_plot.py`) after the two sweep tables, with a paragraph comparing
+  Limit A / Limit B with the thermal Gamma.
+
+**What to check:**
+
+1. The limit curves (new `lorentz_curves_*_unknown_z.csv`) pass through the table values at z = 1, 3, 5, 7 (lines only -- the markers are disabled, commented out in the script), and the 2x2 figure renders at `0.75\textwidth` (a `figure*`) at a legible size, and its per-panel "BEST model" legends are legible; `fig:gamma_comparison_unknown_z`
+   resolves.
+2. The paragraph's numbers match the figure/tables: thermal Gamma exceeds Limit A by 1.1-3.6x and Limit B by 2.7-9.4x in all
+   ten BB episodes at z = 1, 3, 5 (z = 1, 3, 5, 7 are exact points on the thermal grid since the extension, so no interpolation);
+   GRB131014A closest (1.1-1.6x over Limit A), GRB140206B weakest (3.1-3.6x).
+3. "the ratios are nearly independent of the assumed redshift" -- true to ~0.01 in the ratio range across z = 1, 3, 5 in the
+   computation, but worth a glance that the figure shows the curves and markers rising in step.
+4. The thermal curve now runs to z = 7 (the photospheric sweep was extended from 5 to 7 on 2026-10-02): check that `fig:photospheric` is still legible with the longer log axis (ticks 0.5-7), and that the three edited statements in the photospheric subsection read correctly ("$0.5\le z\le7$", "factor $\approx4.5$ ... $z=0.5$ to $z=7$", "upper end ($z=7$) ... $5.1$--$11.4\times10^{12}$ cm"). The comparison paragraph now quotes ratios at z = 1, 3, 5, 7 (1.1-3.6x over Limit A, 2.7-9.5x over Limit B), taken at exact grid points rather than interpolated.
+
+**Why:** the LaTeX build was left to the user, so none of this has been checked against a build.
+
+Status: **PENDING**
+
+---
+
+### 2026-10-02 — Sweep-table values changed for five episodes (pulse-selection rule now the fitters')
+
+**What changed:** `lorentz_factor.py::load_norris_tv()` now selects the pulse with the fitters' photon-to-pulse rule (`lorentz_factor.md` §15). The Limit A / Limit B sweep tables
+(`tab:lorentz_unknown_z`, `tab:lorentz_limit_b_unknown_z`) were regenerated and synced to `tex_files/generated/`; five rows changed (GRB140206B TR4; GRB231129C EX0, TR1, TR2, EX1). GRB080916C's tables are identical.
+
+**What to check:**
+
+1. The five rows' $t_v$ and $\Gamma_{\min}$ in the rendered tables match `lorentz_results_unknown_z.csv` / `lorentz_results_limit_b_unknown_z.csv` (e.g. GRB231129C TR2: $t_v=0.824$, Limit A at $z=1$ is 175, Limit B 72; GRB140206B TR4: $t_v=3.230^{+0.090}_{-0.093}$ (was $14.499$), Limit A 115 and Limit B 53 at $z=1$).
+2. `fig:gamma_comparison_unknown_z` redrawn: GRB231129C's EX0/TR1/TR2/EX1 limit curves moved by a few percent, and GRB140206B's TR4 is not in the figure (no blackbody).
+3. No prose number needs changing (all quoted ranges and ratios were re-verified against the new CSVs).
 
 Status: **PENDING**
 

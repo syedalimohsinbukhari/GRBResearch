@@ -18,7 +18,8 @@ Design, mirroring ``amati_relationship.py``:
   - Episodes with no usable high-energy index (e.g. a CPL best fit) get empty Gamma columns.
 
 Outputs:
-    - lorentz_results_unknown_z.csv   -- all computed values
+    - lorentz_results_unknown_z.csv   -- all computed values, at z = 1, 3, 5, 7
+    - lorentz_curves_unknown_z.csv    -- the same on a dense z grid, for the comparison figure
     - lorentz_table_unknown_z.tex     -- rendered by generate_lorentz_table_unknown_z.py
 """
 
@@ -53,6 +54,10 @@ from lorentz_factor import (
 from lorentz_factor_limit_b import compute_gamma_min_limit_b
 
 Z_VALUES = (1, 3, 5, 7)
+# Dense grid for the redshift curves in gamma_comparison_unknown_z_plot.py: log-spaced over the photospheric sweep's range
+# (0.5-7), plus the four tabulated z so every table value is also an exact curve point.  The curves reuse each episode's
+# existing draw set, so they consume no extra random numbers and the table values are unaffected.
+Z_CURVE = np.unique(np.append(np.logspace(np.log10(0.5), np.log10(7.0), 60), Z_VALUES))
 
 # Independent of lorentz_factor_limit_b_unknown_z.py's seed: that script's __file__ differs.
 SEED = seed_from_name(__file__)
@@ -69,12 +74,16 @@ def run_sweep(limit, rng, seed):
     """Gamma_min for ``limit`` ('A' or 'B') at every swept z, for each no-redshift burst's LAT episodes.
 
     Shared by this script (Limit A) and ``lorentz_factor_limit_b_unknown_z.py`` (Limit B), each passing
-    its own ``rng``/``seed`` so the two limits use independent draws.  Returns a DataFrame, one row per episode.
+    its own ``rng``/``seed`` so the two limits use independent draws.
+
+    Returns ``(table, curve)``: ``table`` is one row per episode with Gamma at each of ``Z_VALUES``; ``curve`` is the same
+    quantity (best fit, with the same percentile-based errors) on the dense ``Z_CURVE`` grid, one row per episode and z.
     """
     root = find_project_root()
     _, _, grb_objects, _ = prepare_grbs(grb_list=GRB_LIST, result_file=root / "results.json", get_best=True)
 
     results = []
+    curve_rows = []
     header = f"{'GRB':<12}{'Ep.':<6}{'model':<10}{'alpha':>7}{'dT [s]':>9}" + "".join(
         f"{'z=' + str(z):>12}" for z in Z_VALUES
     )
@@ -160,14 +169,33 @@ def run_sweep(limit, rng, seed):
             print(line + ("  *" if limit == "A" and row["low_significance"] else ""))
             results.append(row)
 
-    return pd.DataFrame(results)
+            for z in Z_CURVE:
+                gamma = _gamma(limit, alpha_ls, f_1, e_max_mev, delta_t, z)
+                draws = _gamma(limit, alpha_draws[usable], f1_draws[usable], e_max_mev, delta_t_for_draws[usable], z)
+                lo, med, hi = np.percentile(draws[np.isfinite(draws)], PERCENTILES)
+                curve_rows.append(
+                    {
+                        "GRB": f"GRB{short_name}",
+                        "episode": episode,
+                        "model": model.name,
+                        "z": z,
+                        f"Gamma_min_{limit}": gamma,
+                        f"Gamma_min_{limit}_err_lower": med - lo,
+                        f"Gamma_min_{limit}_err_upper": hi - med,
+                        "seed": seed,
+                    }
+                )
+
+    return pd.DataFrame(results), pd.DataFrame(curve_rows)
 
 
 def main():
     """Limit A sweep: write the CSV, then render its table."""
     out_dir = Path(__file__).parent
-    run_sweep("A", get_rng(seed=SEED), SEED).to_csv(out_dir / "lorentz_results_unknown_z.csv", index=False)
-    print("\nSaved: lorentz_results_unknown_z.csv")
+    table, curve = run_sweep("A", get_rng(seed=SEED), SEED)
+    table.to_csv(out_dir / "lorentz_results_unknown_z.csv", index=False)
+    curve.to_csv(out_dir / "lorentz_curves_unknown_z.csv", index=False)
+    print("\nSaved: lorentz_results_unknown_z.csv, lorentz_curves_unknown_z.csv")
 
     subprocess.run([sys.executable, str(out_dir / "generate_lorentz_table_unknown_z.py"), "A"], check=True)
 

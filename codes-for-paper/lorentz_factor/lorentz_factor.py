@@ -30,7 +30,8 @@ delta_T (t_v) precedence, per episode (see ``variability_timescale()``):
     1. A literature override, if one is entered in ``VARIABILITY_TIMESCALE``;
     2. A measured value from the Norris-pulse fits in ``codes-for-paper/variability_analysis/`` (Phase 5), if one exists
        for that episode and passes the ``MC_KEPT_FRACTION_MIN`` quality gate -- see ``load_norris_tv()`` and
-       ``lorentz_factor.md``;
+       ``lorentz_factor.md``.  The pulse is the one the fitters themselves assign the episode's LAT photon to
+       (nearest preceding onset among still-active pulses; ``lorentz_factor.md`` section 15);
     3. Otherwise the episode's own duration, an upper bound on the true t_v (conservative by construction, the original
        convention).
 
@@ -143,16 +144,50 @@ def load_lat_photons(csv_path=LAT_PHOTONS_CSV):
 LAT_PHOTONS, LOW_SIGNIFICANCE = load_lat_photons()
 
 
+# Photon-to-pulse rule of the Norris fitters (variability_analysis/shared_utilities.py::assign_pulse), reimplemented here
+# rather than imported across folders (this project's "copy rather than fight sys.path" convention).  A photon at time t
+# is assigned to the pulse with the latest onset t_s <= t among the pulses still "active" at t, i.e. whose own value at t
+# is at least ACTIVE_THRESHOLD_FRAC of its own peak.  ACTIVE_THRESHOLD_FRAC must match shared_utilities.py's constant;
+# verified 2026-10-02 against all 15 photon assignments the fitters recorded in norris_fit_results_GRB*.csv.
+ACTIVE_THRESHOLD_FRAC = 0.01
+
+
+def _norris_value(t, amplitude, t_s, tau1, tau2):
+    """Norris pulse value at ``t`` (zero before onset); same form as ``norris_fit.norris_pulse``."""
+    if t <= t_s:
+        return 0.0
+    return amplitude * np.exp(2.0 * np.sqrt(tau1 / tau2)) * np.exp(-tau1 / (t - t_s) - (t - t_s) / tau2)
+
+
+def assigned_pulse(pulses, t_arr):
+    """Pulse index the fitters' rule assigns a photon at ``t_arr`` to, or ``None`` if no pulse is active then.
+
+    ``pulses`` is a DataFrame with one row per distinct pulse (index = ``pulse_index``) and the columns
+    ``A_cts_per_s``, ``t_s``, ``tau1``, ``tau2``, ``t_peak_s``.
+    """
+    active = []
+    for index, pulse in pulses.iterrows():
+        if pulse.t_s > t_arr:
+            continue
+        peak = _norris_value(pulse.t_peak_s, pulse.A_cts_per_s, pulse.t_s, pulse.tau1, pulse.tau2)
+        value = _norris_value(t_arr, pulse.A_cts_per_s, pulse.t_s, pulse.tau1, pulse.tau2)
+        if peak > 0 and value / peak >= ACTIVE_THRESHOLD_FRAC:
+            active.append(index)
+    return max(active, key=lambda j: pulses.loc[j].t_s) if active else None
+
+
 def load_norris_tv(photons):
     """Per-episode measured t_v from the manual Norris-pulse fits, one row selected per episode.
 
     Several episodes have more than one candidate pulse (their window overlaps a neighbouring
     episode's -- e.g. EX0 is a strict superset of TR1's window, so a pulse belonging to TR1 also
-    falls inside EX0). Where more than one candidate exists, the one whose ``t_peak_s`` is closest
-    to that episode's own Gamma_min-defining LAT photon arrival time (``t_arr_s``, from `photons`)
-    is selected -- the rule locked in `PHASE5_TV_PLAN.md` for the (abandoned) automated pipeline,
-    applied here to the manual joint-fit CSVs instead. Every episode this function is ever asked
-    about is already restricted to ``episode in photons`` by the caller, so `t_arr_s` always exists.
+    falls inside EX0).  The pulse that defines the episode's t_v is the one the Norris fitters themselves assign that
+    episode's Gamma_min-defining LAT photon (``t_arr_s``, from `photons`) to: the pulse with the latest onset among
+    those still active at ``t_arr_s`` (see ``assigned_pulse()``).  This replaced a nearest-``t_peak`` rule on
+    2026-10-02 (user decision: the fitter is the primary selector); it changes five GRB231129C/GRB140206B episodes
+    and none of GRB080916C's tabulated ones -- ``lorentz_factor.md`` section 15.  If the assigned pulse is not one of
+    the episode's own candidate rows (or no pulse is active), the episode falls back to its duration with the reason
+    recorded, never silently.
 
     A selected candidate is only used if its `mc_kept_fraction` is at least `MC_KEPT_FRACTION_MIN`;
     otherwise the rejection is recorded (`rejected_reason`) and the caller falls back to duration --
@@ -178,13 +213,32 @@ def load_norris_tv(photons):
 
         table = pd.read_csv(csv_path)
         table = table[table["episode"].notna()]
+        # One row per distinct pulse of the burst (a pulse repeats across every episode window it falls in); the fitters'
+        # assignment rule looks at all of a burst's pulses, not just those of one episode.
+        pulses = table.drop_duplicates("pulse_index").set_index("pulse_index").sort_index()
 
         for episode, t_arr in ((ep, t) for ep, (_, t) in episode_photons.items()):
             candidates = table[table["episode"] == episode]
             if candidates.empty:
                 continue
 
-            row = candidates.loc[(candidates["t_peak_s"] - t_arr).abs().idxmin()]
+            assigned = assigned_pulse(pulses, t_arr)
+            row_match = candidates[candidates["pulse_index"] == assigned] if assigned is not None else candidates.iloc[:0]
+            if row_match.empty:
+                result[(short_name, episode)] = {
+                    "t_v_s": None,
+                    "t_v_err_lower_s": None,
+                    "t_v_err_upper_s": None,
+                    "pulse_index": None if assigned is None else int(assigned),
+                    "mc_kept_fraction": None,
+                    "rejected_reason": (
+                        "no pulse is active at the photon's arrival" if assigned is None
+                        else f"assigned pulse {int(assigned)} is not one of this episode's pulse rows"
+                    ),
+                }
+                continue
+
+            row = row_match.iloc[0]
             kept_fraction = float(row["mc_kept_fraction"])
 
             if kept_fraction < MC_KEPT_FRACTION_MIN:

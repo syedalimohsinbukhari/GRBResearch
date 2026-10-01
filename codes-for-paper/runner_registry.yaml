@@ -12,6 +12,10 @@ scripts:
         note: GBM fluence CSV
     -   path: fluence/csv_to_latex.py
         note: GBM fluence table (reads grb_fluence.py's CSV)
+    -   path: fluence/flux_energyFlux.py
+        note: >-
+            Flux vs. energy-flux plot (reads fluence/flux_energy_flux.csv; no MC, no seed). Not referenced by any
+            figure in the current draft, still a real pipeline script -- included for a complete rebuild
     -   path: variability_analysis/fitter_GRB080916C.py
         note: >-
             Norris-pulse joint fit -> norris_fit_results_GRB080916C.csv (measured t_v, feeds
@@ -53,6 +57,11 @@ scripts:
             rerun to reconfirm the paper's "t_v ~= 1.7 s" claim still holds if lorentz_results.csv changes
     -   path: gbm_only_refit/gbm_only_refit.py
         note: GBM-only refit comparison
+    -   path: gbm_only_refit/gbm_only_refit_3way.py
+        note: >-
+            GRB131014A three-way refit comparison (joint / GBM-only / GBM-only NaI >= 40 keV); imports helpers from
+            gbm_only_refit.py but writes its own separate CSV/figures. Not referenced by any figure in the current
+            draft (seed_registry `unused`) -- included for a complete rebuild
     -   path: bb_fraction/bb_flux_fraction.py
         note: Blackbody flux fraction CSV
     -   path: bb_fraction/csv_to_latex.py
@@ -61,6 +70,17 @@ scripts:
         note: Photospheric radius / Lorentz factor CSV (Pe'er 2007)
     -   path: photospheric_radius/csv_to_latex.py
         note: Photospheric radius table (reads pe_er_photosphere.py's CSV)
+    -   path: lorentz_factor/gamma_comparison_plot.py
+        note: >-
+            GRB080916C Limit A / Limit B / thermal Gamma comparison figure (fig:gamma_comparison); reads
+            lorentz_results.csv, lorentz_results_limit_b.csv and photospheric_radius/pe_er_photosphere.csv, so it must run
+            after all three of their scripts. No MC of its own, so no seed_registry entry
+    -   path: lorentz_factor/gamma_comparison_unknown_z_plot.py
+        note: >-
+            Limit A / Limit B / thermal Gamma vs. assumed z for the three no-redshift bursts, all three as curves (reads the two
+            lorentz_curves_*_unknown_z.csv files from the sweep scripts above and photospheric_radius/pe_er_photosphere.csv, so it
+            must run after all three; no MC of its own, so
+            no seed_registry entry)
     -   path: model_parameters/epeak_vs_kt.py
         note: kT-Epeak correlation (not currently used in the paper, still a real pipeline script)
     -   path: model_parameters/peak_energy.py
@@ -92,5 +112,12 @@ scripts:
 #   LAT_analysis/txt_to_csv.py, csv_to_latex.py -- lives outside codes-for-paper/ entirely, and builds the LAT table
 #       from already-saved gtlike/RMFIT text output, not a fresh MC pipeline (no N_GRID/seed involved at all) --
 #       out of scope for "rerun the analysis pipeline."
+#   beta_lat_consistency/beta_lat_consistency.py -- a diagnostic that writes the comparison table in
+#       beta_lat_consistency.md (no CSV/figure/paper table, no MC, no seed).
+#   lorentz_factor/generate_lorentz_table*.py -- CSV-to-LaTeX renderers; chained by subprocess from the Lorentz-factor
+#       compute scripts above, so not separate runner steps (same reason as the note on lorentz_factor.py).
+#   variability_analysis/GRB*/fitter_{,un}normalized*.py, _common.py, shared_utilities.py, norris_fit.py -- exploratory
+#       normalized-vs-unnormalized Norris fits (seed_registry `unused`) and shared helper modules; the canonical per-burst
+#       fits are fitter_GRB<paper-name>.py above.
 #   seed_table_to_latex.py, sync_paper_assets.py -- paper-output plumbing, not analysis; run these separately, after
 #       this list, if the seed table or the paper repo's copies need refreshing too.

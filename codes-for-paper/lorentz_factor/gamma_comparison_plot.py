@@ -171,12 +171,12 @@ def make_plot(limit_a, limit_b, thermal, path_stem="gamma_comparison"):
     # the thermal-Gamma points are the highest values on this log axis, so an in-axes "upper left" box sat directly on
     # top of them.
     legend1 = axis.legend(
-        handles=method_handles, loc="upper left", bbox_to_anchor=(1.02, 1.0), fontsize=LEGEND_FONT_SIZE, frameon=True
+        handles=method_handles, loc="upper left", bbox_to_anchor=(1.01, 1.0), fontsize=LEGEND_FONT_SIZE, frameon=True
     )
     axis.add_artist(legend1)
     legend2 = axis.legend(
         handles=episode_handles,
-        bbox_to_anchor=(1.06, 0.55),
+        bbox_to_anchor=(1.01, 0.55),
         fontsize=LEGEND_FONT_SIZE,
         title=f"BEST model",
         title_fontsize=LEGEND_FONT_SIZE,

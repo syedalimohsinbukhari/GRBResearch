@@ -32,6 +32,9 @@ active:
     gamma_comparison:
         source: codes-for-paper/lorentz_factor/gamma_comparison.png
         dest: images/section5/gamma_comparison.png
+    gamma_comparison_unknown_z:
+        source: codes-for-paper/lorentz_factor/gamma_comparison_unknown_z.png
+        dest: images/section5/gamma_comparison_unknown_z.png
     high_index_best_all:
         source: codes-for-paper/model_parameters/high_index_best__all.png
         dest: images/section5/high_index_best__all.png
@@ -70,5 +73,18 @@ unused:
     gbm_only_refit_fractional_diff:
         source: codes-for-paper/gbm_only_refit/gbm_only_refit_fractional_diff.png
         note: "the one MC-derived plot this script produces; not referenced by any figure in the current draft (see md_file_refs/HISTORIC_SEEDING.md, SEED_PLAN-implementation.md section)"
+
+    gbm_only_refit_3way_delta_cstat:
+        source: codes-for-paper/gbm_only_refit/gbm_only_refit_3way_delta_cstat.png
+        note: "GRB131014A three-way refit; not referenced by any figure in the current draft (see seed_registry.yaml gbm_only_refit_3way)"
+    gbm_only_refit_3way_fractional_diff:
+        source: codes-for-paper/gbm_only_refit/gbm_only_refit_3way_fractional_diff.png
+        note: "as gbm_only_refit_3way_delta_cstat above"
+    gbm_only_refit_3way_kt_comparison:
+        source: codes-for-paper/gbm_only_refit/gbm_only_refit_3way_kt_comparison.png
+        note: "as gbm_only_refit_3way_delta_cstat above"
+    flux_vs_energy_flux:
+        source: codes-for-paper/fluence/flux_vs_energy_flux.png
+        note: "fluence/flux_energyFlux.py; not referenced by any figure in the current draft"
 
 no_known_source: { }

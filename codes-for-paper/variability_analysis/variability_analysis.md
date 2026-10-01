@@ -882,3 +882,87 @@ Shared infrastructure (all four bursts above):
   3 windows × 5 or 7 pulses = 36 rows), and one fitted-light-curve plot per model per window width
   (`window_sensitivity_{simple,complex}_{narrow_-1_160,wide_-20_300,widest_full_range}.png/.pdf`, 6 plots
   total).
+
+---
+
+## Literature precedent for overlapping Norris fits, and which pulse sets $t_v$ — **added 2026-10-02**
+
+Prompted by the observation that most TR episodes are covered by several overlapping pulses, and that a later pulse can be suppressed by an
+earlier pulse's tail (e.g. GRB080916C norris3 in TR2 under norris2 from TR1). Read-only audit; **no code was changed**. The PDFs are in
+`GRBResearchPaper/Literature Review/` (gitignored). Only abstracts and the search snippets were checked, not each paper's fitting procedure,
+so what they do for $t_v$ specifically is unconfirmed.
+
+### 1. What the literature says
+
+- **Joint decomposition into many overlapping pulses is standard practice.** `Norris1996` (ApJ 459, 393; >400 pulses in 41 bright BATSE bursts),
+  `Norris2005` (long-lag, wide-pulse GRBs), `Kocevski2003` (curvature-effect pulse function; `Zhang2005` is the physical follow-up).
+- **Non-uniqueness for heavily overlapping pulses is explicitly acknowledged.** `Hakkila2011` (Hakkila & Preece, ApJ 740, 104): unique extraction of
+  heavily overlapping and low-S/N pulses is hard and the solutions are inherently non-unique; one apparent pulse can hide several, so one pulse's
+  signal becomes noise for another. The project's `Hakkila2026` (systematic-uncertainty case study) is the more recent version of the same point,
+  already invoked above for GRB080916C's early structure and for the $t_s$-$\tau_1$ degeneracy.
+- **The main alternative avoids decomposition: minimum variability timescale (MVT).** `MacLachlan2012`/`MacLachlan2013`, `Golkhou2014`,
+  `Golkhou2015` (Haar-wavelet / structure-function estimators); recent validation in `Maccary2025` and `Bala2026`. MVT is model-independent but is
+  a global per-burst number, so there is no natural per-episode value. (An earlier chat message linked arXiv 1409.1232 for this; that is Barnacka's
+  size-duration paper, not an MVT paper -- ignore it.)
+- **No consensus on which pulse sets $t_v$ for an episode** was found. The $\gamma\gamma$ argument wants the variability scale of the region that
+  emitted the photon, which supports tying the pulse to the photon (our rule); using the episode's shortest pulse would give higher $\Gamma_{\min}$
+  and is harder to defend. This is an interpretation, not a literature statement.
+
+**Suggested sentence for the paper, if wanted** (not added anywhere): "Pulses were decomposed jointly; where an earlier pulse's tail overlaps and
+suppresses a later one, the decomposition is inherently non-unique \citep{Hakkila2011}." (Needs a bib entry for Hakkila & Preece 2011.)
+
+### 2. Which pulse does each episode's $\Gamma_{\min}$ actually use
+
+`lorentz_factor.py::load_norris_tv()` takes, among the episode's candidate pulse rows in `norris_fit_results_GRB*.csv`, the pulse whose `t_peak_s` is
+closest to the episode's LAT photon arrival time, gated at `mc_kept_fraction >= 0.5`; otherwise the episode duration. Columns below: `share@peak` =
+fraction of the *total* fitted model flux at that pulse's peak that comes from that pulse (low = overlapped/suppressed); `share@t_arr` = same, at the
+photon's arrival time.
+
+| burst | episode | pulse used | candidates | $\lvert t_\text{peak}-t_\text{arr}\rvert$ [s] | mc_kept | share@peak | share@t_arr |
+|---|---|---|---|---|---|---|---|
+| 080916C | EX0 / TR1 | 2 | 2 / 1 | 0.42 | 0.997 | 0.98 | 0.99 |
+| 080916C | TR2 | 3 | 1 | 1.01 | 0.686 | **0.26** | **0.08** |
+| 080916C | TR3 | 4 | 1 | 14.59 | 1.000 | 0.91 | 0.98 |
+| 131014A | EX0 / TR1 | 3 | 3 / 2 | 0.22 | 1.000 | 0.97 | 0.99 |
+| 131014A | TR2 | 5 | 2 | 0.41 | 1.000 | 0.53 | **0.07** |
+| 131014A | EX1 | 5 | 2 | 0.72 | 1.000 | 0.53 | **0.14** |
+| 140206B | TR2 | 3 | 2 | 4.00 | 1.000 | 0.55 | 0.30 |
+| 140206B | TR3 | 5 | 1 | 0.18 | 0.808 | **0.17** | **0.16** |
+| 140206B | TR4 | 4 | 2 | 1.63 | 1.000 | **0.25** | 0.40 |
+| 231129C | EX0 / TR1 | 1 | 3 | 0.03 | 0.996 | 0.93 | 0.90 |
+| 231129C | TR2 / EX1 | 4 | 3 | 0.35 | 0.808 | 0.65 | 0.43 |
+
+Episodes with no pulse rows fall back to the duration (T90 everywhere; GRB140206B EX0/TR1/TR5).
+Reading: GRB080916C TR2 (the episode behind $\Gamma_{\min}=741$, $t_v=0.43$ s) rests on a pulse that supplies only 26% of the model flux at its peak
+and 8% at the photon's arrival -- exactly the suppressed-by-norris2's-tail case. GRB131014A TR2/EX1 and GRB140206B TR3/TR4 are similar.
+
+### 3. Two selection rules existed in the code and disagreed for five episodes -- **RESOLVED 2026-10-02: the fitters' rule is now used everywhere**
+
+**Resolution (user decision, 2026-10-02):** the fitter is the primary selector, so `lorentz_factor.py::load_norris_tv()` now applies the fitters' rule (nearest preceding onset among
+still-active pulses) instead of nearest `t_peak`; the five tables below were regenerated and synced. Full account in `lorentz_factor.md` §15. The paragraph and tables
+below describe the situation before the change.
+
+- The **fitters** (`shared_utilities.py::assign_pulse`, called identically by all four `fitter_GRB*.py`) assign a photon to the pulse with the latest onset
+  `t_s <= t_arr` among pulses still above `ACTIVE_THRESHOLD_FRAC = 0.01` of their own peak -- nearest-preceding-onset, i.e. temporal proximity.
+- **`load_norris_tv()`** uses nearest `t_peak` to the photon (the rule locked in `PHASE5_TV_PLAN.md`).
+
+They pick different pulses for (checked 2026-10-02 against the CSV parameters):
+
+| episode | rule used for $\Gamma_{\min}$ (nearest $t_\text{peak}$) | fitter assignment rule (nearest preceding onset) |
+|---|---|---|
+| GRB231129C EX0 / TR1 | pulse 1: $t_v=0.812$ s | pulse 3: $t_v=0.606$ s |
+| GRB231129C TR2 / EX1 | pulse 4: $t_v=0.433$ s (mc_kept 0.81) | pulse 5: $t_v=0.824$ s |
+| GRB140206B TR4 | pulse 4: $t_v=14.5$ s | pulse 6: $t_v=3.23$ s |
+| GRB080916C TR5 | pulse 6: $t_v=1.60$ s | pulse 5 (not a candidate row in TR5) |
+
+(The GRB080916C TR5 case is moot: TR5 is cut by the 1 GeV floor.) All other episodes agree. **Which rule is right is the user's call; nothing was
+changed.** Note the effect on the paper: GRB231129C's TR2/EX1 and GRB140206B's TR4 $\Gamma_{\min}$ (new redshift-sweep tables) would change under the
+other rule; GRB080916C's table is unaffected.
+
+### 4. Stale text found while checking
+
+- `assign_pulse`'s docstring said "whichever pulse is dominant at that instant", but the code implements temporal proximity with the 1% active
+  threshold (dominant-flux was replaced; see the 2026-09-22 section above). **Docstring corrected 2026-10-02** (docstring only, no behaviour change).
+- The "Photon-to-pulse assignment" section above, and later ones, describe **dominant-flux for GRB231129C/GRB140206B**. After the 2026-09-27
+  restructure all four fitters call the single shared `assign_pulse`, so that description no longer matches the code.
+

@@ -221,8 +221,10 @@ A Norris fit would replace that upper bound with a measurement. Since $\Gamma_\t
 | `lorentz_table_limit_b.tex` | generated paper table (Limit B) |
 | `lorentz_factor_unknown_z.py` | Limit A redshift sweep for the three no-redshift bursts, plus the shared `run_sweep()` (§13) |
 | `lorentz_factor_limit_b_unknown_z.py` | Limit B redshift sweep, own seed; imports `run_sweep()` (§13) |
+| `gamma_comparison_unknown_z_plot.py` / `.png` / `.pdf` | thermal-vs-limits figure over assumed $z$ for the no-redshift bursts (§13.5) |
 | `generate_lorentz_table_unknown_z.py` | renders either sweep table from its CSV (`A` / `B` argument) |
 | `lorentz_results_unknown_z.csv`, `lorentz_results_limit_b_unknown_z.csv` | one row per no-redshift-burst episode, Gamma columns per swept $z$ |
+| `lorentz_curves_unknown_z.csv`, `lorentz_curves_limit_b_unknown_z.csv` | the same on a dense $z$ grid (60 log-spaced points plus $z=1,3,5,7$), for the comparison figure |
 | `lorentz_table_unknown_z.tex`, `lorentz_table_limit_b_unknown_z.tex` | generated paper tables, Limits A / B at $z=1,3,5,7$ |
 | `gamma_comparison_plot.py` | comparison figure: Limit A, Limit B, thermal $\Gamma$ (§8.6) |
 | `gamma_comparison.png` / `.pdf` | the figure itself, also copied to `GRBResearchPaper/images/section5/` |
@@ -331,7 +333,7 @@ deliberately conservative upper bound), not a bug fix.
 
 ### 11.1 Decisions (user, 2026-09-27)
 
-1. **Multi-pulse → episode selection.** Several episodes have more than one Norris-fitted pulse
+1. **Multi-pulse → episode selection.** **Superseded 2026-10-02 (user decision):** the pulse is now the one the Norris fitters themselves assign the episode's photon to (nearest preceding onset among still-active pulses), not the nearest `t_peak`; see `lorentz_factor.md` §15. The text below describes the original rule. Several episodes have more than one Norris-fitted pulse
    whose `t_peak_s` falls inside their window (e.g. `EX0` is a strict superset of `TR1`'s window,
    so `TR1`'s own pulse is also a candidate for `EX0`). The candidate whose `t_peak_s` is closest
    to that episode's own $\Gamma_\text{min}$-defining LAT photon arrival time (`t_arr_s`) is
@@ -511,6 +513,8 @@ Mirroring the Amati unknown-$z$ table, both limits are now evaluated at assumed 
 
 ### 13.2 Implementation
 
+- **Table layout (user, 2026-10-02):** the $\dagger$ (duration $t_v$) and $\ddagger$ (TS < 25, Limit A only) markers sit on the *episode name*, not on the $t_v$ or $\Gamma$ values; a single `\resizebox{\columnwidth}{!}{...}` wraps the whole `threeparttable` (tablenotes included); the photon-energy column header is just $E_\text{GeV}$ with no unit bracket.
+
 - One draw set per episode, reused across the four redshifts, so the $z$ columns of a row are correlated (same as the Amati
   sweep). $z$ enters only through $d_L$ in $\hat\tau$ and the $(1+z)$ factors; nothing is refit. $t_v$ follows the usual
   precedence (Norris if it passes the quality gate, else duration), and its uncertainty is resampled as in §11.
@@ -530,8 +534,107 @@ the $z$ dependence, not measured limits.
 (`fitter_GRB131014A/140206B/231129C.py`) moved from `unused` to `active` in the seed registry, since their $t_v$ now feeds a
 paper table.
 
-### 13.5 Scope
+### 13.5 Comparison figure — **added 2026-10-02**
+
+`gamma_comparison_unknown_z_plot.py` is the redshift-sweep counterpart of `gamma_comparison_plot.py`: a 2x2 grid (one panel per
+no-redshift burst, the fourth axes holding the method legend; per-panel episode/model legends sit inside their frames), assumed $z$ on the x-axis, Limit A / Limit B and the thermal $\Gamma$ (Pe'er 2007,
+$Y=1$) all as curves with $1\sigma$ bands over $z=0.5$--$7$ (the photospheric sweep was extended from $5$ to $7$ for this, 2026-10-02). Only blackbody-augmented episodes are drawn (10 of them), since only those have a thermal
+$\Gamma$. The limit curves come from `lorentz_curves_unknown_z.csv` / `lorentz_curves_limit_b_unknown_z.csv` (written by the sweep scripts on a dense 0.5--7 grid, reusing each episode's existing draws, so the tables and seeds are unchanged -- verified byte-identical); the markers at the tabulated $z=1,3,5,7$ are currently disabled (lines only, user's call, 2026-10-02) but kept as commented-out code in the script, so episodes are told apart by line style alone. It also reads `pe_er_photosphere.csv`; no MC of its own, so no seed. Result: thermal $\Gamma$ exceeds
+Limit A by $1.1$--$3.6\times$ and Limit B by $2.7$--$9.4\times$ in every shown episode at $z=1,3,5$, nearly independent of $z$.
+The existing `gamma_comparison_plot.py` (GRB080916C) is not in `runner_registry.yaml` -- a pre-existing gap, not fixed here.
+
+### 13.6 Scope
 
 Paper prose and the two `\input` lines are in `section-5-data-analysis.tex`; a LaTeX build was left to the user and has not
 been run for these tables. `gamma_comparison` is unchanged (still GRB080916C only); comparing these limits against the
 thermal $\Gamma$ at the fiducial $z=2$ is a possible follow-up.
+
+---
+
+## 14. Why T90 and TR2 look odd in the GRB080916C comparison figure — **checked 2026-10-02, not a bug**
+
+The user noticed that T90 and TR2 look odd, for both Limit A and Limit B, in `gamma_comparison.png` (fig:gamma_comparison).
+
+### 14.1 What was verified
+
+- Recomputed $\hat\tau$, Limit A and Limit B for all five GRB080916C episodes from scratch (astropy `FlatLambdaCDM(H0=69.6, Om0=0.286)`,
+  $d_L(z{=}4.35)=40.44$ Gpc; the Lithwick & Sari expressions of §1/§8 with the CSV's $f_1$, $\beta$, $t_v$, $E_\text{max}$). Every value matches
+  `lorentz_results.csv` / `lorentz_results_limit_b.csv` to the printed precision.
+- `gamma_comparison_plot.py` plots exactly the CSV values, at the right episode positions. No plotting bug.
+
+### 14.2 Why they look odd -- the inputs, not the code
+
+| episode | $t_v$ [s] | source | $E_\text{max}$ | $\hat\tau$ | Limit A | Limit B |
+|---|---|---|---|---|---|---|
+| T90 | 62.98 | duration | 27.4 GeV | $7.1\times10^{9}$ | 507 | 112 |
+| EX0 | 4.03 | Norris | 0.30 GeV | $4.0\times10^{11}$ | 361 | 197 |
+| TR1 | 4.03 | Norris | 0.30 GeV | $4.7\times10^{11}$ | 374 | 209 |
+| TR2 | 0.43 | Norris | 2.1 GeV | $1.7\times10^{12}$ | 741 | 352 |
+| TR3 | 15.4 | Norris | 27.4 GeV | $1.9\times10^{10}$ | 585 | 138 |
+
+- Limit B depends on $\hat\tau$ only, and $\hat\tau\propto 1/t_v$. **T90 has the lowest Limit B** because its $t_v$ is the whole 63 s
+  duration (§4: a conservative upper bound, since T90 is multi-pulse and is not Norris-fit), making $\hat\tau$ ~100-250x smaller than the
+  other episodes'.
+- Limit A also scales with the photon energy, $\propto E_\text{max}^{(\alpha-1)/(2\alpha+2)}$ (a factor of roughly 7-8 for 27 GeV vs 0.3 GeV).
+  So **T90's Limit A is high** (507, above EX0/TR1) despite its tiny $\hat\tau$: it carries the 27.4 GeV photon. TR3 does the same.
+- **TR2 is highest in both** because it has the shortest measured $t_v$ (0.43 s, the pulse coincident with its 2.1 GeV photon) and so the largest $\hat\tau$.
+- Consequence for reading the figure: T90's large A-vs-B gap is real, and is the signature of "long $t_v$, high-energy photon". The figure does not show
+  that T90 (and the other $\dagger$ rows) use the duration as $t_v$; `tab:lorentz` marks it with a $\dagger$ but the figure and its caption do not.
+
+### 14.3 Same pattern elsewhere
+
+In the no-redshift sweep (§13) the lowest Limit B in each burst (at $z=1$) belongs to a duration-$t_v$ episode: T90 for GRB131014A (93) and
+GRB231129C (27), and GRB140206B's TR5 (25, with T90 at 27 next to it). Only the Limit B pattern was checked there; whether Limit A is boosted by the
+highest-energy photon in those bursts as it is for GRB080916C's T90 was not checked, and the GRB140206B duration episodes EX0/TR1 carry only
+~0.2 GeV photons.
+
+### 14.4 If this comes up again
+
+Check the `t_v_source` and `E_max_MeV` columns of the two CSVs before suspecting the plot or the formulas. Options considered but not
+taken: mark duration-$t_v$ episodes in the figure legend or caption, or add a sentence in the prose near `fig:gamma_comparison`.
+
+---
+
+## 15. Pulse selection now follows the fitters' assignment rule — **changed 2026-10-02, user decision**
+
+### 15.1 Decision
+
+The primary selector of which Norris pulse belongs to an episode's LAT photon is the fitter (`variability_analysis/shared_utilities.py::assign_pulse`,
+called by all four `fitter_GRB*.py`), so `lorentz_factor.py::load_norris_tv()` now uses the same rule instead of its own nearest-`t_peak` rule (§11.1).
+Background and the literature check that prompted it: `variability_analysis.md`, last section.
+
+### 15.2 The rule
+
+A photon at $t_\text{arr}$ is assigned to the pulse with the **latest onset** $t_s \le t_\text{arr}$ among the pulses still **active** at $t_\text{arr}$,
+meaning the pulse's own value there is at least `ACTIVE_THRESHOLD_FRAC = 0.01` of its own peak. `load_norris_tv()` gets the pulse parameters from
+`norris_fit_results_GRB*.csv` (one row per distinct pulse per burst) and reimplements the rule locally (`assigned_pulse()`, `_norris_value()`), per the
+project's copy-rather-than-import convention; **`ACTIVE_THRESHOLD_FRAC` must be kept equal to `shared_utilities.py`'s**. The reimplementation was
+checked against all 15 photon assignments recorded in the fitters' own CSVs: 15/15 reproduced.
+
+If the assigned pulse is not one of the episode's own pulse rows, or no pulse is active, the episode falls back to its duration and the reason is stored
+in `NORRIS_TV[...]["rejected_reason"]` (never silent). The only such case is GRB080916C TR5 (assigned pulse 5, not a TR5 row), already excluded by the
+1 GeV floor (§12).
+
+### 15.3 Effect
+
+Five episodes switch pulse; every other row is unchanged (13 of 18 sweep rows byte-identical in $\Gamma_{\min}$; GRB080916C's `lorentz_results*.csv` rows
+and tables are identical):
+
+| episode | pulse (old -> new) | $t_v$ [s] (old -> new) | Limit A at $z=1$ | Limit B at $z=1$ |
+|---|---|---|---|---|
+| GRB140206B TR4 | 4 -> 6 | 14.5 -> 3.23 | 92 -> 115 | 40 -> 53 |
+| GRB231129C EX0 | 1 -> 3 | 0.812 -> 0.606 | 111 -> 115 | 63 -> 66 |
+| GRB231129C TR1 | 1 -> 3 | 0.812 -> 0.606 | 91 -> 94 | 43 -> 45 |
+| GRB231129C TR2 | 4 -> 5 | 0.433 -> 0.824 | 190 -> 175 | 81 -> 72 |
+| GRB231129C EX1 | 4 -> 5 | 0.433 -> 0.824 | 181 -> 167 | 77 -> 69 |
+
+The sweep tables and curve CSVs were regenerated with the same seeds and synced. Every number quoted in `section-5-data-analysis.tex` still holds after the change
+(Limit A $46$--$341$ at $z=1$ and $162$--$1225$ at $z=7$; Limit B $25$--$143$ and $84$--$496$; growth factors $3.5$--$3.7$ / $3.4$--$3.6$; thermal-to-limit ratios
+$1.1$--$3.6$ / $2.7$--$9.5$; GRB131014A $1.1$--$1.6$, GRB140206B $3.1$--$3.6$ over Limit A), because those extremes come from episodes whose pulse did not change.
+Limit A remains the larger bound in every episode at every swept $z$.
+
+### 15.4 Consequence to remember
+
+An episode's $\Gamma_{\min}$ is now tied to the fitters' decomposition, so any refit that changes pulse onsets or the active threshold can move the selected pulse.
+Several selected pulses are heavily overlapped (e.g. GRB080916C TR2's pulse supplies 26% of the model flux at its peak); see `variability_analysis.md`.
+

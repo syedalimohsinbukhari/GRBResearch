@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from generate_lorentz_table import TEX_NAMES, episode_order, fmt_t_v
+from generate_lorentz_table import TEX_NAMES, episode_order
 
 HERE = Path(__file__).parent
 INPUTS = {
@@ -42,15 +42,36 @@ def fmt_plain(val, fmt_str):
     return MISSING if val is None else f"${format(val, fmt_str)}$"
 
 
-def fmt_gamma(r, limit, z, flag=False):
-    """One Gamma_min cell: ``value_{-lo}^{+hi}`` (dagger-flagged if low significance), or the missing marker."""
+def fmt_t_v(r):
+    """The t_v cell, value only (``v`` or ``v^{+hi}_{-lo}`` for a Norris measurement) -- no source marker.
+
+    The duration-as-t_v marker lives on the episode name instead (see ``episode_label``), not on this value.
+    """
+    if r["t_v_source"] == "norris":
+        return f"${r['t_v_s']:.3f}^{{+{r['t_v_err_upper_s']:.3f}}}_{{-{r['t_v_err_lower_s']:.3f}}}$"
+    return f"${r['t_v_s']:.3f}$"
+
+
+def fmt_gamma(r, limit, z):
+    """One Gamma_min cell: ``value_{-lo}^{+hi}``, or the missing marker."""
     key = f"Gamma_min_{limit}_z{z}"
     if r[key] is None:
         return MISSING
-    cell = f"${round(r[key])}_{{-{r[key + '_err_lower']:.0f}}}^{{+{r[key + '_err_upper']:.0f}}}"
-    if flag:
-        cell += r"\,^{\ddagger}"
-    return cell + "$"
+    return f"${round(r[key])}_{{-{r[key + '_err_lower']:.0f}}}^{{+{r[key + '_err_upper']:.0f}}}$"
+
+
+def episode_label(r, limit):
+    """Episode name carrying its markers: $\\dagger$ if t_v is the episode duration, $\\ddagger$ if the LAT detection has TS < 25.
+
+    Markers are on the episode name, not on the values, since each describes the episode as a whole.  The TS < 25 flag
+    is Limit A only: it marks a weak photon association, which Limit B does not use.
+    """
+    marks = []
+    if r["t_v_source"] == "duration":
+        marks.append(r"\dagger")
+    if limit == "A" and r["low_significance"]:
+        marks.append(r"\ddagger")
+    return r["episode"] + (f"$^{{{','.join(marks)}}}$" if marks else "")
 
 
 def build_rows(results, limit):
@@ -67,11 +88,9 @@ def build_rows(results, limit):
             rows += f"    \\multicolumn{{{n_cols}}}{{l}}{{\\textbf{{{tex_name}}}}} \\\\\n"
             current = r["GRB"]
 
-        # The Limit A dagger on TS < 25 marks a weak photon association, which only Limit A uses.
-        flag = limit == "A" and bool(r["low_significance"])
-        gammas = " & ".join(fmt_gamma(r, limit, z, flag) for z in Z_VALUES)
+        gammas = " & ".join(fmt_gamma(r, limit, z) for z in Z_VALUES)
         lead = f"{fmt_plain(r['E_max_MeV'] / 1e3, '.2f')} & " if limit == "A" else ""
-        rows += f"    {r['episode']} & {lead}{fmt_t_v(r)} & {fmt_plain(r['beta'], '.3f')} & {gammas} \\\\\n"
+        rows += f"    {episode_label(r, limit)} & {lead}{fmt_t_v(r)} & {fmt_plain(r['beta'], '.3f')} & {gammas} \\\\\n"
     return rows
 
 
@@ -98,7 +117,7 @@ def build_latex_table(results, limit):
         label, colspec, n_lead = "tab:lorentz_unknown_z", "lccccccc", 4
         what = (r"Minimum bulk Lorentz factor $\Gamma_{\min}$ from the gamma-gamma opacity condition (Limit A), "
                 r"for the three bursts without a measured redshift, at four assumed redshifts $z=1,3,5,7$.")
-        cols = r"Episode & $E_{\rm GeV}$ [GeV] & $t_{\rm v}$ [s] & $\beta$ &"
+        cols = r"Episode & $E_{\rm GeV}$ & $t_{\rm v}$ [s] & $\beta$ &"
     else:
         label, colspec, n_lead = "tab:lorentz_limit_b_unknown_z", "lcccccc", 3
         what = (r"Minimum bulk Lorentz factor $\Gamma_{\min}$ from Compton scattering off pair-produced $e^{\pm}$ "
@@ -115,9 +134,9 @@ def build_latex_table(results, limit):
         rf"Errors are the statistical $1\sigma$ interval from $10^{{4}}$ Monte Carlo draws (seed {seed}) "
         r"of the spectral parameters~\citep{Lithwick2001}.}" "\n"
         rf"\label{{{label}}}" "\n"
+        r"\resizebox{\columnwidth}{!}{" "\n"
         r"\begin{threeparttable}" "\n"
         r"\renewcommand{\arraystretch}{1.25}" "\n"
-        r"\resizebox{\columnwidth}{!}{" "\n"
         rf"\begin{{tabular}}{{{colspec}}}" "\n"
         r"\toprule" "\n"
         rf"{cols} \multicolumn{{4}}{{c}}{{$\Gamma_{{\min}}$}} \\" "\n"
@@ -126,12 +145,12 @@ def build_latex_table(results, limit):
         + rows
         + r"\bottomrule" "\n"
         r"\end{tabular}" "\n"
-        r"}" "\n"
         r"\begin{tablenotes}" "\n"
         r"\footnotesize" "\n"
         + tablenotes(rows)
         + r"\end{tablenotes}" "\n"
         r"\end{threeparttable}" "\n"
+        r"}" "\n"
         r"\end{table}" "\n"
     )
 

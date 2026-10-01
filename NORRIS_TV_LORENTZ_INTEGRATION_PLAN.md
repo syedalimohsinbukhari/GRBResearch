@@ -39,7 +39,9 @@ $\Gamma_\text{min}$ change (197→258→134→507) was verified this way before 
 
 ## Decisions locked in (confirmed with user, 2026-09-27)
 
-1. **Multi-pulse → episode selection rule**: when more than one fitted pulse's `t_peak_s` falls
+1. **Multi-pulse → episode selection rule** — **Superseded 2026-10-02 (user decision):** the pulse is now the one the Norris fitters themselves assign the episode's photon to (nearest preceding onset among still-active pulses), not the nearest `t_peak`; see `lorentz_factor.md` §15. The text below describes the original rule.
+
+   Original:  when more than one fitted pulse's `t_peak_s` falls
    in an episode's window, pick the pulse whose `t_peak_s` is closest to that episode's own
    $\Gamma_\text{min}$-defining LAT photon arrival time (`t_arr_s`, from `LAT_PHOTONS`/
    `lat_photons.csv`, already loaded in `lorentz_factor.py`). This is the exact rule already

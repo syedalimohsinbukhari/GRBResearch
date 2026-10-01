@@ -368,7 +368,11 @@ def save_data(
 
 
 def assign_pulse(t_arr: float, parameters: NDArray, n_pulses: int):
-    """Assign one photon arrival time to whichever pulse is dominant at that instant.
+    """Assign one photon arrival time to a pulse by temporal proximity: the pulse with the latest onset `t_s <= t_arr`
+    among those still active at `t_arr` (own value >= `ACTIVE_THRESHOLD_FRAC` of own peak).
+
+    (Not "dominant flux": that earlier rule was replaced -- see variability_analysis.md. `lorentz_factor.py` reimplements
+    this rule in `assigned_pulse()` and must stay in sync with it.)
 
     Parameters
     ----------

@@ -81,6 +81,42 @@ unused:
     kt_epeak_correlation:
         script: model_parameters/epeak_vs_kt.py
         note: "not referenced by any figure or table in the current draft"
+    gbm_only_refit_3way:
+        script: gbm_only_refit/gbm_only_refit_3way.py
+        note: >-
+            GRB131014A three-way refit (joint / GBM-only / GBM-only NaI >= 40 keV); MC-seeded, but not referenced by any
+            figure or table in the current draft (folding it into the paper is a separate, later decision -- see
+            gbm_only_refit.md)
+    norris_normalized_080916C:
+        script: variability_analysis/GRB080916009/fitter_normalized.py
+        note: "080916C: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_unnormalized_080916C:
+        script: variability_analysis/GRB080916009/fitter_unnormalized.py
+        note: "080916C: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_normalized_131014A:
+        script: variability_analysis/GRB131014215/fitter_normalized.py
+        note: "131014A: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_unnormalized_131014A:
+        script: variability_analysis/GRB131014215/fitter_unnormalized.py
+        note: "131014A: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_normalized_140206B:
+        script: variability_analysis/GRB140206275/fitter_normalized.py
+        note: "140206B: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_unnormalized_140206B:
+        script: variability_analysis/GRB140206275/fitter_unnormalized.py
+        note: "140206B: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_normalized_p0_140206B:
+        script: variability_analysis/GRB140206275/fitter_normalized_p0.py
+        note: "140206B: historical record only -- the superseded P0 pulse configuration (see variability_analysis/GRB140206275/_common.py)"
+    norris_unnormalized_p0_140206B:
+        script: variability_analysis/GRB140206275/fitter_unnormalized_p0.py
+        note: "140206B: historical record only -- the superseded P0 pulse configuration (see variability_analysis/GRB140206275/_common.py)"
+    norris_normalized_231129C:
+        script: variability_analysis/GRB231129779/fitter_normalized.py
+        note: "231129C: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
+    norris_unnormalized_231129C:
+        script: variability_analysis/GRB231129779/fitter_unnormalized.py
+        note: "231129C: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"
 
 dormant:
     norris_pulse_fit_tv_legacy:
