@@ -36,12 +36,9 @@ active:
     lat_info_table:
         source: LAT_analysis/lat_info_table.tex
         dest: tex_files/generated/lat_info_table.tex
-    lorentz_table:
-        source: codes-for-paper/lorentz_factor/lorentz_table.tex
-        dest: tex_files/generated/lorentz_table.tex
-    lorentz_table_limit_b:
-        source: codes-for-paper/lorentz_factor/lorentz_table_limit_b.tex
-        dest: tex_files/generated/lorentz_table_limit_b.tex
+    lorentz_table_combined:
+        source: codes-for-paper/lorentz_factor/lorentz_table_combined.tex
+        dest: tex_files/generated/lorentz_table_combined.tex
     lorentz_table_unknown_z:
         source: codes-for-paper/lorentz_factor/lorentz_table_unknown_z.tex
         dest: tex_files/generated/lorentz_table_unknown_z.tex

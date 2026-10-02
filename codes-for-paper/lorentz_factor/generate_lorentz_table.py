@@ -101,7 +101,7 @@ def build_latex_table(results):
         if r["GRB"] != current:
             if current is not None:
                 rows += "    \\midrule\n"
-            rows += f"    \\multicolumn{{7}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
+            rows += f"    \\multicolumn{{6}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
             current = r["GRB"]
 
         gamma = None if r["Gamma_min"] is None else round(r["Gamma_min"])
@@ -115,7 +115,7 @@ def build_latex_table(results):
             gamma_str += "$"
 
         rows += (
-            f"    {r['episode']} & {fmt(r['z'], '.2f')} & {fmt(r['E_max_MeV'] / 1e3, '.2f')} & "
+            f"    {r['episode']} & {fmt(r['E_max_MeV'] / 1e3, '.2f')} & "
             f"{fmt(r['t_arr_s'], '.2f')} & {fmt_t_v(r)} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
         )
 
@@ -141,15 +141,16 @@ def build_latex_table(results):
 $E_{\rm GeV}$ is the highest-energy \ac{LAT} photon of that episode, $t_{\rm arr}$ its arrival time relative to $T_0$, $t_{\rm v}$ the variability timescale, $\beta$ the high-energy photon index of the episode's best-fit model, and $\Gamma_{\min}$ the derived lower limit~\citep{Lithwick2001}.
 % Errors on $\Gamma_{\min}$ are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo draws (seed __SEED__) of the spectral parameters (and, for a $\dagger$-free $t_{\rm v}$, of $t_{\rm v}$'s own measured uncertainty as well); they are far smaller than the systematic uncertainty from the analytic approximation adopted, and should not be read as the total uncertainty.
 Errors in the table are the statistical $1\sigma$ interval from $10^{4}$ Monte Carlo draws (seed __SEED__) of the spectral parameters;
+the redshift of \grbzeroeightzeroninesixteenC\ is $z = 4.35$.
 % Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z = 4.35$); the other three bursts lack a measured redshift, so $\Gamma_{\min}$ is undetermined for them and they are omitted from this table.
 }
 \label{tab:lorentz}
 \resizebox{\columnwidth}{!}{
 \begin{threeparttable}
 \renewcommand{\arraystretch}{1.25}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccc}
 \toprule
-Episode & $z$ & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
+Episode & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
     $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
 \midrule
 """

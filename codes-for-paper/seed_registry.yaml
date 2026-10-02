@@ -31,11 +31,11 @@ active:
     lorentz_limit_a:
         script: lorentz_factor/lorentz_factor.py
         item: "Lorentz factor, Limit A"
-        cref: "\\cref{fig:gamma_comparison,tab:lorentz}"
+        cref: "\\cref{fig:gamma_comparison,tab:lorentz_combined}"
     lorentz_limit_b:
         script: lorentz_factor/lorentz_factor_limit_b.py
         item: "Lorentz factor, Limit B"
-        cref: "\\cref{fig:gamma_comparison,tab:lorentz_limit_b}"
+        cref: "\\cref{fig:gamma_comparison,tab:lorentz_combined}"
     lorentz_unknown_z_limit_a:
         script: lorentz_factor/lorentz_factor_unknown_z.py
         item: "Lorentz factor, Limit A, redshift sweep"
@@ -63,7 +63,7 @@ active:
     norris_pulse_fit_tv_080916C:
         script: variability_analysis/fitter_GRB080916C.py
         item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB080916C"
-        cref: "\\cref{tab:lorentz,tab:lorentz_limit_b}"
+        cref: "\\cref{tab:lorentz_combined}"
     norris_pulse_fit_tv_131014A:
         script: variability_analysis/fitter_GRB131014A.py
         item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB131014A"

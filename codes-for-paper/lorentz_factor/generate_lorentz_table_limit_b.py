@@ -61,7 +61,7 @@ def build_latex_table(results):
         if r["GRB"] != current:
             if current is not None:
                 rows += "    \\midrule\n"
-            rows += f"    \\multicolumn{{5}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
+            rows += f"    \\multicolumn{{4}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
             current = r["GRB"]
 
         gamma = None if r["Gamma_min_B"] is None else round(r["Gamma_min_B"])
@@ -71,7 +71,7 @@ def build_latex_table(results):
             gamma_str = f"${gamma}_{{-{r['Gamma_min_B_err_lower']:.0f}}}^{{+{r['Gamma_min_B_err_upper']:.0f}}}$"
 
         rows += (
-            f"    {r['episode']} & {fmt(r['z'], '.2f')} & "
+            f"    {r['episode']} & "
             f"{fmt_t_v(r)} & {fmt(r['beta'], '.3f')} & {gamma_str} \\\\\n"
         )
 
@@ -91,9 +91,9 @@ Only \grbzeroeightzeroninesixteenC\ has a confirmed spectroscopic redshift ($z =
 \begin{threeparttable}
 \renewcommand{\arraystretch}{1.25}
 \resizebox{\columnwidth}{!}{
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-Episode & $z$ & $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
+Episode & $t_{\rm v}$ [s] & $\beta$ & $\Gamma_{\min}$ \\
 \midrule
 """
         + rows

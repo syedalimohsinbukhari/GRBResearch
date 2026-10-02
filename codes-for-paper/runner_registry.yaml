@@ -38,6 +38,11 @@ scripts:
             Lorentz factor Limit B (independent seed from Limit A by design; no run-order
             dependency on it, but same norris_fit_results_GRB*.csv dependency as Limit A above).
             Also self-chains into generate_lorentz_table_limit_b.py via subprocess.
+    -   path: lorentz_factor/generate_lorentz_table_combined.py
+        note: >-
+            Join-only combined Limit A + Limit B table (lorentz_table_combined.tex); recomputes nothing and
+            reads lorentz_results.csv and lorentz_results_limit_b.csv, so it must run after both
+            lorentz_factor.py and lorentz_factor_limit_b.py above.
     -   path: lorentz_factor/lorentz_factor_unknown_z.py
         note: >-
             Lorentz factor Limit A swept over assumed z = 1, 3, 5, 7 for the three no-redshift bursts
