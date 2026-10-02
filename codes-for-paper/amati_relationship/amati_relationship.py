@@ -95,10 +95,10 @@ for i, a in enumerate([ax[0]]):
     g_name.append([f"GRB{grb_list[i]}"] * len(_[0]))
 
 # ---------------------------------------------------------------------------
-# Unknown-redshift GRBs — redshift locus across z = 1, 3, 5, 7
+# Unknown-redshift GRBs — redshift locus across z = 1, 2, 3, 5, 7
 # ---------------------------------------------------------------------------
 
-Z_VALUES_UNKNOWN = (1, 3, 5, 7)
+Z_VALUES_UNKNOWN = (1, 2, 3, 5, 7)
 
 # Previously discarded: plot_unknown_redshift_grb() already computes (Ep, Eiso) at every z in
 # Z_VALUES_UNKNOWN for these three bursts' episodes, purely to draw the dashed locus -- its return

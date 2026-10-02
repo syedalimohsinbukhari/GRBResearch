@@ -101,9 +101,10 @@ REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
 
 # Redshift sweep for the bursts without a measured z:
 # the bulk of the long-GRB distribution, with z = 2 (close to the long-GRB median) as the fiducial.
-# Z_MAX was 5.0 until 2026-10-02, when it was extended to 7.0 (user decision) to match the z = 1, 3, 5, 7 sweep of the
-# Amati and Lorentz-factor tables, so the thermal Gamma can be compared with the opacity limits at every assumed z.
-Z_MIN, Z_MAX, Z_POINTS = 0.5, 7.0, 25
+# Z_MAX was 5.0 until 2026-10-02, when it was extended to 7.0 (user decision) to match the sweep of the Amati and
+# Lorentz-factor tables, so the thermal Gamma can be compared with the opacity limits at every assumed z; Z_MIN was
+# 0.5 until the same date, when the lower end was raised to 1 so every sweep in the paper covers 1-7.
+Z_MIN, Z_MAX, Z_POINTS = 1.0, 7.0, 25
 Z_FIDUCIAL = 2.0
 # Extra grid points that are not on the log grid but are quoted elsewhere in the paper (the Amati/Lorentz sweep values
 # and the former upper end of the range), so they are exact grid points rather than interpolations.
@@ -445,8 +446,8 @@ def make_plot(rows, path_stem="pe_er_photosphere"):
         axis.axvline(Z_FIDUCIAL, color="0.4", linestyle=":", linewidth=LINE_WIDTH, zorder=-10)
         axis.set_xscale("log")
         axis.set_yscale("log")
-        # A log axis over 0.5-7 otherwise labels only the single decade tick.
-        z_ticks = [0.5, 1.0, 2.0, 3.0, 5.0, 7.0]
+        # A log axis over 1-7 otherwise labels only the single decade tick.
+        z_ticks = [1.0, 2.0, 3.0, 5.0, 7.0]
         axis.set_xticks(z_ticks, minor=False)
         axis.set_xticklabels([f"{t:g}" for t in z_ticks])
         axis.set_xticks([], minor=True)

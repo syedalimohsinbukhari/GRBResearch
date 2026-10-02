@@ -10,7 +10,7 @@ Design (2026-09-30 review of an earlier min-max-range draft):
     console output). One E_p,obs column, point + error, plus this caption sentence, says the same
     thing as a 4-column E_i,peak sweep in a quarter of the space.
   - E_iso does NOT reduce to a fixed multiple of E_p,obs -- it runs through d_L(z)^2 and a
-    per-episode K-correction, so it gets one column per swept z (1, 3, 5, 7), not a min-max range
+    per-episode K-correction, so it gets one column per swept z (1, 2, 3, 5, 7), not a min-max range
     that would hide the (non-uniform, burst-dependent) shape of that growth.
 
 2026-09-30, later same day: this version shows each Eiso cell as value +- MC error rather than a
@@ -27,7 +27,7 @@ import pandas as pd
 
 from csv_to_latex import decimals_for, format_grb_name, format_model_name, format_value_with_errors
 
-Z_VALUES = (1, 3, 5, 7)
+Z_VALUES = (1, 2, 3, 5, 7)
 
 
 def csv_to_latex_table(csv_path="amati_relationship_unknown_z.csv",
@@ -36,8 +36,8 @@ def csv_to_latex_table(csv_path="amati_relationship_unknown_z.csv",
     seed = int(df["seed"].iloc[0])
 
     ep_decimals = decimals_for(np.r_[df["E_p_obs_err_lower__1e+03_keV"], df["E_p_obs_err_upper__1e+03_keV"]])
-    # One shared decimal count across all four z columns, derived from every z's own error rather
-    # than each z picking its own precision -- keeps the four Eiso columns visually aligned.
+    # One shared decimal count across all five z columns, derived from every z's own error rather
+    # than each z picking its own precision -- keeps the five Eiso columns visually aligned.
     ei_err_cols = np.r_[[df[f"E_0_iso_z{z}_err_lower__1e+52_erg"] for z in Z_VALUES]].ravel()
     ei_err_cols = np.r_[ei_err_cols, np.r_[[df[f"E_0_iso_z{z}_err_upper__1e+52_erg"] for z in Z_VALUES]].ravel()]
     ei_decimals = decimals_for(ei_err_cols)
@@ -53,7 +53,7 @@ def csv_to_latex_table(csv_path="amati_relationship_unknown_z.csv",
     # not duplicated here; captions in this paper are kept to what the table itself shows.
     latex_lines.append(
         "    \\caption{Observed peak energy $E_\\text{p}$ and isotropic equivalent energy \\eiso\\ "
-        "for the three bursts without a measured redshift, at four assumed redshifts $z=1, 3, 5, 7$.\n"
+        "for the three bursts without a measured redshift, at the assumed redshifts $z=1, 2, 3, 5, 7$.\n"
         f"        Values are the median and asymmetric $1\\sigma$ error from $10^4$ Monte Carlo "
         f"samples (seed ${seed}$).}}"
     )
@@ -64,10 +64,10 @@ def csv_to_latex_table(csv_path="amati_relationship_unknown_z.csv",
     latex_lines.append("        \\toprule")
     latex_lines.append(
         "        Model & Episode & $E_{\\mathrm{p}}$ [MeV] & "
-        "\\multicolumn{4}{c}{$E^{52}_{\\mathrm{iso}}$ [erg]} \\\\"
+        "\\multicolumn{5}{c}{$E^{52}_{\\mathrm{iso}}$ [erg]} \\\\"
     )
     latex_lines.append(
-        "         & & & $z=1$ & $z=3$ & $z=5$ & $z=7$ \\\\"
+        "         & & & $z=1$ & $z=2$ & $z=3$ & $z=5$ & $z=7$ \\\\"
     )
     latex_lines.append("        \\midrule")
 
@@ -81,7 +81,7 @@ def csv_to_latex_table(csv_path="amati_relationship_unknown_z.csv",
             if idx != 0:
                 latex_lines.append("        \\midrule")
             grb_display = format_grb_name(grb_name)
-            latex_lines.append(f"        \\multicolumn{{7}}{{l}}{{\\textbf{{{grb_display}}}}} \\\\")
+            latex_lines.append(f"        \\multicolumn{{8}}{{l}}{{\\textbf{{{grb_display}}}}} \\\\")
             current_grb = grb_name
 
         model_name = format_model_name(row["Model"])

@@ -3,12 +3,12 @@ Gamma_min (Limit A, Limit B) vs. thermal Gamma over redshift -- the three bursts
 ==============================================================================================================
 Redshift-sweep counterpart of ``gamma_comparison_plot.py`` (GRB080916C, one episode per x position).  For
 GRB131014A, GRB140206B and GRB231129C no redshift is measured, so each panel puts redshift on the x-axis, and all three
-quantities are curves over z = 0.5-7 with their 1-sigma bands:
+quantities are curves over z = 1-7 with their 1-sigma bands:
 
     - the thermal Gamma (Pe'er 2007, Y = 1) from ``pe_er_photosphere.csv``;
     - Limit A and Limit B from ``lorentz_curves_unknown_z.csv`` / ``lorentz_curves_limit_b_unknown_z.csv`` -- the same
       calculation as the tables, on a dense z grid from each episode's existing draw set.  The markers sit on the curves at
-      the four tabulated redshifts z = 1, 3, 5, 7 (currently disabled -- lines only) and are exactly the values in ``tab:lorentz_unknown_z`` /
+      the five tabulated redshifts z = 1, 2, 3, 5, 7 (currently disabled -- lines only) and are exactly the values in ``tab:lorentz_unknown_z`` /
       ``tab:lorentz_limit_b_unknown_z``.
 
 Only episodes with a blackbody component (the only ones with a thermal Gamma) are shown, so every episode drawn has all
@@ -44,7 +44,7 @@ from grb_research.grb_utils import save_fig
 from lorentz_factor import episode_label
 
 GRB_LIST = ["131014A", "140206B", "231129C"]
-Z_VALUES = (1, 3, 5, 7)
+Z_VALUES = (1, 2, 3, 5, 7)
 
 ROOT = find_project_root()
 LORENTZ_DIR = ROOT / "codes-for-paper" / "lorentz_factor"
@@ -143,7 +143,7 @@ def make_plot(limit_a, limit_b, thermal, path_stem="gamma_comparison_unknown_z")
                     rows.z, rows[column] - rows[f"{column}_err_lower"], rows[column] + rows[f"{column}_err_upper"],
                     color=color, alpha=0.12,
                 )
-                # Lines only for now: the markers at the four tabulated redshifts (exact curve points, identifying the episode)
+                # Lines only for now: the markers at the five tabulated redshifts (exact curve points, identifying the episode)
                 # are disabled, not removed -- uncomment this block and the marker kwargs in the legend handle below to restore.
                 # at_table = rows[np.isclose(rows.z.to_numpy()[:, None], Z_VALUES).any(axis=1)]
                 # axis.plot(
@@ -160,7 +160,7 @@ def make_plot(limit_a, limit_b, thermal, path_stem="gamma_comparison_unknown_z")
         axis.set_yscale("log")
         # axis.set_ylim(4, 3000)
         # axis.set_xlim(0.3, 7.7)
-        axis.set_xticks(range(1, 8, 2))
+        axis.set_xticks(list(Z_VALUES))
         axis.xaxis.minorticks_off()
         axis.set_title(f"GRB{short}", fontsize=TITLE_FONT_SIZE)
 

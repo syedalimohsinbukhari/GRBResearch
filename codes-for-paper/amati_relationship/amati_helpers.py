@@ -294,7 +294,7 @@ def plot_grbs_over_amati_relationship(
 def plot_unknown_redshift_grb(
     models,
     t90_marker: str,
-    z_values: Sequence[float] = (1, 3, 5, 7),
+    z_values: Sequence[float] = (1, 2, 3, 5, 7),
     n_grid: int = N_GRID,
     n_sample: int = N_SAMPLES,
     *,
@@ -304,7 +304,7 @@ def plot_unknown_redshift_grb(
     """
     Plot a GRB with unknown redshift across several assumed z values.
 
-    For each episode in *models*, four points are drawn (one per entry in
+    For each episode in *models*, one point per redshift is drawn (one per entry in
     z_values) and connected by a dashed line to show the locus of the burst
     on the Amati plane as a function of assumed redshift. Each episode uses
     the same marker scheme as in plot_grbs_over_amati_relationship so the
@@ -317,7 +317,7 @@ def plot_unknown_redshift_grb(
     t90_marker : str
         Matplotlib marker for the T90 episode of this GRB.
     z_values : sequence of float
-        Redshift values to evaluate. Defaults to (1, 3, 5, 7).
+        Redshift values to evaluate. Defaults to (1, 2, 3, 5, 7).
     n_grid, n_sample : int
         Passed through to the sampler.
     rng : np.random.Generator

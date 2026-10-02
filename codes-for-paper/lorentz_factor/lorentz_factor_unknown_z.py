@@ -2,7 +2,7 @@
 =========================================================================================================
 Companion to ``lorentz_factor.py`` (Limit A) and ``lorentz_factor_limit_b.py`` (Limit B), which are
 pinned to ``REDSHIFTS`` and so only ever cover GRB080916C.  This script evaluates Limit A for
-GRB131014A, GRB140206B and GRB231129C at the assumed redshifts z = 1, 3, 5, 7 -- the same sweep as
+GRB131014A, GRB140206B and GRB231129C at the assumed redshifts z = 1, 2, 3, 5, 7 -- the same sweep as
 ``amati_relationship.py``'s unknown-z table -- the way that table sweeps E_iso.
 
 ``lorentz_factor_limit_b_unknown_z.py`` is the Limit B counterpart.  It reuses ``run_sweep()`` from here but has
@@ -18,7 +18,7 @@ Design, mirroring ``amati_relationship.py``:
   - Episodes with no usable high-energy index (e.g. a CPL best fit) get empty Gamma columns.
 
 Outputs:
-    - lorentz_results_unknown_z.csv   -- all computed values, at z = 1, 3, 5, 7
+    - lorentz_results_unknown_z.csv   -- all computed values, at z = 1, 2, 3, 5, 7
     - lorentz_curves_unknown_z.csv    -- the same on a dense z grid, for the comparison figure
     - lorentz_table_unknown_z.tex     -- rendered by generate_lorentz_table_unknown_z.py
 """
@@ -53,11 +53,11 @@ from lorentz_factor import (
 )
 from lorentz_factor_limit_b import compute_gamma_min_limit_b
 
-Z_VALUES = (1, 3, 5, 7)
+Z_VALUES = (1, 2, 3, 5, 7)
 # Dense grid for the redshift curves in gamma_comparison_unknown_z_plot.py: log-spaced over the photospheric sweep's range
-# (0.5-7), plus the four tabulated z so every table value is also an exact curve point.  The curves reuse each episode's
+# (1-7), plus the five tabulated z so every table value is also an exact curve point.  The curves reuse each episode's
 # existing draw set, so they consume no extra random numbers and the table values are unaffected.
-Z_CURVE = np.unique(np.append(np.logspace(np.log10(0.5), np.log10(7.0), 60), Z_VALUES))
+Z_CURVE = np.unique(np.append(np.logspace(np.log10(1.0), np.log10(7.0), 60), Z_VALUES))
 
 # Independent of lorentz_factor_limit_b_unknown_z.py's seed: that script's __file__ differs.
 SEED = seed_from_name(__file__)

@@ -27,7 +27,7 @@ INPUTS = {
     "B": (HERE / "lorentz_results_limit_b_unknown_z.csv", HERE / "lorentz_table_limit_b_unknown_z.tex"),
 }
 
-Z_VALUES = (1, 3, 5, 7)
+Z_VALUES = (1, 2, 3, 5, 7)
 MISSING = "-"
 
 
@@ -77,7 +77,7 @@ def episode_label(r, limit):
 def build_rows(results, limit):
     """Rows grouped by burst (own header row each), episodes in temporal order."""
     results = sorted(results, key=lambda r: (r["GRB"], episode_order(r["episode"])))
-    n_cols = 7 if limit == "B" else 8
+    n_cols = 8 if limit == "B" else 9
 
     rows, current = "", None
     for r in results:
@@ -114,14 +114,14 @@ def build_latex_table(results, limit):
     rows = build_rows(results, limit)
     seed = int(results[0]["seed"])
     if limit == "A":
-        label, colspec, n_lead = "tab:lorentz_unknown_z", "lccccccc", 4
+        label, colspec, n_lead = "tab:lorentz_unknown_z", "lcccccccc", 4
         what = (r"Minimum bulk Lorentz factor $\Gamma_{\min}$ from the gamma-gamma opacity condition (Limit A), "
-                r"for the three bursts without a measured redshift, at four assumed redshifts $z=1,3,5,7$.")
+                r"for the three bursts without a measured redshift, at the assumed redshifts $z=1,2,3,5,7$.")
         cols = r"Episode & $E_{\rm GeV}$ & $t_{\rm v}$ [s] & $\beta$ &"
     else:
-        label, colspec, n_lead = "tab:lorentz_limit_b_unknown_z", "lcccccc", 3
+        label, colspec, n_lead = "tab:lorentz_limit_b_unknown_z", "lccccccc", 3
         what = (r"Minimum bulk Lorentz factor $\Gamma_{\min}$ from Compton scattering off pair-produced $e^{\pm}$ "
-                r"(Limit B), for the three bursts without a measured redshift, at four assumed redshifts $z=1,3,5,7$.")
+                r"(Limit B), for the three bursts without a measured redshift, at the assumed redshifts $z=1,2,3,5,7$.")
         cols = r"Episode & $t_{\rm v}$ [s] & $\beta$ &"
 
     blanks = " &" * n_lead
@@ -139,8 +139,8 @@ def build_latex_table(results, limit):
         r"\renewcommand{\arraystretch}{1.25}" "\n"
         rf"\begin{{tabular}}{{{colspec}}}" "\n"
         r"\toprule" "\n"
-        rf"{cols} \multicolumn{{4}}{{c}}{{$\Gamma_{{\min}}$}} \\" "\n"
-        rf"{blanks} $z=1$ & $z=3$ & $z=5$ & $z=7$ \\" "\n"
+        rf"{cols} \multicolumn{{5}}{{c}}{{$\Gamma_{{\min}}$}} \\" "\n"
+        rf"{blanks} $z=1$ & $z=2$ & $z=3$ & $z=5$ & $z=7$ \\" "\n"
         r"\midrule" "\n"
         + rows
         + r"\bottomrule" "\n"

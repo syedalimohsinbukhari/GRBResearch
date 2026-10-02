@@ -6,7 +6,7 @@ because ``seed_from_name(__file__)`` hashes the script name -- the same decorrel
 has from ``lorentz_factor.py``.
 
 Outputs:
-    - lorentz_results_limit_b_unknown_z.csv  -- all computed values, at z = 1, 3, 5, 7
+    - lorentz_results_limit_b_unknown_z.csv  -- all computed values, at z = 1, 2, 3, 5, 7
     - lorentz_curves_limit_b_unknown_z.csv   -- the same on a dense z grid, for the comparison figure
     - lorentz_table_limit_b_unknown_z.tex    -- rendered by generate_lorentz_table_unknown_z.py
 """

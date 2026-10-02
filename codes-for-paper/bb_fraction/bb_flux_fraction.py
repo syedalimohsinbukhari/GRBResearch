@@ -24,7 +24,7 @@ different rest-frame band for each burst, and since the BB peaks near 3.92 kT, t
 rest-frame shape falls inside vs outside a shared comparison window.
 So a second, rest-frame :math:`f_BB` is also computed here (1 keV - 10 MeV rest-frame, matching the rest-frame band
 already used for :math:`S_bol/E_iso` elsewhere in this work), using each burst's actual or assumed redshift --
-z = 4.35 (measured) for GRB080916C, swept over [0.5, 5.0] with z = 2 marked as the fiducial for the other three,
+z = 4.35 (measured) for GRB080916C, swept over [1, 7] with z = 2 marked as the fiducial for the other three,
 mirroring the precedent already established for this exact problem in photospheric_radius/`pe_er_photosphere.py`.
 See bb_fraction.md Sec 2.2b.
 
@@ -101,8 +101,11 @@ REDSHIFTS = {"080916C": 4.35, "131014A": None, "140206B": None, "231129C": None}
 # Redshift sweep for the bursts without a measured z:
 # The bulk of the long-GRB distribution, with z = 2 (close to the long-GRB median) as the fiducial -- same grid as
 # pe_er_photosphere.py, so the two are comparable.
-Z_MIN, Z_MAX, Z_POINTS = 0.5, 5.0, 25
+Z_MIN, Z_MAX, Z_POINTS = 1.0, 7.0, 25
 Z_FIDUCIAL = 2.0
+# Tabulated redshifts of the Amati/Lorentz sweeps that are not on the log grid, so they are exact grid points (z = 7 is
+# Z_MAX, z = 2 is Z_FIDUCIAL); same set as pe_er_photosphere.py.
+Z_EXTRA = (1.0, 3.0, 5.0)
 
 # Cosmology -- Fana Dirirsa et al. (2019), the single cosmology used across this project.
 # Inert for the observer-frame columns (f_BB is redshift/cosmology independent per-episode there); reported per
@@ -241,7 +244,7 @@ def compute_fraction(model, grb_name, n_samples=N_SAMPLES, *, rng):
         z_grid, z_source = np.array([measured_z]), "spectroscopic"
     else:
         z_grid = np.logspace(np.log10(Z_MIN), np.log10(Z_MAX), Z_POINTS)
-        z_grid = np.unique(np.append(z_grid, Z_FIDUCIAL))
+        z_grid = np.unique(np.append(z_grid, (Z_FIDUCIAL, *Z_EXTRA)))
         z_source = "swept"
 
     # The rest-frame band [E_MIN_KEV_REST, E_MAX_KEV_REST] is fixed; the fitted (observer-frame) spectrum must be
@@ -522,7 +525,7 @@ def make_rest_vs_z_plot(rows, path_stem="bb_flux_fraction_rest_vs_z"):
 
     axis.axvline(Z_FIDUCIAL, color="0.4", linestyle=":", linewidth=LINE_WIDTH, zorder=-10)
     axis.set_xscale("log")
-    z_ticks = [0.5, 1.0, 2.0, 3.0, 5.0]
+    z_ticks = [1.0, 2.0, 3.0, 5.0, 7.0]
     axis.set_xticks(z_ticks, minor=False)
     axis.set_xticklabels([f"{t:g}" for t in z_ticks])
     axis.set_xticks([], minor=True)
