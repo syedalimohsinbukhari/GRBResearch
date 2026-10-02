@@ -25,6 +25,7 @@ from grb_research import (
     LEGEND_FONT_SIZE,
     LEGEND_TITLE_FONT_SIZE,
 )
+from grb_research.grb_constants import N_SAMPLES as n_samples, N_GRID as n_grid
 from grb_research.grb_utils import save_fig
 
 # ---------------------------------------------------------------------------
@@ -48,8 +49,6 @@ t90_markers = ["o", "s", "X", "D"]
 # Sampling config
 # ---------------------------------------------------------------------------
 
-n_sample = 5_000
-n_grid = 1000
 SEED = seed_from_name(__file__)
 rng = get_rng(seed=SEED)
 
@@ -79,7 +78,7 @@ for i, a in enumerate([ax[0]]):
         redshift_list=[redshifts[i]],
         t90_marker_list=[t90_markers[i]],
         n_grid=n_grid,
-        n_sample=n_sample,
+        n_sample=n_samples,
         rng=rng,
         axis=a,
     )
@@ -120,7 +119,7 @@ for idx, m_ in enumerate(grb_best[1:]):
             t90_marker=t90_markers[idx + 1],
             z_values=Z_VALUES_UNKNOWN,
             n_grid=n_grid,
-            n_sample=n_sample,
+            n_sample=n_samples,
             rng=rng,
             axis=ax[idx + 1],
         )
@@ -170,7 +169,7 @@ for idx, m_ in enumerate(grb_best[1:]):
 unknown_z_rows.sort(key=lambda r: (r["GRBName"], episode_order(r["EpisodeName"])))
 
 unknown_z_df = pd.DataFrame(unknown_z_rows)
-unknown_z_df["n_samples"] = n_sample
+unknown_z_df["n_samples"] = n_samples
 unknown_z_df["seed"] = SEED
 unknown_z_df.to_csv("amati_relationship_unknown_z.csv", index=False)
 
@@ -204,7 +203,7 @@ if n_unknown > 0:
     ei_err_lower = np.concatenate([ei_err_lower, np.full(shape=n_unknown, fill_value=np.nan)])
     ei_err_upper = np.concatenate([ei_err_upper, np.full(shape=n_unknown, fill_value=np.nan)])
 
-n_samples_col = np.full(len(g_name), n_sample)
+n_samples_col = np.full(len(g_name), n_samples)
 seed_col = np.full(len(g_name), SEED)
 
 q = pd.DataFrame(
