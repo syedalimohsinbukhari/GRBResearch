@@ -224,8 +224,8 @@ A Norris fit would replace that upper bound with a measurement. Since $\Gamma_\t
 | `gamma_comparison_unknown_z_plot.py` / `.png` / `.pdf` | thermal-vs-limits figure over assumed $z$ for the no-redshift bursts (§13.5) |
 | `generate_lorentz_table_unknown_z.py` | renders either sweep table from its CSV (`A` / `B` argument) |
 | `lorentz_results_unknown_z.csv`, `lorentz_results_limit_b_unknown_z.csv` | one row per no-redshift-burst episode, Gamma columns per swept $z$ |
-| `lorentz_curves_unknown_z.csv`, `lorentz_curves_limit_b_unknown_z.csv` | the same on a dense $z$ grid (60 log-spaced points plus $z=1,3,5,7$), for the comparison figure |
-| `lorentz_table_unknown_z.tex`, `lorentz_table_limit_b_unknown_z.tex` | generated paper tables, Limits A / B at $z=1,3,5,7$ |
+| `lorentz_curves_unknown_z.csv`, `lorentz_curves_limit_b_unknown_z.csv` | the same on a dense $z$ grid (60 log-spaced points over $1\le z\le7$ plus $z=1,2,3,5,7$), for the comparison figure |
+| `lorentz_table_unknown_z.tex`, `lorentz_table_limit_b_unknown_z.tex` | generated paper tables, Limits A / B at $z=1,2,3,5,7$ |
 | `gamma_comparison_plot.py` | comparison figure: Limit A, Limit B, thermal $\Gamma$ (§8.6) |
 | `gamma_comparison.png` / `.pdf` | the figure itself, also copied to `GRBResearchPaper/images/section5/` |
 | `lorentz_factor.md` | this file |
@@ -497,7 +497,7 @@ this is reviewed and integrated deliberately.
 ## 13. Redshift sweep for the three no-redshift bursts — **added 2026-10-01**
 
 Limits A and B were pinned to `REDSHIFTS`, so GRB131014A, GRB140206B and GRB231129C never appeared in any Lorentz table.
-Mirroring the Amati unknown-$z$ table, both limits are now evaluated at assumed $z=1,3,5,7$ and given their own tables
+Mirroring the Amati unknown-$z$ table, both limits are now evaluated at assumed $z=1,2,3,5,7$ (originally $1,3,5,7$; $z=2$, the fiducial, was added 2026-10-02) and given their own tables
 (`tab:lorentz_unknown_z`, `tab:lorentz_limit_b_unknown_z`).
 
 ### 13.1 Decisions (user, 2026-10-01)
@@ -515,7 +515,7 @@ Mirroring the Amati unknown-$z$ table, both limits are now evaluated at assumed 
 
 - **Table layout (user, 2026-10-02):** the $\dagger$ (duration $t_v$) and $\ddagger$ (TS < 25, Limit A only) markers sit on the *episode name*, not on the $t_v$ or $\Gamma$ values; a single `\resizebox{\columnwidth}{!}{...}` wraps the whole `threeparttable` (tablenotes included); the photon-energy column header is just $E_\text{GeV}$ with no unit bracket.
 
-- One draw set per episode, reused across the four redshifts, so the $z$ columns of a row are correlated (same as the Amati
+- One draw set per episode, reused across the assumed redshifts, so the $z$ columns of a row are correlated (same as the Amati
   sweep). $z$ enters only through $d_L$ in $\hat\tau$ and the $(1+z)$ factors; nothing is refit. $t_v$ follows the usual
   precedence (Norris if it passes the quality gate, else duration), and its uncertainty is resampled as in §11.
 - `run_sweep(limit, rng, seed)` in `lorentz_factor_unknown_z.py` is shared; each script supplies its own `rng`/`seed`, so the
@@ -539,7 +539,7 @@ paper table.
 `gamma_comparison_unknown_z_plot.py` is the redshift-sweep counterpart of `gamma_comparison_plot.py`: a 2x2 grid (one panel per
 no-redshift burst, the fourth axes holding the method legend; per-panel episode/model legends sit inside their frames), assumed $z$ on the x-axis, Limit A / Limit B and the thermal $\Gamma$ (Pe'er 2007,
 $Y=1$) all as curves with $1\sigma$ bands over $z=0.5$--$7$ (the photospheric sweep was extended from $5$ to $7$ for this, 2026-10-02). Only blackbody-augmented episodes are drawn (10 of them), since only those have a thermal
-$\Gamma$. The limit curves come from `lorentz_curves_unknown_z.csv` / `lorentz_curves_limit_b_unknown_z.csv` (written by the sweep scripts on a dense 0.5--7 grid, reusing each episode's existing draws, so the tables and seeds are unchanged -- verified byte-identical); the markers at the tabulated $z=1,3,5,7$ are currently disabled (lines only, user's call, 2026-10-02) but kept as commented-out code in the script, so episodes are told apart by line style alone. It also reads `pe_er_photosphere.csv`; no MC of its own, so no seed. Result: thermal $\Gamma$ exceeds
+$\Gamma$. The limit curves come from `lorentz_curves_unknown_z.csv` / `lorentz_curves_limit_b_unknown_z.csv` (written by the sweep scripts on a dense 1--7 grid (0.5--7 before 2026-10-02), reusing each episode's existing draws, so the tables and seeds are unchanged -- verified byte-identical); the markers at the tabulated $z=1,2,3,5,7$ are currently disabled (lines only, user's call, 2026-10-02) but kept as commented-out code in the script, so episodes are told apart by line style alone. It also reads `pe_er_photosphere.csv`; no MC of its own, so no seed. Result: thermal $\Gamma$ exceeds
 Limit A by $1.1$--$3.6\times$ and Limit B by $2.7$--$9.4\times$ in every shown episode at $z=1,3,5$, nearly independent of $z$.
 The existing `gamma_comparison_plot.py` (GRB080916C) is not in `runner_registry.yaml` -- a pre-existing gap, not fixed here.
 
@@ -638,3 +638,6 @@ Limit A remains the larger bound in every episode at every swept $z$.
 An episode's $\Gamma_{\min}$ is now tied to the fitters' decomposition, so any refit that changes pulse onsets or the active threshold can move the selected pulse.
 Several selected pulses are heavily overlapped (e.g. GRB080916C TR2's pulse supplies 26% of the model flux at its peak); see `variability_analysis.md`.
 
+## 16. Redshift-grid unification — **2026-10-02**
+
+Every assumed-redshift sweep for the three no-redshift bursts now uses tabulated $z=1,2,3,5,7$ (2 = the fiducial, now shown rather than only quoted) and curves over $1\le z\le7$: `Z_VALUES` in `lorentz_factor_unknown_z.py`, `generate_lorentz_table_unknown_z.py` and `gamma_comparison_unknown_z_plot.py`; `Z_CURVE` lower bound 0.5 to 1. Limit A / B values at $z=1,3,5,7$ and every seed are unchanged (draws are shared across $z$); the tables gain a $z=2$ column. Quoted ranges and ratios were re-verified against the re-run CSVs: Limit A grows $\times3.5$--$3.7$ and Limit B $\times3.4$--$3.6$ from $z=1$ to $7$; thermal $\Gamma$ exceeds Limit A by $1.1$--$3.6$ and Limit B by $2.7$--$9.5$ at every tabulated $z$; Limit A remains the larger bound everywhere it is computed.

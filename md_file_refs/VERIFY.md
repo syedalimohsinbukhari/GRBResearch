@@ -682,3 +682,15 @@ Status: **PENDING**
 
 Status: **PENDING**
 
+### 2026-10-02 — redshift-grid unification (z = 1, 2, 3, 5, 7; curves over 1-7)
+
+**What changed:** every no-redshift sweep (Amati, Limit A/B, f_BB, photospheric) now tabulates z = 1, 2, 3, 5, 7 and draws curves over 1 <= z <= 7; section 5 has one consolidated redshift paragraph, other mentions point to `\cref{sec:physics}`. The Lorentz and Amati sweep tables gained a z = 2 column; f_BB, the photospheric and the comparison figures were redrawn.
+
+**What to check:**
+
+1. `tab:lorentz_unknown_z`, `tab:lorentz_limit_b_unknown_z` and `tab:eiso-unknown-z` still fit their `resizebox` with five z columns and the header `multicolumn` spans line up.
+2. `fig:amati_relationship`, `fig:gamma_comparison_unknown_z`, `fig:bbfraction-rest-vs-z` and `fig:photospheric`: x ticks are 1, 2, 3, 5, 7 and the figures are legible.
+3. Prose edits: r_ph factor now ~2.4; r_0 peak ~1.6; the 131014A/231129C offset paragraph; 140206B f_BB 0.058-0.064; the new redshift-sensitivity sentence in section 6 (rest-frame ordering).
+4. The three `% TODO(rerun)` comments are gone from section 5.
+
+Status: **PENDING**
