@@ -86,7 +86,7 @@ differs per script.
   `codes-for-paper/lorentz_factor/lorentz_factor_limit_b_unknown_z.py` (the Limit A / Limit B redshift
   sweeps for the three no-redshift bursts; separate seeds, same decorrelation as the pair above, with the
   second script importing the first's `run_sweep()` but passing its own `rng`)
-- `codes-for-paper/gbm_only_refit/gbm_only_refit.py`
+- `codes-for-paper/gbm_only_refit/gbm_only_refit.py` (and `gbm_only_refit_3way.py`, added 2026-09-06: own seed, imports the two-way script's helpers, passes its own `rng`; `unused` in the registry)
 - `codes-for-paper/bb_fraction/bb_flux_fraction.py`
 - `codes-for-paper/photospheric_radius/pe_er_photosphere.py`
 - `codes-for-paper/model_parameters/epeak_vs_kt.py`
@@ -94,9 +94,16 @@ differs per script.
 - `codes-for-paper/amati_relationship/amati_relationship.py` (`amati_helpers.py` carries the
   `rng`-aware helper functions it calls)
 - `codes-for-paper/butterfly_plots/butterfly_all.py`
+- `codes-for-paper/variability_analysis/fitter_GRB080916C.py`, `fitter_GRB131014A.py`, `fitter_GRB140206B.py`,
+  `fitter_GRB231129C.py` (the Norris-pulse $t_v$ fits, added to this scheme after the original Phase B list; each derives
+  its own seed and passes it to the MC `t_v` propagation in `norris_fit.py` / `shared_utilities.py`, whose `seed`
+  argument has no default so a caller cannot silently fall back to a literal; `active` in the registry since their
+  $t_v$ feeds the paper's Lorentz-factor tables) — **added 2026-10-20**
 - `codes-for-paper/variability_analysis/norris..py` — updated for consistency (derived seed
   instead of a literal), but dormant: no caller in `codes-for-paper/` currently invokes it, so
   this one was not run as part of Phase B's verification pass.
+
+**Update 2026-10-20:** the list above grew after this paragraph was written (the redshift-sweep scripts, `gbm_only_refit_3way.py`, the four `fitter_GRB*.py`, and the exploratory `GRB*/fitter_{,un}normalized*.py` and `experiments/` scripts, which also use `seed_from_name(__file__)`). The authoritative, always-computed list is `codes-for-paper/seed_registry.yaml` -> `seed_table.csv`; checked 2026-10-20 that every `seed` in `seed_table.csv` equals `seed_from_name(<script basename>)` under `MASTER_SEED = 2828702241`, and that the `seed` columns of `amati_relationship*.csv`, `bb_flux_fraction.csv`, `pe_er_photosphere.csv`, the four `lorentz_*` CSV pairs (Limit A 3983203661, Limit B 4169226666, sweeps 1051076921 / 3962326526), `gbm_only_refit*.csv` and the four `norris_fit_results_GRB*.csv` match the registry. The determinism verification described next covers the ten scripts that existed at the end of Phase B (original text, unchanged):
 
 All ten runnable scripts above were independently verified deterministic: each run twice from a
 clean state, output CSV diffed byte-for-byte between runs, `seed` column confirmed single-valued.

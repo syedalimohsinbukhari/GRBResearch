@@ -2,7 +2,7 @@
 
 Companion to `time_integrated_table.py`. Written 2026-09-06, closing the last `no_known_source`
 entry in `table_registry.yaml` for a table that is actually `\input` by the paper
-(`tex_files/section-3-data-preparation-and-analysis.tex:33`, which pulls the generated table in
+(`tex_files/section-3-data-preparation-and-analysis.tex:37` as of 2026-10-20 -- it was `:33` when written), which pulls the generated table in
 directly -- there is no intermediate wrapper file; see table_registry.yaml's header comment).
 
 Like `LAT_analysis/`, this folder holds no physics — it is bookkeeping. Every cell is a raw
@@ -35,7 +35,7 @@ table directly — see §3's wrapper-removal note.
   `\tabledash`; caught by diffing the generator's output against the previously-published table
   before syncing anything, not by inspection.
 - **GRB names in the header use the paper's `\grbxxxxxxx` macros**, not literal `GRB080916C` text
-  *(Claude, changed from the previous hand-typed table)*. The macros (`tex_files/preamble.tex:128-131`)
+  *(Claude, changed from the previous hand-typed table)*. The macros (`tex_files/preamble.tex:130-133` as of 2026-10-20; `:128-131` when written)
   expand to exactly that literal text, so this is a zero-visual-diff change — done for consistency
   with every other generated table (LAT, Amati, lorentz), which all use the macros.
 - **The commented-out "TR breakdown episodes" rows (`BR--A/B/C`, GRB131014A) are dropped, not

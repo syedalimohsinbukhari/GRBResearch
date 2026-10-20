@@ -85,8 +85,8 @@ unused:
         script: gbm_only_refit/gbm_only_refit_3way.py
         note: >-
             GRB131014A three-way refit (joint / GBM-only / GBM-only NaI >= 40 keV); MC-seeded, but not referenced by any
-            figure or table in the current draft (folding it into the paper is a separate, later decision -- see
-            gbm_only_refit.md)
+            figure or table in the current draft (internal-only by user decision: every BB verified without the NaI K-edge cut was also
+            verified with it; script is not rerunnable and is excluded from runner_registry.yaml -- see gbm_only_refit.md)
     norris_normalized_080916C:
         script: variability_analysis/GRB080916009/fitter_normalized.py
         note: "080916C: exploratory normalized-vs-unnormalized full-range Norris fit (2026-09-24/27); not referenced by any figure or table in the current draft"

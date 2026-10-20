@@ -3,6 +3,8 @@
 Run each from `GRBResearchWork/`. Top-level canonical scripts were renamed/restructured
 (`fitter_GRBNAME.py` + `shared_utilities.py`) after this list was first written — updated to match.
 
+> **Status check, 2026-10-20 (documentation sweep): the "Still pending" table below is stale.** Every output CSV it lists now exists with a `seed` column equal to the script's `seed_from_name(__file__)` (and to `seed_registry.yaml` / `seed_table.csv`), i.e. all were rerun after the fix: the `GRB131014215/`, `GRB140206275/` (including both `_p0` variants) and `GRB231129779/` normalized/unnormalized CSVs (mtimes 2026-09-27 05:24-07:01, seeds 3447222311 / 1602551691 / 2091438651 / 3792274645), and the `experiments/window_sensitivity_GRB{080916009,131014215,231129779}/window_sensitivity_results.csv` (seed 493797354) and `window_sensitivity_GRB140206275/window_sensitivity_results_{simple,complex}.csv` (seed 2437793349). `experiments/window_sensitivity_GRB140206275/window_sensitivity_results.csv` (seed 12345, 2026-09-16) is the pre-split, pre-fix file and is a leftover. Only the "Deferred" row (GRB231129779 `widest_full_range`) is a genuine open item as far as this check could tell; its CSV nevertheless carries the post-fix seed, so whether that window was rerun is worth a glance. The file header says "temp, delete when done"; deleting it is the user's call.
+
 ## Already rerun since the seeding fix (confirmed by CSV/script mtime, can skip)
 
 | file | command |

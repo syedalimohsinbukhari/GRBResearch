@@ -62,11 +62,6 @@ scripts:
             rerun to reconfirm the paper's "t_v ~= 1.7 s" claim still holds if lorentz_results.csv changes
     -   path: gbm_only_refit/gbm_only_refit.py
         note: GBM-only refit comparison
-    -   path: gbm_only_refit/gbm_only_refit_3way.py
-        note: >-
-            GRB131014A three-way refit comparison (joint / GBM-only / GBM-only NaI >= 40 keV); imports helpers from
-            gbm_only_refit.py but writes its own separate CSV/figures. Not referenced by any figure in the current
-            draft (seed_registry `unused`) -- included for a complete rebuild
     -   path: bb_fraction/bb_flux_fraction.py
         note: Blackbody flux fraction CSV
     -   path: bb_fraction/csv_to_latex.py
@@ -117,6 +112,12 @@ scripts:
 #   LAT_analysis/txt_to_csv.py, csv_to_latex.py -- lives outside codes-for-paper/ entirely, and builds the LAT table
 #       from already-saved gtlike/RMFIT text output, not a fresh MC pipeline (no N_GRID/seed involved at all) --
 #       out of scope for "rerun the analysis pipeline."
+#   gbm_only_refit/gbm_only_refit_3way.py -- NOT RERUNNABLE, by design (user decision, 2026-10-20). It reads
+#       results.json["GRB131014215GBM40keV"], which was deliberately left out of results.json in ec31e4c, so a run
+#       raises KeyError. The CSV/figures on disk are the 2026-09-06 outputs and are kept as the record. The experiment
+#       (GRB131014A refit with NaI >= 40 keV, i.e. with the iodine K-edge removed; referee item #7) found every BB that
+#       was verified without the cut was also verified with it, so it is not repeated in the paper. See
+#       gbm_only_refit/gbm_only_refit.md section 6.
 #   beta_lat_consistency/beta_lat_consistency.py -- a diagnostic that writes the comparison table in
 #       beta_lat_consistency.md (no CSV/figure/paper table, no MC, no seed).
 #   lorentz_factor/generate_lorentz_table*.py -- CSV-to-LaTeX renderers; chained by subprocess from the Lorentz-factor

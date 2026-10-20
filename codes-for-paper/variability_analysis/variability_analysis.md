@@ -1,5 +1,19 @@
 # Variability timescale (t_v) via manually-seeded joint Norris fit — GRB131014A
 
+> **Status as of 2026-10-20 (header added by the documentation sweep; the body below is historical and is left as written, per this file's append-don't-rewrite convention).**
+>
+> - **"Not yet wired into `lorentz_factor.py`'s `Gamma_min` pipeline" (and the similar "not yet done / not yet fed back" sentences below) is superseded.** The Norris-measured $t_v$ has fed `Gamma_min` since 2026-09-27 (`lorentz_factor.md` §11), the pulse-to-episode rule was changed to the fitters' own rule on 2026-10-02 (`lorentz_factor.md` §15; last section of this file), and the three no-redshift fitters feed the paper's redshift-sweep tables (`seed_registry.yaml`: `active`).
+> - **Current canonical state, read from the four `norris_fit_results_GRB*.csv` and `fitter_GRB*.py` on 2026-10-20** (every fit: summed NaI detectors, 10-400 keV, joint `NorrisFitter` with `max_iterations=20000`, fit window = the light curve's full range, `n_samples=10000`; seeds equal those in `seed_registry.yaml`):
+>
+> | burst | pulses | fit window [s] | LAT photon floor | seed | episodes with a Norris row in the CSV | write-up in this file |
+> |---|---|---|---|---|---|---|
+> | GRB080916C | 6 | -25.9 to 300.6 | 1000 MeV | 3806256479 | EX0, TR1-TR5, EX1 (8 rows) | dedicated section, but it describes the superseded 8-pulse and 7-pulse stages |
+> | GRB131014A | 5 | -135.9 to 478.4 | 100 MeV | 1210250649 | EX0, TR1, TR2, EX1 (9 rows) | full main-section write-up, for the old `[-1, 10]` s window |
+> | GRB140206B | 7 (single COMPLEX-style model) | -133.2 to 481.2 | 100 MeV | 23314306 | TR2, TR3, TR4, TR6 (7 rows; EX0/TR1/TR5 fall back to duration) | none of its own; spread over the window-widening, 2026-09-24 and "Files here" sections |
+> | GRB231129C | 6 | -138.5 to 475.8 | 100 MeV | 3915483327 | EX0, TR1, TR2, EX1 (12 rows) | none of its own; window-widening section, 2026-09-27 section and "Files here" |
+>
+> - **What is still missing (not written up anywhere in this file; stated here rather than invented).** `PHASE5_TV_PLAN.md` says only GRB131014A has main-section coverage and the other three are partial; that remains true. (1) No "What the code computes / judgement calls / validation / results" sections for GRB140206B and GRB231129C. (2) GRB080916C has no write-up of its *current* 6-pulse full-range fit (only the 2026-09-23 re-run bullet and the CSV). (3) The GRB131014A write-up predates the move to the full-range window: the old `[-1, 10]` s window, "5 pulses over the EX0/TR1/TR2/EX1 region" and the 2026-09-07 results table are historical (see the dated update under "Results"). (4) The SIMPLE model for GRB140206B and the 5-pulse GRB231129C model described in "Files here" are no longer the production scripts; the SIMPLE script `fitter_GRB140206275_simple.py` no longer exists (see the restructure note below). (5) The quality gate (`mc_kept_fraction >= 0.5`) and the fallback-to-duration logic live in `lorentz_factor.md` §11.1, not here. Deciding whether to write (1)-(3) up now, or leave this file as a historical log and point readers at the CSVs and `lorentz_factor.md`, is a user call.
+
 **Filenames below are historical, 2026-09-26 restructure note.** The four per-burst top-level scripts
 this file's history refers to as `fitter.py`, `fitter_GRB080916C.py`, `fitter_CLAUDE_GRB131014215.py`
 and `fitter_GRB140206275_simple.py` (plus the SIMPLE-model outputs) no longer exist under those names.
@@ -669,6 +683,8 @@ this fit, weighted or not — expected, not a new problem from any of this.
 | 3 | TR1 (+EX0) | 1.766–1.774 | $0.375$–$0.381$ | 0.91–0.999 | 1232.92 MeV @ 1.984 s (+6 more, all in decay) |
 | 4 | TR2 (+EX1) | 2.697–2.699 | $0.552$–$0.561$ | 0.999–1.00 | 445.28 MeV @ 2.533 s |
 | 5 | TR2 (+EX1) | 3.589–3.590 | $0.266$–$0.269$ | 0.77–0.85 | **1021.24 MeV @ 3.184 s** (TR2's existing $\Gamma_\text{min}$ photon) + 552.79 MeV @ 4.111 s |
+
+**Update 2026-10-20 (from `norris_fit_results_GRB131014A.csv`; the table above is the original 2026-09-07 `[-1, 10]` s result and is kept as history).** After the summed-detector refit and the move to the full-range window (-135.9 to 478.4 s), the three photon-bearing pulses read: pulse 3 $t_\text{peak}=1.760$ s, $t_v=0.375$ s, kept 1.000 (7 photons, 1232.92 MeV @ 1.984 s); pulse 4 $t_\text{peak}=2.699$ s, $t_v=0.556$ s, kept 1.000 (445.28 MeV @ 2.533 s); pulse 5 $t_\text{peak}=3.593$ s, $t_v=0.289$ s, kept **1.000** (1021.24 MeV @ 3.184 s) -- i.e. pulse 5's $t_v$ moved from 0.266-0.269 s to 0.289 s and its `mc_kept_fraction` from 0.77-0.85 to 1.00. Pulses 1 and 2 now report kept 0.876 and 0.608, versus 0.10-0.21 in the narrow window quoted in the next section. The $t_v=0.289$ s of pulse 5 is the value `lorentz_results.csv` uses for GRB131014A TR2 (`t_v_s = 0.289`).
 
 ## Known limitations and open questions
 
