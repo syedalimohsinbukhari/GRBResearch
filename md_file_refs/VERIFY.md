@@ -170,6 +170,7 @@ Status: **CONFIRMED** (2026-09-06, user checked rendered PDF)
   range **overlaps** GRB080916C's ($6.1$–$14\times10^{11}$~cm) rather than sitting an order of magnitude above it —
   turning the previous unsupported assertion ("should not be over-interpreted... scales with the assumed redshift") into
   a demonstrated result.
+  (Superseded, source-checked 2026-10-20: the 2026-10-02 grid unification replaced these numbers; the current text, `section-5-data-analysis.tex` lines 366 and 402, quotes a factor $\approx2.4$ over $z=1$-$7$ and offset ranges $2.2$-$4.8\times10^{12}$~cm at $z=1$ and $5.1$-$11.4\times10^{12}$~cm at $z=7$. The Status below records the 2026-09-06 check of the old text.)
 - Clarified that GRB140206B ($\approx7\times10^{11}$~cm) is *also* at an assumed fiducial $z=2$, same as
   GRB131014A/GRB231129C — it's grouped with GRB080916C by where its r_ph *lands* (in the
   literature's $10^{11}$–$10^{12}$~cm range), not because its redshift is measured. This was a point the user
@@ -639,6 +640,8 @@ Status: **CONFIRMED** (2026-09-04, source + user visual confirmation)
 
 Status: **CONFIRMED** (2026-10-02, user reports the paper compiles properly; item 5 resolved by the follow-up edit to line ~221 -- see the entry below; items 1-4 and 6 rest on the user's build check, not on a separate item-by-item read)
 
+**Superseded in part (source-checked 2026-10-20, status above unchanged):** the redshift grid and column counts quoted here describe the 2026-10-01 state. The current `tex_files/section-5-data-analysis.tex` uses $z=1,2,3,5,7$ (lines 12, 170, 384, 394), the generated sweep tables now have a $z=2$ column (Table A 9 columns, Table B 8 per `tex_files/generated/lorentz_table*_unknown_z.tex`), and `tab:lorentz` no longer exists (replaced by `tab:lorentz_combined`, lines 220-244). The ranges in item 4 (Limit A 46-341 to 162-1225, x3.5-3.7; Limit B 25-143 to 84-496, x3.4-3.6) were re-derived from `lorentz_results_unknown_z.csv` / `lorentz_results_limit_b_unknown_z.csv` and still hold; they match `section-5-data-analysis.tex` line 254.
+
 ---
 
 ### 2026-10-02 — Line ~221 rewording, and the thermal-vs-limits redshift figure (`fig:gamma_comparison_unknown_z`)
@@ -665,6 +668,13 @@ Status: **CONFIRMED** (2026-10-02, user reports the paper compiles properly; ite
 
 **Why:** the LaTeX build was left to the user, so none of this has been checked against a build.
 
+**Source-checked 2026-10-20, visual PDF check still pending** (checked against the generated CSVs and the current `.tex`; nothing visual is marked confirmed):
+
+- Item 1, numerics: `lorentz_curves_unknown_z.csv` / `lorentz_curves_limit_b_unknown_z.csv` pass exactly through the tabulated values (85 points each, max relative difference 0) at every tabulated z; the grid is now z = 1, 2, 3, 5, 7, not 1, 3, 5, 7. `\label{fig:gamma_comparison_unknown_z}` exists (line 397) and is cited (line 383); `figure*` with `width=0.75\textwidth` (lines 390-392). Legibility and legends are still a visual check.
+- Item 2: ratios recomputed from `pe_er_photosphere.csv` against the two sweep CSVs over the ten BB episodes at z = 1, 2, 3, 5, 7: Limit A 1.12-3.57 (text: 1.1-3.6), Limit B 2.72-9.48 (text: 2.7-9.5). **This entry's own item 2 says "9.4x" for Limit B; that is stale, the correct and current figure is 9.5** (as in item 4 and `section-5-data-analysis.tex` line 385). GRB131014A 1.12-1.63 (text 1.1-1.6), GRB140206B 3.05-3.57 (text 3.1-3.6): match line 387.
+- Item 4, superseded: the three photospheric statements quoted ("$0.5\le z\le7$", "factor $\approx4.5$ ... $z=0.5$ to $z=7$", ticks 0.5-7) were replaced by the grid unification; current text says $1\le z\le7$ and factor $\approx2.4$ (line 366), recomputed 2.37 from `pe_er_photosphere.csv`. The "$5.1$-$11.4\times10^{12}$ cm at $z=7$" figure still holds (recomputed 5.12-11.37). Figure tick legibility remains a visual check.
+- Layout drift: after commit 8ec6343 the figure sits in the photospheric subsection rather than after the sweep tables, and the "next sentence" now cites `tab:lorentz_combined` (line 224), not `tab:lorentz`.
+
 Status: **PENDING**
 
 ---
@@ -680,6 +690,12 @@ Status: **PENDING**
 2. `fig:gamma_comparison_unknown_z` redrawn: GRB231129C's EX0/TR1/TR2/EX1 limit curves moved by a few percent, and GRB140206B's TR4 is not in the figure (no blackbody).
 3. No prose number needs changing (all quoted ranges and ratios were re-verified against the new CSVs).
 
+**Source-checked 2026-10-20, visual PDF check still pending:**
+
+- Item 1: the quoted values match the CSVs and the generated tables, which are byte-identical (`cmp`) between `GRBResearchWork/codes-for-paper/lorentz_factor/` and `GRBResearchPaper/tex_files/generated/`. GRB231129C TR2: $t_v=0.824$ (CSV 0.8239), Limit A at $z=1$ 175 (174.9), Limit B 72 (72.3). GRB140206B TR4: $t_v=3.230^{+0.090}_{-0.093}$ (CSV 3.230, err 0.0928 / 0.0902; the generated table prints exactly this), Limit A 115 (114.9), Limit B 53 (52.7). The "was 14.499" is a pre-change value and was not re-derived here. Whether the rendered tables show these is not checked.
+- Item 2: the redrawn figure and its TR4 exclusion are visual.
+- Item 3: the quoted sweep ranges and ratios re-derived from the CSVs (see the entry above); they hold.
+
 Status: **PENDING**
 
 ### 2026-10-02 — redshift-grid unification (z = 1, 2, 3, 5, 7; curves over 1-7)
@@ -692,5 +708,13 @@ Status: **PENDING**
 2. `fig:amati_relationship`, `fig:gamma_comparison_unknown_z`, `fig:bbfraction-rest-vs-z` and `fig:photospheric`: x ticks are 1, 2, 3, 5, 7 and the figures are legible.
 3. Prose edits: r_ph factor now ~2.4; r_0 peak ~1.6; the 131014A/231129C offset paragraph; 140206B f_BB 0.058-0.064; the new redshift-sensitivity sentence in section 6 (rest-frame ordering).
 4. The three `% TODO(rerun)` comments are gone from section 5.
+
+**Source-checked 2026-10-20, visual PDF check still pending:**
+
+- Item 1, source only: in the generated `.tex` the `multicolumn{5}` spans are consistent with the column counts (Limit A table 4 + 5 = 9, Limit B 3 + 5 = 8, Amati unknown-z 3 + 5 = 8) and all three are wrapped in `\resizebox{\columnwidth}`. Whether they fit and line up when rendered is not checked.
+- Item 2: ticks and legibility are visual. In the text, every no-redshift sweep reads $z=1,2,3,5,7$ and curves over $1\le z\le7$ (`section-5-data-analysis.tex` lines 12, 170, 364, 384, 394); the only leftover old grid is inside a commented-out line (161), which does not render.
+- Item 3, numbers: r_ph factor 2.37 ($\approx2.4$, line 366) and r_0 peak at $z=1.63$ ($\sim1.6$, line 365) recomputed from `pe_er_photosphere.csv`; GRB131014A+GRB231129C r_ph ranges 2.2-4.8 ($z=1$) and 5.1-11.4 ($z=7$) $\times10^{12}$ cm match line 402; GRB140206B observer-frame $f_\text{BB}$ 0.0578-0.0638 from `bb_flux_fraction.csv` matches "0.058-0.064" (line 319). The new section 6 sentence is present (`section-6-discussion.tex` line 13); its claims check out against the rest-frame column of the CSV (GRB231129C highest at every z; GRB140206B's mean $f_\text{BB,rest}$ rises 0.069 to 0.134 and equals GRB131014A's, 0.090, at $z=3$). Whether the prose reads correctly in context is not checked.
+- Item 4: confirmed from source, `grep -rn 'TODO(rerun)'` over `GRBResearchPaper` `.tex` files finds none.
+- Not covered by any VERIFY entry (gap, for the user to decide): the combined Limit A + Limit B table `tab:lorentz_combined` (commit e97873e / paper commit 8ec6343, now the only table `\input` for GRB080916C's Gamma_min) and the section 5 reshuffle (gamma-comparison figures moved to the photospheric subsection).
 
 Status: **PENDING**

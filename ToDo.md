@@ -11,7 +11,8 @@
 
 - [ ] **Hardness–intensity/flux correlations:** Track $E_\text{peak}$ or $\text{kT}$ versus flux to search for classic “hard-to-soft” or “tracking” behaviors.
 - [ ] **Isotropic energy vs. BB temperature:** Test theoretical scaling relations predicted by photospheric models.
-- [ ] **Redshift dependence:** For GRBs with unknown redshift, explore how inferred physical parameters (e.g., $E_\text{iso}$, photospheric radius) vary across a plausible redshift range.
+- [x] **Redshift dependence:** For GRBs with unknown redshift, explore how inferred physical parameters (e.g., $E_\text{iso}$, photospheric radius) vary across a plausible redshift range.
+  <br>Done (2026-10-01/02). $E_\text{iso}$ at $z = 1, 2, 3, 5, 7$ in `codes-for-paper/amati_relationship/amati_relationship_unknown_z.csv`; photospheric radius / $\Gamma$ / $r_0$ swept over $z \in [1, 7]$ in `codes-for-paper/photospheric_radius/` (`pe_er_photosphere.py`, `Z_MIN, Z_MAX = 1.0, 7.0`); $f_\text{BB}$ vs $z$ in `codes-for-paper/bb_fraction/bb_flux_fraction_rest_vs_z.*`; the $\gamma\gamma$ $\Gamma_\text{min}$ limits swept over $z$ in `codes-for-paper/lorentz_factor/*_unknown_z*` (`lorentz_factor.md` §13).
 
 ### Butterfly (Spectral-Model) Plots
 
@@ -25,13 +26,14 @@
 - [x] **Multi-component decomposition:** Quantify the fractional BB contribution to total energy flux and track its evolution throughout the burst.
   <br>Done in `codes-for-paper/bb_fraction/`. $f_\text{BB}$ computed for all 13 BB-inclusive episodes, in Pe'er's bolometric convention so it feeds the photospheric calculation directly. See `bb_fraction.md`.
 - [ ] **Fireball parameter estimation:** From $kT$ and flux, estimate additional fireball parameters such as baryon loading, initial radius, and possible jet magnetization.
-  <br>*Partially done.* Baryon loading $\eta$ and initial radius $r_0$ both fall out of the Pe'er method ($\eta = \Gamma$ in the coasting phase) and are reported. **Magnetization $\sigma_0$ is still outstanding** — Pe'er's pure-fireball equations cannot give it; it needs the hybrid-outflow framework of Gao \& Zhang (2015), now in the literature folder.
+  <br>*Partially done.* Baryon loading $\eta$ and initial radius $r_0$ both fall out of the Pe'er method ($\eta = \Gamma$ in the coasting phase) and are reported. **Magnetization $\sigma_0$ is still outstanding** — Pe'er's pure-fireball equations cannot give it; it needs the hybrid-outflow framework of Gao \& Zhang (2015), now in the literature folder. *Status 2026-10-20:* scoped as Phase 6 (`PLAN.md`); `codes-for-paper/outflow_composition/PHASE6_PLAN.md` exists but is a plan only — no code, CSV or table has been written, and the folder is untracked. Left unticked.
 - [x] **Lorentz factor lower limits:** Use opacity arguments (e.g., $\gamma\gamma$ pair production) to constrain the minimum bulk Lorentz factor.
   <br>Done in `codes-for-paper/lorentz_factor/`, now evaluated per episode rather than for T90 alone, with MC errors. Note the limits are conservative and weaker than published treatments of the same burst — see `lorentz_factor.md` §5 for the uncertainty budget.
 
 ### Model Robustness and Alternatives
 
 - [ ] **Alternative models:** Fit synchrotron, Comptonized, or two-BB models to test whether the BB signature is genuine or an artifact of model choice.
+  <br>*Not done (checked 2026-10-20).* The fitted-model database (`results.json`) contains only PL, CPL, BAND and SBPL, each with and without a BB; no synchrotron, physical-Comptonization or two-BB fits exist. The related robustness checks that *have* been done — the GBM-only vs joint refit (`codes-for-paper/gbm_only_refit/`) and the LAT high-energy-index consistency check (`codes-for-paper/beta_lat_consistency/`) — test the data choice, not the model choice, so this item stays open.
 - [x] Compare fit statistics (likelihood ratio, AIC/BIC) across all tested models to establish the significance of the BB component.
 
 ### GRB Characterization
@@ -49,3 +51,8 @@
 - [ ] Survey recent GRB spectral and temporal studies to identify comparable analyses and benchmark results.
 - [ ] Highlight key findings from the literature that can guide the physical interpretation of trends observed in the current dataset.
 
+---
+
+### Status note (2026-10-20)
+
+Unticked items that remain: the scatter/correlation studies (partial plots exist in `codes-for-paper/model_parameters/` and `epeak_vs_kt.py`, but no item above has been confirmed as fully covered, so none is ticked), $\sigma_0$ (Phase 6, plan only), alternative spectral models, the population comparison, and the literature survey. For priorities, ordering and decisions pending from the user, see `md_file_refs/PLAN.md` and `md_file_refs/HANDOFF.md`, not this file. Work not listed above but done since: Norris-profile $t_v$ fits (`codes-for-paper/variability_analysis/`) feeding the $\gamma\gamma$ opacity limit in `codes-for-paper/lorentz_factor/` (`lorentz_factor.md` §11, §15).

@@ -2,7 +2,7 @@
 
 Maintained by Claude while working through the phased plan. Newest entry at the bottom, so IDs are not in numerical order.
 
-Status key: **OPEN** (needs your decision), **FIXED** (changed in the working tree), **RESOLVED** (superseded by another entry), **NOTED** (recorded, no change required), **DEFERRED** (tracked for a later phase).
+Status key: **OPEN** (needs your decision), **FIXED** (changed in the working tree), **RESOLVED** (superseded by another entry), **NOTED** (recorded, no change required), **DEFERRED** (tracked for a later phase), **REVERTED** (a change that was made and then backed out because the original was correct — BUG-16 only).
 
 Entries that were fixed later carry the resolution first, then **Original diagnosis:** and the reasoning as it stood when found.
 
@@ -11,7 +11,7 @@ Entries that were fixed later carry the resolution first, then **Original diagno
 <!-- INDEX:BEGIN — generated from the ### headings below; regenerate rather than hand-edit. -->
 ## Index
 
-38 entries: 26 bugs, 11 observations, 1 plan note. **All entries closed or resolved except OBS-11 (DEFERRED, user's call).** BUG-23 closed 2026-09-23 (superseded by a structural fix — sum all NaI detectors instead of picking one — applied to all four bursts, not just GRB080916C; see the entry for the full writeup, including the GRB131014A iteration-budget fix and the GRB080916C pulse-drop that came out of re-running all four fits with it). BUG-24 closed 2026-09-26 (GRB140206B's toggle-comment `P0` desynced its normalized/unnormalized comparison twice; replaced with two permanent explicit arrays, `P0`/`Q0`, the latter adopted as definitive). BUG-25 closed 2026-09-26 (`norris_fit.py`'s `tv_mc_summary()` defaulted to a hardcoded literal seed instead of this project's per-script `seed_from_name()` convention; fixed across every affected script in `variability_analysis/`). BUG-26 closed 2026-09-27 (`norris_fit.py`'s `norris_pulse()` could overflow to NaN when a fit's optimizer probed an extreme `tau1/tau2` ratio; fixed by porting the already-validated clipped-exponent form from `experiments/new_three_model/pulse3.py` into all 5 copies).
+38 entries: 26 bugs, 11 observations, 1 plan note. **All entries closed, resolved, noted as deliberate (OBS-05, OBS-09) or reverted (BUG-16) except OBS-11 (DEFERRED, user's call).** BUG-23 closed 2026-09-23 (superseded by a structural fix — sum all NaI detectors instead of picking one — applied to all four bursts, not just GRB080916C; see the entry for the full writeup, including the GRB131014A iteration-budget fix and the GRB080916C pulse-drop that came out of re-running all four fits with it). BUG-24 closed 2026-09-26 (GRB140206B's toggle-comment `P0` desynced its normalized/unnormalized comparison twice; replaced with two permanent explicit arrays, `P0`/`Q0`, the latter adopted as definitive). BUG-25 closed 2026-09-26 (`norris_fit.py`'s `tv_mc_summary()` defaulted to a hardcoded literal seed instead of this project's per-script `seed_from_name()` convention; fixed across every affected script in `variability_analysis/`). BUG-26 closed 2026-09-27 (`norris_fit.py`'s `norris_pulse()` could overflow to NaN when a fit's optimizer probed an extreme `tau1/tau2` ratio; fixed by porting the already-validated clipped-exponent form from `experiments/new_three_model/pulse3.py` into all 5 copies).
 
 **Everything else, in discovery order** (the order below is the order found, not ID order):
 

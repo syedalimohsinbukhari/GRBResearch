@@ -1,5 +1,12 @@
 # Wiring measured Norris-profile t_v into lorentz_factor.py's Gamma_min (working plan)
 
+> **Status as of 2026-10-20 (header added by the documentation sweep; the body below is historical and left unedited).**
+>
+> - **Implemented** 2026-09-27, as stated just below; results and verification are in `lorentz_factor.md` §11.
+> - **Superseded since.** (1) The pulse-selection rule in this plan's `load_norris_tv()` (the pulse with the nearest $t_\text{peak}$ to the episode's defining LAT photon) was replaced on 2026-10-02 (user decision) by the fitters' own rule, nearest preceding onset among still-active pulses (`lorentz_factor.md` §15); five sweep rows changed, GRB080916C unchanged. (2) The automated peak-finding pipeline that the Phase 5 fits were originally meant to come from was abandoned in favour of manual per-GRB joint fits (`PHASE5_TV_PLAN.md`).
+> - **Related resolved item.** The single-NaI-detector limitation of the Phase 5 fits (open in `PHASE5_TV_PLAN.md` as of 2026-09-18) was closed by BUG-23 on 2026-09-23 (all NaI detectors summed; `md_file_refs/BUGS.md`), so the fits this plan consumes are the all-detector ones.
+> - Current state: `md_file_refs/HANDOFF.md`.
+
 Companion to `PLAN.md` Phase 5, `PHASE5_TV_PLAN.md`, and
 `codes-for-paper/lorentz_factor/lorentz_factor.md` §6b/§11. Written 2026-09-27 — this is the plan
 for the "feed Phase 5's Norris measurements back into `Gamma_min`" step that `PLAN.md`/

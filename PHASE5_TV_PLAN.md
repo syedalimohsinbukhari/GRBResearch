@@ -1,5 +1,12 @@
 # Phase 5 — Norris-profile t_v measurement (working plan)
 
+> **Status as of 2026-10-20 (header added by the documentation sweep; the body below is historical and left unedited).**
+>
+> - **Implemented.** The Norris-profile $t_v$ measurement exists, but via the manual, per-GRB joint-fit track in `codes-for-paper/variability_analysis/` (one `fitter_GRB<paper-name>.py` per burst plus `shared_utilities.py` and `norris_fit.py`; see `variability_analysis.md`), not the pipeline this plan describes. All four bursts have fits and `norris_fit_results_GRB*.csv`. The measured $t_v$ has been fed into `lorentz_factor.py` / `lorentz_factor_limit_b.py` since 2026-09-27 (`lorentz_factor.md` §11).
+> - **Superseded.** (1) The automated MEPSA / `find_peaks` + per-window `pymultifit` pipeline and its `variability_timescale/` file layout (see the 2026-09-16 update below). (2) The photon-to-pulse rule: `load_norris_tv()` used the pulse with the nearest $t_\text{peak}$; on 2026-10-02 (user decision) it was replaced by the fitters' own rule (nearest preceding onset among still-active pulses), `lorentz_factor.md` §15. Any text below describing nearest-$t_\text{peak}$ assignment is out of date.
+> - **Open issue resolved.** The "single-detector fits" issue flagged under the 2026-09-18 update below was resolved by BUG-23 (closed 2026-09-23, `md_file_refs/BUGS.md`): every fitter now sums all of a burst's NaI detectors (raw, no per-detector normalization), for all four bursts. Results in `variability_analysis.md` / the CSVs dated before that date are superseded by the reruns.
+> - Current state and pending items: `md_file_refs/HANDOFF.md` and `md_file_refs/PLAN.md` Phase 5.
+
 Companion to `PLAN.md` Phase 5 (project root, one level up) and `codes-for-paper/lorentz_factor/lorentz_factor.md` §6b. This is a working note, not an approved/locked spec — update it as the implementation surfaces things the plan got wrong.
 
 ## Status update (2026-09-16) — automated pipeline superseded, plan below is stale on that point
