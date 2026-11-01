@@ -49,6 +49,8 @@ def fmt_t_v(r):
     """
     if r["t_v_source"] == "norris":
         return f"${r['t_v_s']:.3f}^{{+{r['t_v_err_upper_s']:.3f}}}_{{-{r['t_v_err_lower_s']:.3f}}}$"
+    if r["t_v_source"] == "duration":
+        return f"$\\leq {r['t_v_s']:.3f}$"
     return f"${r['t_v_s']:.3f}$"
 
 
@@ -98,8 +100,7 @@ def tablenotes(rows):
     """Only document markers actually printed in ``rows``."""
     notes = ""
     if r"\dagger" in rows:
-        notes += (r"\item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, "
-                  r"giving a conservative $\Gamma_{\min}$." "\n")
+        notes += (r"\item[$\dagger$] No pulse-based variability timescale is available; the episode duration is listed as an upper bound ($t_{\rm v}\leq$), so $\Gamma_{\min}$ is a conservative lower bound and not a measurement-based value." "\n")
     if r"\ddagger" in rows:
         notes += (r"\item[$\ddagger$] \ac{LAT} detection with $\mathrm{TS} < 25$; the highest-energy photon "
                   r"association is not secure." "\n")

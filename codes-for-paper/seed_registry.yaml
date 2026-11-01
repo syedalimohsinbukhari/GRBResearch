@@ -76,6 +76,14 @@ active:
         script: variability_analysis/fitter_GRB231129C.py
         item: "Norris-pulse $t_\\mathrm{v}$ fit, GRB231129C"
         cref: "\\cref{tab:lorentz_unknown_z,tab:lorentz_limit_b_unknown_z}"
+    outflow_composition_stage1:
+        script: outflow_composition/gao_zhang_inversion.py
+        item: "Outflow composition, Gao \\& Zhang inversion"
+        cref: "\\cref{fig:outflow_stage1,tab:outflow_stage1,tab:outflow_stage1_unknown_z,tab:outflow_partner}"
+    outflow_composition_stage2:
+        script: outflow_composition/zhang_peer_suppression.py
+        item: "Outflow composition, Zhang \\& Pe'er bound"
+        cref: "\\cref{tab:outflow_stage2}"
 
 unused:
     kt_epeak_correlation:

@@ -82,6 +82,8 @@ def fmt_t_v(r):
     marker_str = f"\\,^{{{marker}}}" if marker else ""
     if r["t_v_source"] == "norris":
         return f"${r['t_v_s']:.3f}^{{+{r['t_v_err_upper_s']:.3f}}}_{{-{r['t_v_err_lower_s']:.3f}}}{marker_str}$"
+    if r["t_v_source"] == "duration":
+        return f"$\\leq {r['t_v_s']:.3f}{marker_str}$"
     return f"${r['t_v_s']:.3f}{marker_str}$"
 
 
@@ -126,7 +128,7 @@ def build_latex_table(results):
     # tablenote at all.
     tablenote_items = ""
     if r"\dagger" in rows:
-        tablenote_items += r"\item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$." "\n"
+        tablenote_items += r"\item[$\dagger$] No pulse-based variability timescale is available; the episode duration is listed as an upper bound ($t_{\rm v}\leq$), so $\Gamma_{\min}$ is a conservative lower bound and not a measurement-based value." "\n"
     if r"\ast" in rows:
         tablenote_items += r"\item[$\ast$] Measured variability timescale from a joint Norris-pulse fit to the light curve, given with its $1\sigma$ Monte Carlo uncertainty." "\n"
     if r"\ddagger" in rows:

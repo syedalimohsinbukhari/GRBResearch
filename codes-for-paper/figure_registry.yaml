@@ -66,7 +66,20 @@ active:
         source: light_curves/GRB231129779/GRB231129C_lightcurve.png
         dest: images/light_curves/GRB231129C_lightcurve.png
 
+    gao_zhang_inversion:
+        source: codes-for-paper/outflow_composition/gao_zhang_inversion.png
+        dest: images/section5/gao_zhang_inversion.png
+
 unused:
+    gao_zhang_inversion_partner:
+        source: codes-for-paper/outflow_composition/gao_zhang_inversion_partner.png
+        note: "Phase 6 stage 1 figure (2026-10-24): same for the SAFE/MARGINAL X_BB partners of non-BB episodes, reported separately; not referenced by any figure in the current draft"
+    zhang_peer_epoch_b:
+        source: codes-for-paper/outflow_composition/zhang_peer_epoch_b.png
+        note: "Phase 6 validation figure (2026-10-24): Abdo et al. (2009) epoch-b reproduction of Zhang & Pe'er's sigma; not referenced by any figure in the current draft"
+    zhang_peer_suppression_spectra:
+        source: codes-for-paper/outflow_composition/zhang_peer_suppression_spectra.png
+        note: "Phase 6 validation figure (2026-10-24): best-fit spectrum and fireball blackbody at sigma = 0 and sigma_min per non-BB episode; not referenced by any figure in the current draft"
     epeak_vs_kt:
         source: codes-for-paper/model_parameters/epeak_vs_kt.png
         note: "not referenced by any figure in the current draft -- matches seed_registry.yaml's kt_epeak_correlation"

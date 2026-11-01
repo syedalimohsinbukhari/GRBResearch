@@ -119,10 +119,10 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
         "    \\label{tab:photospheric}",
         "    \\renewcommand{\\arraystretch}{1.25}",
         "    \\resizebox{\\textwidth}{!}{",
-        "    \\begin{tabular}{lccccccc}",
+        "    \\begin{tabular}{lcccccc}",
         "        \\toprule",
         (
-            "        Model & Episode & $z$ & $kT$ [keV] & "
+            "        Model & Episode & $kT$ [keV] & "
             f"$f_\\mathrm{{BB}}$ [${exponent_label(F_BB_NORM)}$] & "
             f"$r_0$ [${exponent_label(R0_NORM)}$ cm] & $\\Gamma$ & "
             f"$r_\\mathrm{{ph}}$ [${exponent_label(R_PH_NORM)}$ cm] \\\\"
@@ -135,10 +135,12 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
         if row["grb_name"] != current_grb:
             if idx != 0:
                 lines.append("        \\midrule")
-            lines.append(f"        \\multicolumn{{8}}{{l}}{{\\textbf{{{format_grb_name(row['grb_name'])}}}}} \\\\")
+            z_head = f"$z={row['z']:.2f}$" if row["z_source"] == "spectroscopic" else f"$z={row['z']:.2f}^{{\\dagger}}$"
+            lines.append(
+                f"        \\multicolumn{{7}}{{l}}{{\\textbf{{{format_grb_name(row['grb_name'])}}} ({z_head})}} \\\\"
+            )
             current_grb = row["grb_name"]
 
-        z_cell = f"${row['z']:.2f}$" if row["z_source"] == "spectroscopic" else f"${row['z']:.2f}^{{\\dagger}}$"
         f_bb_cell = format_normalised(
             row["f_bb"], row["f_bb_err_lower"], row["f_bb_err_upper"], F_BB_NORM, f_bb_decimals
         )
@@ -147,7 +149,7 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
             row["r_ph_cm"], row["r_ph_err_lower_cm"], row["r_ph_err_upper_cm"], R_PH_NORM, r_ph_decimals
         )
         lines.append(
-            f"        {format_model_name(row['model_name'])} & {row['episode']} & {z_cell} & "
+            f"        {format_model_name(row['model_name'])} & {row['episode']} & "
             f"{format_plain(row['kt_bb_keV'], row['kt_bb_err_lower_keV'], row['kt_bb_err_upper_keV'], 2)} & "
             f"{f_bb_cell} & {r0_cell} & "
             f"{format_plain(row['Gamma'], row['Gamma_err_lower'], row['Gamma_err_upper'])} & "
@@ -156,7 +158,7 @@ def csv_to_latex_table(csv_path="pe_er_photosphere.csv", output_path="photospher
 
     lines += [
         "        \\midrule",
-        "        \\multicolumn{8}{l}{\\footnotesize $^{\\dagger}$ Assumed fiducial redshift; "
+        "        \\multicolumn{7}{l}{\\footnotesize $^{\\dagger}$ Assumed fiducial redshift; "
         "no spectroscopic measurement exists for this burst.} \\\\",
         "        \\bottomrule",
         "    \\end{tabular}",

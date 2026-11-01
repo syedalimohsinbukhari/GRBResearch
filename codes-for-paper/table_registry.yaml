@@ -66,6 +66,18 @@ active:
     time_integrated_table:
         source: codes-for-paper/time_integrated_table/time_integrated_table.tex
         dest: tex_files/generated/time_integrated_table.tex
+    outflow_stage1_table:
+        source: codes-for-paper/outflow_composition/tables/outflow_stage1_table.tex
+        dest: tex_files/generated/outflow_stage1_table.tex
+    outflow_stage1_unknown_z_table:
+        source: codes-for-paper/outflow_composition/tables/outflow_stage1_unknown_z_table.tex
+        dest: tex_files/generated/outflow_stage1_unknown_z_table.tex
+    outflow_partner_table:
+        source: codes-for-paper/outflow_composition/tables/outflow_partner_table.tex
+        dest: tex_files/generated/outflow_partner_table.tex
+    outflow_stage2_table:
+        source: codes-for-paper/outflow_composition/tables/outflow_stage2_table.tex
+        dest: tex_files/generated/outflow_stage2_table.tex
 
 no_known_source:
     per_grb_large_tables:

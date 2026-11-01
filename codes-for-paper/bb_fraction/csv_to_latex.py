@@ -120,8 +120,8 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
             "$99.999\\%$ of the blackbody flux, and is independent of redshift and cosmology for a "
             "given episode.\n"
             f"        $f_\\mathrm{{BB}}^\\mathrm{{rest}}$ instead integrates over the fixed rest-frame "
-            f"band {e_min_rest:.0f}~keV to {e_max_rest / 1e3:.0f}~MeV at the redshift given in the $z$ "
-            "column, so that the comparison band is the same in the source frame for every burst rather "
+            f"band {e_min_rest:.0f}~keV to {e_max_rest / 1e3:.0f}~MeV at the redshift given in the burst "
+            "header row, so that the comparison band is the same in the source frame for every burst rather "
             "than in the observer frame.\n"
             "        Only \\grbzeroeightzeroninesixteenC\\ has a spectroscopic redshift; for the "
             f"remaining bursts $f_\\mathrm{{BB}}^\\mathrm{{rest}}$ is quoted at a fiducial $z = "
@@ -135,15 +135,15 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
         "    \\label{tab:bbfraction}",
         "    \\renewcommand{\\arraystretch}{1.25}",
         "    \\resizebox{\\textwidth}{!}{",
-        "    \\begin{tabular}{lcccccccc}",
+        "    \\begin{tabular}{lccccccc}",
         "        \\toprule",
         (
-            "        Model & Episode & $z$ & $kT$ & "
+            "        Model & Episode & $kT$ & "
             "$F_\\mathrm{BB}$ & $F_\\mathrm{total}$ & "
             "$f_\\mathrm{BB}^\\mathrm{obs}$ & $f_\\mathrm{BB}^\\mathrm{rest}$ \\\\"
         ),
         (
-            "         &  &  & [keV] & "
+            "         &  & [keV] & "
             f"\\multicolumn{{2}}{{c}}{{[${exponent_label(FLUX_BB_NORM)}$ erg\\,cm$^{{-2}}$\\,s$^{{-1}}$]}} & "
             f"[${exponent_label(F_BB_NORM)}$] & [${exponent_label(F_BB_NORM)}$] \\\\"
         ),
@@ -155,10 +155,12 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
         if row["grb_name"] != current_grb:
             if idx != 0:
                 lines.append("        \\midrule")
-            lines.append(f"        \\multicolumn{{8}}{{l}}{{\\textbf{{{format_grb_name(row['grb_name'])}}}}} \\\\")
+            z_head = f"$z={row['z']:.2f}$" if row["z_source"] == "spectroscopic" else f"$z={row['z']:.2f}^{{\\dagger}}$"
+            lines.append(
+                f"        \\multicolumn{{7}}{{l}}{{\\textbf{{{format_grb_name(row['grb_name'])}}} ({z_head})}} \\\\"
+            )
             current_grb = row["grb_name"]
 
-        z_cell = f"${row['z']:.2f}$" if row["z_source"] == "spectroscopic" else f"${row['z']:.2f}^{{\\dagger}}$"
         kt = f"${row['kt_bb_keV']:.2f} \\pm {row['kt_bb_err_keV']:.2f}$"
         f_bb_cell = format_normalised(
             row["f_bb"], row["f_bb_err_lower"], row["f_bb_err_upper"], F_BB_NORM, f_bb_decimals
@@ -181,13 +183,13 @@ def csv_to_latex_table(csv_path="bb_flux_fraction.csv", output_path="bb_fraction
             flux_total_decimals,
         )
         lines.append(
-            f"        {format_model_name(row['model_name'])} & {row['episode']} & {z_cell} & {kt} & "
+            f"        {format_model_name(row['model_name'])} & {row['episode']} & {kt} & "
             f"{flux_bb_cell} & {flux_total_cell} & {f_bb_cell} & {f_bb_rest_cell} \\\\"
         )
 
     lines += [
         "        \\midrule",
-        "        \\multicolumn{8}{l}{\\footnotesize $^{\\dagger}$ Assumed fiducial redshift; "
+        "        \\multicolumn{7}{l}{\\footnotesize $^{\\dagger}$ Assumed fiducial redshift; "
         "no spectroscopic measurement exists for this burst.} \\\\",
         "        \\bottomrule",
         "    \\end{tabular}",

@@ -70,6 +70,51 @@ scripts:
         note: Photospheric radius / Lorentz factor CSV (Pe'er 2007)
     -   path: photospheric_radius/csv_to_latex.py
         note: Photospheric radius table (reads pe_er_photosphere.py's CSV)
+    -   path: outflow_composition/gao_zhang_inversion.py
+        note: >-
+            Gao & Zhang (2015) hybrid-outflow inversion (eta, 1+sigma_0) for the BB episodes (Phase 6, in progress);
+            reads photospheric_radius/pe_er_photosphere.csv only for its Phase 2 closure check (so it must run after
+            pe_er_photosphere.py); the pure-fireball r_0 anchor is recomputed in its own 10 keV - 10 GeV band. Runs its own
+            validation (round trip, boundary continuity, closure) first.
+            Writes gao_zhang_inversion.csv (BEST-BB episodes) and gao_zhang_inversion_partner.csv (SAFE/MARGINAL X_BB
+            partners of non-BB episodes, reported separately)
+    -   path: outflow_composition/gao_zhang_inversion_plot.py
+        note: >-
+            Stage 1 figures (gao_zhang_inversion, gao_zhang_inversion_partner): 1 + sigma_0 against the assumed r_0, one
+            panel per burst; reads both gao_zhang_inversion CSVs, so it must run after gao_zhang_inversion.py. No
+            randomness, hence no seed
+    -   path: outflow_composition/tables/snapshot_tables.py
+        note: >-
+            Stage 1 snapshot tables for outflow_composition.md (results per burst and r_0, project-anchor range, redshift
+            dependence, partner table), written to tables/outflow_composition_tables.generated.md; reads both
+            gao_zhang_inversion CSVs, so it must run after gao_zhang_inversion.py. Kept apart from the computation scripts.
+            No randomness, hence no seed
+    -   path: outflow_composition/zhang_peer_suppression.py
+        note: >-
+            Zhang & Pe'er (2009) minimum-sigma suppression bound (Phase 6, in progress) for the episodes whose BEST
+            model has no blackbody. Reads lorentz_factor/lorentz_results.csv for t_v, so it must run after
+            lorentz_factor.py. Runs its own validation (blackbody normalisation, monotonicity, solver, R_0 convention,
+            Abdo et al. epoch-b reproduction) first; takes ~15 minutes (180 bisection solves over 10 000 draws)
+    -   path: outflow_composition/zhang_peer_suppression_plot.py
+        note: >-
+            Two validation figures for the Zhang & Pe'er bound (zhang_peer_epoch_b, zhang_peer_suppression_spectra);
+            reads zhang_peer_suppression.csv and results.json, so it must run after zhang_peer_suppression.py. No
+            randomness, hence no seed
+    -   path: outflow_composition/tables/stage2_tables.py
+        note: >-
+            Stage 2 tables for outflow_composition.md (results per episode over the z grid, edge-limited rows, test-band
+            spread, exact L_gamma scaling check), written to tables/zhang_peer_tables.generated.md; reads
+            zhang_peer_suppression.csv, so it must run after zhang_peer_suppression.py. Kept apart from the computation
+            scripts. No randomness, hence no seed
+    -   path: outflow_composition/tables/stage1_to_latex.py
+        note: >-
+            Stage 1 LaTeX tables (outflow_stage1_table, outflow_stage1_unknown_z_table, outflow_partner_table .tex);
+            reads both gao_zhang_inversion CSVs, so it must run after gao_zhang_inversion.py. Imports latex_common.py
+            from its own folder. No randomness, hence no seed
+    -   path: outflow_composition/tables/stage2_to_latex.py
+        note: >-
+            Stage 2 LaTeX table (outflow_stage2_table.tex); reads zhang_peer_suppression.csv, so it must run after
+            zhang_peer_suppression.py. Imports latex_common.py from its own folder. No randomness, hence no seed
     -   path: lorentz_factor/gamma_comparison_plot.py
         note: >-
             GRB080916C Limit A / Limit B / thermal Gamma comparison figure (fig:gamma_comparison); reads

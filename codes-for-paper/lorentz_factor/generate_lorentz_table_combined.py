@@ -44,7 +44,7 @@ def build_latex_table(results):
         if r["GRB"] != current:
             if current is not None:
                 rows += "    \\midrule\n"
-            rows += f"    \\multicolumn{{7}}{{l}}{{\\textbf{{{r['tex_name']}}}}} \\\\\n"
+            rows += f"    \\multicolumn{{7}}{{l}}{{\\textbf{{{r['tex_name']}}} ($z={r['z']:.2f}$)}} \\\\\n"
             current = r["GRB"]
         rows += (
             f"    {r['episode']} & {fmt(r['E_max_MeV'] / 1e3, '.2f')} & "
@@ -76,7 +76,7 @@ Episode & $E_{\rm GeV}$ [GeV] & $t_{\rm arr}$ [s] &
 \end{tabular}
 \begin{tablenotes}
 \footnotesize
-\item[$\dagger$] Episode duration adopted as an upper bound on the variability timescale, giving a conservative $\Gamma_{\min}$.
+\item[$\dagger$] No pulse-based variability timescale is available; the episode duration is listed as an upper bound ($t_{\rm v}\leq$), so $\Gamma_{\min}$ is a conservative lower bound and not a measurement-based value.
 \end{tablenotes}
 \end{threeparttable}
 }
