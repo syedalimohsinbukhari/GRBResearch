@@ -24,6 +24,7 @@ PYTHONPATH=src .venv/bin/python codes-for-paper/sync_paper_assets.py      # copy
 | `src/grb_research/` | the `grb_research` package: fit-result parsing, time intervals, flux/fluence Monte Carlo, styling and constants (`SEEDING.md` and `CRITERIA.md` document the RNG-seeding and model-selection conventions) |
 | `codes-for-paper/` | one folder per analysis topic (`fluence/`, `bb_fraction/`, `photospheric_radius/`, `lorentz_factor/`, `amati_relationship/`, `variability_analysis/`, ...), each with its scripts, CSVs, figures, generated `.tex` tables and a method note (`<topic>.md`) |
 | `codes-for-paper/*_registry.yaml` | `runner_registry.yaml` (scripts `runner_all.py` runs), `figure_registry.yaml` / `table_registry.yaml` (what `sync_paper_assets.py` copies into the paper repo), `seed_registry.yaml` (scripts in the paper's RNG-seed table) |
+| `codes-for-paper/outflow_composition/` | Phase 6 (outflow composition, $\eta$ and $\sigma_0$): `gao_zhang_inversion.py` (stage 1), `zhang_peer_suppression.py` (stage 2), their plot scripts and CSVs, and `tables/` (generated markdown and LaTeX tables); method note `outflow_composition.md`, plan `PHASE6_PLAN.md` |
 | `results.json` | fitted-model database (all bursts, all intervals and models) that most scripts read |
 | `GRB080916009/`, `GRB131014215/`, `GRB140206275/`, `GRB231129779/` (and the other four) | raw per-interval fit directories; `GRB131014215GBM/` and `GRB131014215GBM40keV/` are GBM-only refits of GRB131014A |
 | `LAT_analysis/` | LAT photon extraction (`lat_photons.csv`, the LAT-info table); see `LAT_analysis.md` |
@@ -31,7 +32,7 @@ PYTHONPATH=src .venv/bin/python codes-for-paper/sync_paper_assets.py      # copy
 | `080916C.tex`, `131014A.tex`, `140206B.tex`, `231129C.tex` | per-burst appendix tables generated from the fit logs by `generate_table_from_log.py` (the other four `.tex` files at the root are for bursts outside the sample) |
 | `working.py`, `generate_table_from_log.py` | the fitting driver (writes `results.json` and a `cstat_run_*.log`) and the log-to-LaTeX table generator; both use `src.grb_research` imports and are meant to be run from the repo root |
 | `md_file_refs/` | project working documents (see below) |
-| `ToDo.md`, `PHASE5_TV_PLAN.md`, `NORRIS_TV_LORENTZ_INTEGRATION_PLAN.md` | science checklist and two Norris-`t_v` working plans (historical; each carries a dated status header); the Phase 6 plan is in `codes-for-paper/outflow_composition/` |
+| `ToDo.md`, `PHASE5_TV_PLAN.md`, `NORRIS_TV_LORENTZ_INTEGRATION_PLAN.md` | science checklist and two Norris-`t_v` working plans (historical; each carries a dated status header); the Phase 6 plan and method note are in `codes-for-paper/outflow_composition/` |
 
 ## Where to read next
 

@@ -675,7 +675,7 @@ Status: **CONFIRMED** (2026-10-02, user reports the paper compiles properly; ite
 - Item 4, superseded: the three photospheric statements quoted ("$0.5\le z\le7$", "factor $\approx4.5$ ... $z=0.5$ to $z=7$", ticks 0.5-7) were replaced by the grid unification; current text says $1\le z\le7$ and factor $\approx2.4$ (line 366), recomputed 2.37 from `pe_er_photosphere.csv`. The "$5.1$-$11.4\times10^{12}$ cm at $z=7$" figure still holds (recomputed 5.12-11.37). Figure tick legibility remains a visual check.
 - Layout drift: after commit 8ec6343 the figure sits in the photospheric subsection rather than after the sweep tables, and the "next sentence" now cites `tab:lorentz_combined` (line 224), not `tab:lorentz`.
 
-Status: **PENDING**
+Status: **CONFIRMED** (2026-10-24, user visual check of the rendered PDF; stale items noted in the source-check bullets above)
 
 ---
 
@@ -696,7 +696,7 @@ Status: **PENDING**
 - Item 2: the redrawn figure and its TR4 exclusion are visual.
 - Item 3: the quoted sweep ranges and ratios re-derived from the CSVs (see the entry above); they hold.
 
-Status: **PENDING**
+Status: **CONFIRMED** (2026-10-24, user visual check of the rendered PDF; stale items noted in the source-check bullets above)
 
 ### 2026-10-02 — redshift-grid unification (z = 1, 2, 3, 5, 7; curves over 1-7)
 
@@ -717,4 +717,116 @@ Status: **PENDING**
 - Item 4: confirmed from source, `grep -rn 'TODO(rerun)'` over `GRBResearchPaper` `.tex` files finds none.
 - Not covered by any VERIFY entry (gap, for the user to decide): the combined Limit A + Limit B table `tab:lorentz_combined` (commit e97873e / paper commit 8ec6343, now the only table `\input` for GRB080916C's Gamma_min) and the section 5 reshuffle (gamma-comparison figures moved to the photospheric subsection).
 
+Status: **CONFIRMED** (2026-10-24, user visual check of the rendered PDF; stale items noted in the source-check bullets above)
+
+
+---
+
+### 2026-10-24 — Phase 4 narrative re-read of the abstract and sections 5-7: seven rewordings
+
+**What changed** (`GRBResearchPaper`; no numbers changed, all quoted values re-derived from the CSVs first):
+
+1. `section-5-data-analysis.tex`, k-correction paragraph (~line 88): "a deterministic, random seed reported in the table caption" is now "deterministic random seeds, reported in the captions of the affected figures", and the sentence pointing at `tab:seed_table` gained its missing full stop.
+2. Same file, `eq:eiso` paragraph (~line 157): "over the observed rest-frame energy band" is now "over the observer-frame energies that correspond to the rest-frame band".
+3. Same file, Amati paragraph (~line 162): "All GRBs lie within the 2 sigma band..." now says "at the assumed redshifts 1 <= z <= 7 for the three bursts without a measured redshift", and GRB140206B's EX0/TR1/TR6 are "below the relation at every assumed redshift".
+4. Same file, $t_v$ paragraph (~lines 216-220): the claim that the quality criterion holds "except for T90" was wrong. The duration fallback also applies to GRB140206B EX0, TR1 and TR5 (`t_v_source = duration` in `lorentz_results_unknown_z.csv`). Now lists them and says they carry the dagger in the tables.
+5. `section-6-discussion.tex`, Abdo et al. comparison (~lines 21-24): still described the old duration-based $t_v$ and said Limit A "tops out at 507". Rewritten for the Norris $t_v$: Limit A is 361-507 in the three BB episodes (T90, EX0, TR1), TR2 reaches 741 at $t_v=0.43$ s for the same ~2 GeV photon, and the 1.7 s scaling check is restated for T90.
+6. `section-7-conclusion.tex`: "precluding Amati-plane placement" replaced by the assumed-redshift treatment; one new sentence quotes the thermal-to-limit ratios for the ten no-redshift BB episodes (1.1-3.6 over Limit A, 2.7-9.5 over Limit B); future-work item 3 reworded to "replace the assumed-redshift sweeps".
+7. `abstract.tex`: the sentence "Placement on the Amati plane is consistent with the physical self-consistency of the spectral fits..." replaced by a plain statement that all GRB080916C episodes lie within the 2 sigma band and that the other three bursts are evaluated over assumed redshifts 1-7.
+
+**What to check** (in the rendered PDF; note `main.tex` currently `\input`s only section 5, the abstract and sections 1-4, 6, 7 are commented out, so items 5-7 need those lines re-enabled):
+
+1. Section 5, near eq. for $S_\text{bol}$/seed sentence: reads "...reported in the captions of the affected figures. A complete list of adopted random seeds is given in Table N." with the full stop.
+2. Section 5, Amati subsection: the sentence now reads "...within the 2 sigma confidence band of the relation, at the assumed redshifts 1 <= z <= 7 for the three bursts without a measured redshift, with the exception of GRB140206B"; check against the GRB140206B panel of `fig:amati_relationship` that EX0, TR1 and TR6 sit below the band (they should, my own approximation puts them at -2.1 to -4.6 sigma_ext at every z on the grid, ignoring m, k errors and the points' error bars) and that no other episode of any panel leaves the band.
+3. Section 5, $t_v$ paragraph: last three sentences read "For the remaining episodes we take the episode duration... These are every T90 interval... and EX0, TR1 and TR5 of GRB140206B. They are marked dagger in the tables." Check that `tab:lorentz_unknown_z` shows a dagger on exactly T90 (x3 bursts) plus GRB140206B EX0, TR1, TR5, and `tab:lorentz_combined` on T90 only.
+4. Section 6 (Abdo paragraph): "361--507", "$t_v=0.43$ s", "10.18 s", "741", "~2 GeV" and "1.7 s" all appear, and the paragraph no longer says "tops out at 507" or "adopted here".
+5. Section 7: the new ratio sentence and the reworded list item 3 render; abstract: the new Amati sentence reads naturally and the abstract still fits on its page.
+
+**Why:** changes 4 and 5 corrected statements that contradicted the tables (stale $t_v$ convention); change 3 and the conclusion rewording (6) remove a contradiction with Fig. 1 and the sweeps. A failed check means the prose and the table or figure it cites disagree.
+
+**Source-checked 2026-10-24** (against the CSVs; nothing visual): the no-redshift Limit A range 46-341 at z=1 to 162-1225 at z=7 (growth 3.50-3.70) and Limit B 25-143 to 84-496 (growth 3.40-3.57) match section 5; 080916C thermal-to-limit ratios 1.48-2.36 (A) and 4.12-6.71 (B) match "1.5 to 2.4" and "4.1 to 6.7"; $kT$ spans 27.3-58.5 keV across the four bursts, matching "27-59 keV" in the abstract and conclusion; 080916C Amati offsets are within 1.9 sigma_ext for all eight episodes. Not changed, for the user to decide: section 6 line 12 says the strong/intermediate/weak ordering is unchanged in the rest frame "using each burst's spectroscopic or fiducial redshift", and line 13 then says GRB140206B and GRB131014A are not separable from z >~ 3; both are true but the first sentence is easy to read as stronger than the second allows.
+
 Status: **PENDING**
+
+
+---
+
+### 2026-10-24 — Phase 6 (outflow composition) stages 1-2: open decisions, nothing in the paper yet
+
+**What changed:** nothing in `GRBResearchPaper`. This entry logs the open decisions from `GRBResearchWork/codes-for-paper/
+outflow_composition/outflow_composition.md` §8, so they are not lost. Stage 1 (`gao_zhang_inversion.py`, main and partner
+tables and figures) and stage 2 (`zhang_peer_suppression.py`, 180 rows) are built, registered as `unused`, and not yet
+`\input` or cited anywhere. The decisions are the user's; the defaults below are what the CSVs currently use.
+
+**Open decisions** (defaults in use; each changes numbers if reversed):
+
+1. **Decided 2026-10-25: 10 keV (no change to the CSVs).** Stage 2 test-band lower edge: 10 keV in use ("fit" band 10 keV-10 MeV; "extrapolated" 1 keV-10 MeV is carried as a
+   sensitivity column). The alternative is 8 keV, the GBM edge. It only affects the 17 lower-edge-limited fit-band rows
+   (GRB080916C TR3 and EX1; GRB140206B T90, TR5, TR6 at all five z; TR4 of GRB080916C partly, 26% of draws), none of which
+   has a detected blackbody. For those rows the extrapolated band can differ by up to 39x.
+2. **Primary decided 2026-10-25: observer-frame 10 keV-10 GeV (no change to the CSVs); whether to keep the rest-frame
+   sensitivity rows was not addressed.** Stage 2 L_gamma band: observer-frame 10 keV-10 GeV is the primary (reproduces Zhang & Pe'er's epoch-b numbers: kT_max 53
+   vs 50 keV, eta* 866 vs 850, sigma 22 vs ~20); rest-frame 1-10^4 keV is kept as a sensitivity row (2.5x low on epoch b).
+   Because 1+sigma_min is exactly proportional to L_gamma, a one-sentence factor could replace the extra rows. Observer
+   8 keV-40 MeV (the GBM fluence band) is a third option; it also reproduces kT_max and eta* but gives sigma = 15.9.
+3. **Decided 2026-10-25: stage 1 only moves to observer-frame 10 keV-10 GeV; Phase 1/2 stay at 1 keV-10 MeV; the
+   r_0 anchor is recomputed in the new band. Code changed and stage 1 rerun at 10 000 samples on 2026-10-25 (CSVs and
+   figures regenerated; outflow_composition.md sections 5 and 5a refreshed).** Stage 1 F_ob band: was observer-frame 1 keV-10 MeV for consistency with Phase 1/2 (documented caveat). Widening to
+   10 GeV raises GRB080916C's 1+sigma_0 by 20-50% at r_0 = 1e8 cm (T90 9.6 -> 14.3, EX0 7.3 -> 8.9, TR1 8.2 -> 10.3) and
+   would mean revisiting Phase 1/2. The 1 keV-10 MeV band already holds 97-100% of the 1 keV-10 GeV flux for GRB131014A
+   and GRB231129C and 78-92% for GRB140206B (54-83% for GRB080916C), so those bursts move far less.
+
+**Decided, recorded for the paper wording:**
+
+- delta = 1/3 only, citing the Gao et al. section on delta; no numerical delta check. Option (b), general-delta top-down
+  formulae, is a possible later experimental setup. f_gamma = 0.5.
+- Model-set rules: the main table holds only episodes whose BEST model contains a blackbody; non-BEST blackbody models
+  (partners, SAFE/MARGINAL, flagged like the red MARGINAL rows of the appendix tables) are reported separately; no UNSAFE
+  blackbody model is ever used; the partner of BEST continuum X is X_BB only. 7 of the 13 non-BB episodes have a usable
+  partner; 6 do not (GRB080916C TR4, EX1, TR5; GRB140206B TR5, TR6; GRB231129C TR2). GRB131014A has no non-BB episode, so
+  it appears in the main stage 1 table and figure only.
+- Stage 2 sigma_min is a floor (suppressed blackbody must stay below the best-fit spectrum). A statistical-exclusion
+  version (frozen-blackbody RMFIT refits) is a possible future experiment.
+
+**Not built / stale:** LaTeX tables and paper text for Phase 6; `seed_table.csv` is stale (`seed_table_to_latex.py` not
+rerun; the new scripts are `unused`, so the paper's seed table is unchanged); the exact Abdo epoch-b interval (3.58-7.68 s)
+has not been refit with the project's pipeline.
+
+**What to check:** nothing in the rendered PDF yet. When Phase 6 enters the paper, check that the text states the chosen
+bands (items 1-3 above), the delta = 1/3 and f_gamma = 0.5 assumptions, and that the main table lists only BEST-BB episodes
+with the partner rows reported separately.
+
+**Why:** these are judgement calls that move published numbers; logging them here keeps the chosen defaults and the
+alternatives visible until the user settles them.
+
+Status: **PENDING** (decisions open; no PDF check needed until Phase 6 text exists)
+
+
+---
+
+### 2026-10-25 — Phase 6 outflow composition drafted into section 5 (subsection 5.7), appendix and registries
+
+**What changed** (`GRBResearchPaper`, `GRBResearchWork`; main.tex now `\input`s every section):
+
+1. `section-5-data-analysis.tex`: new `\subsection{Outflow composition}` (`subsec:outflow-composition`) after the photospheric subsection, with the Gao & Zhang inversion method and results, `tab:outflow_stage1`, `fig:outflow_stage1` (figure*), `tab:outflow_stage1_unknown_z`, the Zhang & Pe'er bound method and results, `tab:outflow_stage2`, and a short caveats paragraph.
+2. `main.tex`: new appendix section `sec:outflow-partners` (placed before the Monte Carlo seeds) with `tab:outflow_partner`.
+3. `ref.bib`: `GaoZhang2015` and `ZhangPeer2009`.
+4. `seed_table.tex` regenerated: two new rows (Gao & Zhang inversion, Zhang & Pe'er bound). `figure_registry.yaml`, `table_registry.yaml` and `seed_registry.yaml` moved the Phase 6 entries to `active`; `sync_paper_assets.py` copied the four tables and `images/section5/gao_zhang_inversion.png` into the paper.
+
+**What to check** (rendered PDF):
+
+1. The four tables and the figure render, and nothing overflows: `tab:outflow_stage1` and `tab:outflow_stage1_unknown_z` are single-column with `\resizebox{\columnwidth}`, `tab:outflow_stage2` and `tab:outflow_partner` are `table*`; the `table*` in the appendix sits in a `\onecolumn` block.
+2. Prose against tables, section 5.7: at r_0 = 1e8 cm the 1+sigma_0 ranges are 8.8-14 (GRB080916C), 9.1-12 (GRB140206B), 0.70-2.5 (GRB131014A), 0.45-0.58 (GRB231129C); the pure-fireball r_0 thresholds ~3e6, 3e6, 3e7, 2e8 cm match the dotted lines of `fig:outflow_stage1`; z-sweep claims (1+sigma_0 changes 32-35% and eta rises 2.8-3.9x between z = 1 and 7; GRB140206B EX0 degenerate at every z, TR1 at z = 5 and 7); stage 2: GRB080916C 19-63, GRB140206B 1.1-25, GRB231129C 2.1-5.2, and "17 of 45" entries carry the double dagger.
+3. The bibliography lists Gao & Zhang (2015) and Zhang & Pe'er (2009), and the seed table in the appendix has the two new rows.
+4. **Not checked against the source PDF:** the citations of Table 2 and eqs. (38)-(40) of Gao & Zhang (2015) in the method paragraph (transcribed and round-trip validated by `gao_zhang_inversion.py`, but the printed numbers were not re-read from `Literature Review/GaoHeZhang2015.pdf`).
+5. Abstract, section 6 and section 7 (drafted later the same day): the abstract gained three sentences before "Our results demonstrate..."; section 6 gained `\subsection{Outflow composition}` (`subsec:discussion-outflow-composition`) after "Implications for Photospheric Emission Models"; section 7 gained one paragraph before "Several issues remain unresolved" and a fifth future-work item. Check that each renders, that the quoted numbers match the section-5 tables (0.45-14 at r_0 = 1e8 cm; 19-63, 1.1-25 and 2.1-5.2 for 1+sigma_min; thresholds ~3e6, 3e7, 2e8 cm; 17 of 45 band-limited; Delta C = 24.1 for GRB080916C TR3 and 24.9 for GRB140206B T90 against the 28.74 threshold), that the abstract still fits its page, and that the wording does not over-claim (the section 6 text is interpretive: "compatible with a baryon-dominated fireball", "consistent with the initially magnetically dominated outflow they propose").
+6. Redshift moved from a column to the burst header row (later 2026-10-25): `tab:outflow_stage1`, `tab:outflow_partner`, `tab:bbfraction`, `tab:photospheric` lost their `$z$` column, and each burst header now reads e.g. `GRB080916C ($z=4.35$)` or `GRB131014A ($z=2.00^{\dagger}$)`; `tab:lorentz_combined`'s header gained `($z=4.35$)`. The `tab:outflow_stage1` and `tab:outflow_partner` headers are now two rows (multirow for the leading columns, `$1+\sigma_0$` spanning the three `$r_0$` columns). Check that each table still fits (they are one column narrower, so `\resizebox` scales them up and the page count rose from 33 to 34 in a scratch build), that the dagger footnote still reads correctly, and that the `tab:bbfraction` caption ("at the redshift given in the burst header row") is accurate.
+7. Duration-based t_v presented as a bound (later 2026-10-25, user decision to treat it as an upper bound and not as evidence of the same weight): in `tab:lorentz_combined`, `tab:lorentz_unknown_z` and `tab:lorentz_limit_b_unknown_z` the t_v cell of every duration-based episode now reads `$\leq$ duration` and the footnote says Gamma_min is then a conservative lower bound, not a measurement-based value. Section 5 (t_v paragraph) now says the duration is an upper bound on t_v, not an estimate, and quotes the effect (a duration 10x or 100x the true timescale lowers Gamma_min by about 1.4 or 2.0 for alpha = 2.25); the thermal-vs-limit comparison is split by t_v source: GRB080916C measured-t_v episodes (EX0, TR1) give 2.3-2.4 (Limit A) and 4.1-4.3 (Limit B), the T90 gives 1.5 and 6.7; the ten no-redshift blackbody episodes give 1.1-2.9 and 2.7-6.1 for the six measured and 1.6-3.6 and 4.2-9.5 for the four duration-based (131014A T90, 140206B EX0 and TR1, 231129C T90); section 7 repeats the split in one clause. Check the rendering of the `$\leq$` in the t_v columns, the footnote, and that these ratio ranges are consistent with `fig:gamma_comparison_unknown_z`.
+8. Stage 2 duration-based entries (later 2026-10-25, after a t_v sensitivity test, `outflow_composition/tv_sensitivity_stage2.py`): the `tab:outflow_stage2` dagger footnote now says the duration stands in for t_v and that 1+sigma_min is not monotonic in t_v; section 5 says the duration is not a conservative substitute there, and that lowering t_v by factors 3 and 10 changes 1+sigma_min by 0.19-0.60 for the three GRB080916C episodes (TR4, EX1, TR5) and raises it by 1.6-8.9 for GRB140206B T90 and TR5; section 6's first limitation says these five are not floors. Check the footnote and both sentences render, and the numbers against `tv_sensitivity_stage2.csv` (1000 samples, so approximate).
+
+**Why:** the section quotes numbers and cites equations; a mismatch means a table, the prose and the CSV disagree, or a transcribed equation number is wrong.
+
+**Source-checked 2026-10-25** (not visual): every number in the new prose was recomputed from `outflow_composition/tables/*.generated.md` and the CSVs. A scratch build (`pdflatex`, `bibtex`, two `pdflatex` passes into the scratchpad, not the paper root) gives 0 errors, 0 undefined references or citations, 0 overfull boxes and 33 pages; both new entries appear in the generated bibliography. The paper root's `main.bbl` is the old one until the user rebuilds in TeXstudio.
+
+Status: **PENDING**
+
