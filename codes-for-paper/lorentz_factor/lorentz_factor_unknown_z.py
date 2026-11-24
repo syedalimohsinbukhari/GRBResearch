@@ -182,6 +182,7 @@ def run_sweep(limit, rng, seed):
                         f"Gamma_min_{limit}": gamma,
                         f"Gamma_min_{limit}_err_lower": med - lo,
                         f"Gamma_min_{limit}_err_upper": hi - med,
+                        "n_samples": N_SAMPLES,
                         "seed": seed,
                     }
                 )

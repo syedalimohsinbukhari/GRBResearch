@@ -7,6 +7,7 @@ import numpy as np
 from scipy.odr import ODR, Model as ODRModel, RealData
 
 from grb_research import EpisodeMarkerResolver, LEGEND_FONT_SIZE, break_e_to_e_peak
+from grb_research.grb_constants import N_SAMPLES
 
 # -- Named parameter extraction ------------------------------------------------
 
@@ -134,7 +135,7 @@ def sbpl_mask(index1_sbpl, index2_sbpl, e_break_sbpl):
     return np.logical_and(np.abs((index1_sbpl + index2_sbpl + 4) / (index1_sbpl - index2_sbpl)) < 1, e_break_sbpl > 0)
 
 
-def convert_sbpl_to_band(model, n_sample: int = 10_000, *, rng: np.random.Generator):
+def convert_sbpl_to_band(model, n_sample: int = N_SAMPLES, *, rng: np.random.Generator):
     """Convert SBPL break energy to Band E_peak via Monte-Carlo.
 
     Draws ``1.5 × n_sample`` multivariate-normal samples from the parameter

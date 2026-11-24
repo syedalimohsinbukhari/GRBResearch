@@ -795,7 +795,7 @@ def component_energy_fluxes(model_name, values, energy, chunk: int = 2_000):
     return merged, np.concatenate(totals)
 
 
-def draw_model_samples(model, n_samples: int = 10_000, *, rng: np.random.Generator):
+def draw_model_samples(model, n_samples: int = N_SAMPLES, *, rng: np.random.Generator):
     """Draw fit-covariance parameter samples, filtered by physical constraints.
 
     Notes
